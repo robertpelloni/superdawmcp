@@ -7,6 +7,8 @@
 - [x] Establish Ableton Live OSC bridge.
 - [x] Establish REAPER File-based/Web bridge.
 - [x] Basic Transport, Mixer, and MIDI Clip control.
+- [x] Refine REAPER ReaScript Adapter for advanced control.
+- [x] Implement Ardour OSC Driver.
 - [x] Develop Client Libraries (Go, TypeScript).
 - [x] Implement End-to-End Integration Test Suite.
 

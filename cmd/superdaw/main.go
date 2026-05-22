@@ -14,7 +14,14 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	// Instantiate active backend driver targets over loopback infrastructure
-	abletonDriver := daw.NewAbletonDriver("127.0.0.1", 11000, 11001)
+	drivers := map[string]daw.DAWDriver{
+		"ableton": daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
+		"reaper":  daw.NewReaperDriver("127.0.0.1", 8000, 8080),
+		"ardour":  daw.NewArdourDriver("127.0.0.1", 3819),
+	}
+
+	// Default driver
+	activeDriver := drivers["ableton"]
 
 	for {
 		input, err := reader.ReadString('\n')
@@ -60,16 +67,25 @@ func main() {
 			}
 			json.Unmarshal(req.Params, &callParams)
 
+			// Routing logic: allow overriding target DAW via arguments
+			targetDAW, ok := callParams.Arguments["daw"].(string)
+			driver := activeDriver
+			if ok {
+				if d, found := drivers[targetDAW]; found {
+					driver = d
+				}
+			}
+
 			if callParams.Name == "superdaw_set_mixer" {
 				trackID, _ := callParams.Arguments["track_id"].(string)
 				volume, _ := callParams.Arguments["volume"].(float64)
-				_ = abletonDriver.SetTrackVolume(trackID, float32(volume))
+				_ = driver.SetTrackVolume(trackID, float32(volume))
 			} else if callParams.Name == "superdaw_write_midi" {
 				trackID, _ := callParams.Arguments["track_id"].(string)
 				notesJSON, _ := json.Marshal(callParams.Arguments["notes"])
 				var notes []daw.MIDINote
 				json.Unmarshal(notesJSON, &notes)
-				_ = abletonDriver.WriteMIDIClip(trackID, 0, notes)
+				_ = driver.WriteMIDIClip(trackID, 0, notes)
 			}
 
 			res := mcp.JSONRPCResponse{

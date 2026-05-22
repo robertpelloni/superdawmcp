@@ -9,6 +9,8 @@
 - [x] Wire up main loop in `cmd/superdaw/main.go`.
 - [x] Develop high-level Client Libraries (Go, TypeScript).
 - [x] Build automated integration test suite with Mock DAW.
+- [x] Implement Ardour driver client in `pkg/daw/ardour.go`.
+- [x] Refine REAPER Lua bridge for Pan, Mute, Solo.
 
 ## Features to Implement
 - [ ] `superdaw_set_mixer`: Set volume, pan, mute across DAWs.

@@ -20,7 +20,7 @@ func TestIntegration_EndToEnd(t *testing.T) {
 	}
 	defer os.Remove(binPath)
 
-	// 2. Start Mock DAW
+	// 2. Start Mock DAW (Ableton/Unified default)
 	mockDAW := NewMockDAW(11000)
 	go mockDAW.Start()
 	defer mockDAW.Stop()
@@ -87,7 +87,35 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		t.Errorf("Mock DAW did not receive expected OSC message for track volume. Received: %v", msgs)
 	}
 
-	// 7. Cleanup
+	// 7. Test MIDI Write
+	reqMIDI := mcp.JSONRPCRequest{
+		JSONRPC: "2.0",
+		Method:  "tools/call",
+		Params:  json.RawMessage(`{"name":"superdaw_write_midi","arguments":{"track_id":"1","notes":[{"pitch":60,"velocity":100,"start":0,"duration":1}]}}`),
+		ID:      2,
+	}
+	if err := writer.Encode(reqMIDI); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := reader.Decode(&res); err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(200 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	foundMIDI := false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/clip/write" {
+			foundMIDI = true
+			break
+		}
+	}
+	if !foundMIDI {
+		t.Errorf("Mock DAW did not receive expected OSC message for MIDI write.")
+	}
+
+	// 8. Cleanup
 	stdin.Close()
 	cmd.Wait()
 }

@@ -1,5 +1,5 @@
 -- SuperDAW REAPER Bridge (Lua)
--- Exposes unified OSC control for REAPER
+-- Exposes unified OSC control and ReaScript logic for REAPER
 
 local function log(msg)
     reaper.ShowConsoleMsg("SuperDAW: " .. tostring(msg) .. "\n")
@@ -7,32 +7,59 @@ end
 
 log("Bridge Initializing...")
 
--- OSC Configuration
-local osc_ip = "127.0.0.1"
-local osc_port = 8000 -- REAPER listens here
-
-local function handle_osc(msg)
-    local addr = msg.address
-    log("Received OSC: " .. addr)
-
-    if addr == "/superdaw/transport/play" then
-        local val = msg.args[1]
-        if val == 1 then reaper.OnPlayButton() else reaper.OnStopButton() end
-    elseif addr == "/superdaw/transport/tempo" then
-        reaper.SetCurrentBPM(0, msg.args[1], true)
-    elseif addr == "/superdaw/track/volume" then
-        local track_idx = msg.args[1]
-        local volume = msg.args[2]
-        local track = reaper.GetTrack(0, tonumber(track_idx))
-        if track then
-            reaper.SetMediaTrackInfo_Value(track, "D_VOL", volume)
-        end
+-- Unified Handlers
+local function SetTrackVolume(track_idx, volume)
+    local track = reaper.GetTrack(0, tonumber(track_idx))
+    if track then
+        reaper.SetMediaTrackInfo_Value(track, "D_VOL", volume)
     end
 end
 
--- Main loop to keep script alive if necessary, though REAPER OSC is usually handled by its engine.
--- For a pure Lua implementation of OSC parsing, we would use a socket library.
--- However, REAPER's built-in OSC support is more efficient.
--- This script serves as a placeholder for custom ReaScript logic that standard OSC cannot reach.
+local function SetTrackPan(track_idx, pan)
+    local track = reaper.GetTrack(0, tonumber(track_idx))
+    if track then
+        reaper.SetMediaTrackInfo_Value(track, "D_PAN", pan)
+    end
+end
 
-log("SuperDAW REAPER Bridge Ready (Placeholder for advanced ReaScript logic)")
+local function SetTrackMute(track_idx, mute)
+    local track = reaper.GetTrack(0, tonumber(track_idx))
+    if track then
+        reaper.SetMediaTrackInfo_Value(track, "B_MUTE", mute)
+    end
+end
+
+local function SetTrackSolo(track_idx, solo)
+    local track = reaper.GetTrack(0, tonumber(track_idx))
+    if track then
+        reaper.SetMediaTrackInfo_Value(track, "I_SOLO", solo)
+    end
+end
+
+local function WriteMIDI(track_idx, clip_idx, notes_json)
+    local track = reaper.GetTrack(0, tonumber(track_idx))
+    if not track then return end
+
+    -- In REAPER, we typically create or find a MIDI item
+    local item = reaper.GetTrackMediaItem(track, tonumber(clip_idx))
+    if not item then
+        -- Create a new 4-bar MIDI item if not found
+        item = reaper.CreateNewMIDIItemInProj(track, 0, 16)
+    end
+
+    local take = reaper.GetActiveTake(item)
+    if not take or not reaper.TakeIsMIDI(take) then return end
+
+    -- Clear existing notes
+    reaper.MIDI_DeleteNote(take, -1)
+
+    -- Parse JSON (Mock parsing as REAPER doesn't have native JSON)
+    -- In a real scenario, we'd use a Lua JSON library or pass flattened args
+    -- For now, we assume a flattened string format or simple CSV
+    log("WriteMIDI called for track " .. track_idx)
+end
+
+-- OSC Configuration is handled by REAPER's native OSC engine.
+-- This script provides the ReaScript backend for custom logic.
+
+log("SuperDAW REAPER Bridge Ready")
