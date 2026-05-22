@@ -21,6 +21,9 @@ class SuperDAW(ControlSurface):
         self._osc_server.add_handler("/superdaw/track/volume", self._handle_volume)
         self._osc_server.add_handler("/superdaw/track/create", self._handle_create_track)
 
+        # Clips
+        self._osc_server.add_handler("/superdaw/clip/write", self._handle_clip_write)
+
     def _handle_play(self, params):
         play = int(params[0])
         if play:
@@ -45,6 +48,35 @@ class SuperDAW(ControlSurface):
         else:
             self.song().create_midi_track()
         self.song().tracks[-1].name = name
+
+    def _handle_clip_write(self, params):
+        track_idx = int(params[0])
+        clip_idx = int(params[1])
+        # Flattened notes are in params[2:]
+        notes_data = params[2:]
+        if track_idx < len(self.song().tracks):
+            track = self.song().tracks[track_idx]
+            if clip_idx < len(track.clip_slots):
+                clip_slot = track.clip_slots[clip_idx]
+                if not clip_slot.has_clip:
+                    clip_slot.create_clip(4.0)
+                clip = clip_slot.clip
+                clip.remove_notes(0, 0, 127, 127)
+
+                new_notes = []
+                for i in range(0, len(notes_data), 4):
+                    pitch = int(notes_data[i])
+                    velocity = int(notes_data[i+1])
+                    start = float(notes_data[i+2])
+                    duration = float(notes_data[i+3])
+                    new_notes.append(Live.Clip.MidiNoteSpecification(
+                        pitch=pitch,
+                        start_time=start,
+                        duration=duration,
+                        velocity=velocity,
+                        mute=False
+                    ))
+                clip.add_new_notes(tuple(new_notes))
 
     def update_display(self):
         super(SuperDAW, self).update_display()

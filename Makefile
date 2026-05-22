@@ -15,6 +15,11 @@ build:
 test:
 	@echo "Running tests..."
 	go test -v ./...
+	$(MAKE) integration-test
+
+integration-test:
+	@echo "Running integration tests..."
+	go test -v ./tests/integration/...
 
 fmt:
 	@echo "Formatting code..."

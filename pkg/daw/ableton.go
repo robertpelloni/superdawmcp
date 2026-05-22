@@ -82,8 +82,16 @@ func (a *AbletonLiveDriver) SetTrackVolume(trackID string, volume float32) error
 
 func (a *AbletonLiveDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error {
 	// Unified Protocol: /superdaw/clip/write
-	// For Ableton, we might still use a specialized format if JSON isn't supported in-agent
-	return nil
+	msg := osc.NewMessage("/superdaw/clip/write")
+	msg.Append(trackID)
+	msg.Append(int32(clipIndex))
+	for _, n := range notes {
+		msg.Append(int32(n.Pitch))
+		msg.Append(int32(n.Velocity))
+		msg.Append(float32(n.StartBeat))
+		msg.Append(float32(n.Duration))
+	}
+	return a.OSCClient.Send(msg)
 }
 
 func (a *AbletonLiveDriver) InstantiatePlugin(trackID string, pluginName string) (string, error) {

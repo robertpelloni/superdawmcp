@@ -64,6 +64,12 @@ func main() {
 				trackID, _ := callParams.Arguments["track_id"].(string)
 				volume, _ := callParams.Arguments["volume"].(float64)
 				_ = abletonDriver.SetTrackVolume(trackID, float32(volume))
+			} else if callParams.Name == "superdaw_write_midi" {
+				trackID, _ := callParams.Arguments["track_id"].(string)
+				notesJSON, _ := json.Marshal(callParams.Arguments["notes"])
+				var notes []daw.MIDINote
+				json.Unmarshal(notesJSON, &notes)
+				_ = abletonDriver.WriteMIDIClip(trackID, 0, notes)
 			}
 
 			res := mcp.JSONRPCResponse{
