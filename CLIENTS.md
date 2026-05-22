@@ -43,6 +43,31 @@ async function run() {
 }
 ```
 
+## Python Client
+
+The Python client library is located in `pkg/client/py`.
+
+### Usage
+
+```python
+from superdaw_client import SuperDAWClient
+
+client = SuperDAWClient("./bin/superdaw-mcp")
+client.connect()
+
+# Set mixer volume for track 1 to 0.8 in REAPER
+client.set_mixer(track_id="1", volume=0.8, daw="reaper")
+
+client.disconnect()
+```
+
+## Examples
+
+Detailed examples are provided in the `examples/` directory:
+
+- `examples/midi_bridge`: A Go-based bridge mapping physical MIDI CC to SuperDAW.
+- `examples/automation_script`: A Python script for complex cross-DAW orchestration.
+
 ## Integration Tests
 
 You can verify the connectivity between the client libraries and the server using the integration test suite:

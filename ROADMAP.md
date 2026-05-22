@@ -9,8 +9,9 @@
 - [x] Basic Transport, Mixer, and MIDI Clip control.
 - [x] Refine REAPER ReaScript Adapter for advanced control.
 - [x] Implement Ardour OSC Driver.
-- [x] Develop Client Libraries (Go, TypeScript).
+- [x] Develop Client Libraries (Go, TypeScript, Python).
 - [x] Implement End-to-End Integration Test Suite.
+- [x] Provide real-world examples (MIDI bridge, Automation script).
 
 ## Phase 2: Advanced DAW Integration
 - [ ] Robust REAPER ReaScript integration via Web API.

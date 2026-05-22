@@ -7,8 +7,9 @@
 - [x] Implement Ableton Live OSC client in `pkg/daw/ableton.go`.
 - [x] Implement REAPER HTTP/File client in `pkg/daw/reaper.go`.
 - [x] Wire up main loop in `cmd/superdaw/main.go`.
-- [x] Develop high-level Client Libraries (Go, TypeScript).
+- [x] Develop high-level Client Libraries (Go, TypeScript, Python).
 - [x] Build automated integration test suite with Mock DAW.
+- [x] Create example connectors (MIDI bridge, Python script).
 - [x] Implement Ardour driver client in `pkg/daw/ardour.go`.
 - [x] Refine REAPER Lua bridge for Pan, Mute, Solo.
 

@@ -1,0 +1,36 @@
+# Binary artifacts
+bin/
+superdaw-mcp-test
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.venv
+.env
+.tox
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Go
+pkg/vst/cache.json
+go.sum
+
+# Node/TypeScript
+node_modules/
+dist/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

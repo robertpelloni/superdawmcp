@@ -46,6 +46,7 @@ func GenerateManifest() ListToolsResult {
 						"track_id": map[string]interface{}{"type": "string"},
 						"volume":   map[string]interface{}{"type": "number", "description": "Volume float range 0.0 to 1.0"},
 						"pan":      map[string]interface{}{"type": "number", "description": "Panning float range -1.0 to 1.0"},
+						"daw":      map[string]interface{}{"type": "string", "description": "Target DAW: 'ableton', 'reaper', or 'ardour'"},
 					},
 					"required": []string{"track_id", "volume"},
 				},
@@ -57,6 +58,7 @@ func GenerateManifest() ListToolsResult {
 					"type": "object",
 					"properties": map[string]interface{}{
 						"track_id": map[string]interface{}{"type": "string"},
+						"daw":      map[string]interface{}{"type": "string", "description": "Target DAW: 'ableton', 'reaper', or 'ardour'"},
 						"notes": map[string]interface{}{
 							"type": "array",
 							"items": map[string]interface{}{
