@@ -18,6 +18,7 @@ func main() {
 		"ableton": daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
 		"reaper":  daw.NewReaperDriver("127.0.0.1", 8000, 8080),
 		"ardour":  daw.NewArdourDriver("127.0.0.1", 3819),
+		"bitwig":  daw.NewBitwigDriver("127.0.0.1", 8181),
 	}
 	activeDriver := drivers["ableton"]
 
