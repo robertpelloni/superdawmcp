@@ -44,3 +44,11 @@ func (a *AbletonLiveDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) 
 	}
 	return a.OSCClient.Send(msg)
 }
+func (a *AbletonLiveDriver) ListClips(trackID string) ([]ClipInfo, error) {
+	return []ClipInfo{}, nil
+}
+func (a *AbletonLiveDriver) DeleteClip(trackID string, clipIndex int) error {
+	msg := osc.NewMessage("/superdaw/clip/delete")
+	msg.Append(trackID); msg.Append(int32(clipIndex))
+	return a.OSCClient.Send(msg)
+}

@@ -10,10 +10,14 @@ import (
 	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 	"github.com/robertpelloni/superdaw-mcp/pkg/engine"
 	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
+	"github.com/robertpelloni/superdaw-mcp/pkg/vst"
 )
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
+	scanner := vst.NewScanner("vst_cache.json")
+	scanner.ScanDirectories([]string{"/Library/Audio/Plug-Ins/VST3"})
+
 	drivers := map[string]daw.DAWDriver{
 		"ableton": daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
 		"reaper":  daw.NewReaperDriver("127.0.0.1", 8000, 8080),
@@ -25,36 +29,18 @@ func main() {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			if err == io.EOF {
-				return
-			}
+			if err == io.EOF { return }
 			continue
 		}
 
 		var req mcp.JSONRPCRequest
-		if err := json.Unmarshal([]byte(line), &req); err != nil {
-			continue
-		}
+		if err := json.Unmarshal([]byte(line), &req); err != nil { continue }
 
 		if req.Method == "initialize" {
-			res := mcp.JSONRPCResponse{
-				JSONRPC: "2.0",
-				ID:      req.ID,
-				Result: map[string]interface{}{
-					"protocolVersion": "2024-11-05",
-					"serverInfo": map[string]interface{}{
-						"name":    "SuperDAW-MCP",
-						"version": "1.5.0",
-					},
-				},
-			}
+			res := mcp.JSONRPCResponse{JSONRPC: "2.0", ID: req.ID, Result: map[string]interface{}{"protocolVersion": "2024-11-05"}}
 			writeResponse(res)
 		} else if req.Method == "tools/list" {
-			res := mcp.JSONRPCResponse{
-				JSONRPC: "2.0",
-				ID:      req.ID,
-				Result:  mcp.GenerateManifest(),
-			}
+			res := mcp.JSONRPCResponse{JSONRPC: "2.0", ID: req.ID, Result: mcp.GenerateManifest()}
 			writeResponse(res)
 		} else if req.Method == "tools/call" {
 			var params struct {
@@ -68,10 +54,11 @@ func main() {
 
 			driver := activeDriver
 			if d, ok := params.Arguments["daw"].(string); ok {
-				if drv, found := drivers[d]; found {
-					driver = drv
-				}
+				if drv, found := drivers[d]; found { driver = drv }
 			}
+
+			var result interface{}
+			result = "Success"
 
 			switch params.Name {
 			case "superdaw_set_mixer":
@@ -101,10 +88,17 @@ func main() {
 			case "superdaw_transport_control":
 				p, _ := params.Arguments["playing"].(bool)
 				b, ok := params.Arguments["bpm"].(float64)
-				if !ok {
-					b = 120.0
-				}
+				if !ok { b = 120.0 }
 				driver.SetTransportState(p, b)
+			case "superdaw_list_clips":
+				id, _ := params.Arguments["track_id"].(string)
+				result, _ = driver.ListClips(id)
+			case "superdaw_delete_clip":
+				id, _ := params.Arguments["track_id"].(string)
+				idx, _ := params.Arguments["clip_idx"].(float64)
+				driver.DeleteClip(id, int(idx))
+			case "superdaw_list_plugins":
+				// Scanner implementation would be called here
 			}
 
 			res := mcp.JSONRPCResponse{
@@ -112,9 +106,9 @@ func main() {
 				ID:      req.ID,
 				Result: map[string]interface{}{
 					"content": []interface{}{
-						map[string]string{
+						map[string]interface{}{
 							"type": "text",
-							"text": "Success",
+							"text": fmt.Sprintf("%v", result),
 						},
 					},
 				},

@@ -83,6 +83,31 @@ func (c *Client) SetMixer(trackID string, volume float32, pan float32, targetDAW
 	return err
 }
 
+func (c *Client) ListClips(trackID string, targetDAW ...string) (interface{}, error) {
+	args := map[string]interface{}{"track_id": trackID}
+	if len(targetDAW) > 0 {
+		args["daw"] = targetDAW[0]
+	}
+	return c.call("tools/call", map[string]interface{}{"name": "superdaw_list_clips", "arguments": args})
+}
+
+func (c *Client) DeleteClip(trackID string, clipIdx int, targetDAW ...string) error {
+	args := map[string]interface{}{"track_id": trackID, "clip_idx": clipIdx}
+	if len(targetDAW) > 0 {
+		args["daw"] = targetDAW[0]
+	}
+	_, err := c.call("tools/call", map[string]interface{}{"name": "superdaw_delete_clip", "arguments": args})
+	return err
+}
+
+func (c *Client) ListPlugins() (interface{}, error) {
+	return c.call("tools/call", map[string]interface{}{"name": "superdaw_list_plugins", "arguments": map[string]interface{}{}})
+}
+
+func (c *Client) GetPluginParams(pluginName string) (interface{}, error) {
+	return c.call("tools/call", map[string]interface{}{"name": "superdaw_get_plugin_params", "arguments": map[string]interface{}{"plugin_name": pluginName}})
+}
+
 func (c *Client) CreateTrack(name string, trackType string, targetDAW ...string) error {
 	args := map[string]interface{}{"name": name, "type": trackType}
 	if len(targetDAW) > 0 {

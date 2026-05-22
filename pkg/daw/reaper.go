@@ -35,3 +35,11 @@ func (r *ReaperDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error
 	msg.Append(string(payload))
 	return r.OSCClient.Send(msg)
 }
+func (r *ReaperDriver) ListClips(trackID string) ([]ClipInfo, error) {
+	return []ClipInfo{}, nil
+}
+func (r *ReaperDriver) DeleteClip(trackID string, clipIndex int) error {
+	msg := osc.NewMessage("/superdaw/clip/delete")
+	msg.Append(trackID); msg.Append(int32(clipIndex))
+	return r.OSCClient.Send(msg)
+}

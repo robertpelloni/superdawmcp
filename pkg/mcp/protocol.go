@@ -96,6 +96,50 @@ func GenerateManifest() ListToolsResult {
 					},
 				},
 			},
+			{
+				Name:        "superdaw_list_clips",
+				Description: "List all MIDI clips on a track.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"track_id": map[string]interface{}{"type": "string"},
+						"daw":      map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"track_id"},
+				},
+			},
+			{
+				Name:        "superdaw_delete_clip",
+				Description: "Delete a MIDI clip from a track.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"track_id": map[string]interface{}{"type": "string"},
+						"clip_idx": map[string]interface{}{"type": "integer"},
+						"daw":      map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"track_id", "clip_idx"},
+				},
+			},
+			{
+				Name:        "superdaw_list_plugins",
+				Description: "List all installed VST/AU plugins scanned by SuperDAW.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{},
+				},
+			},
+			{
+				Name:        "superdaw_get_plugin_params",
+				Description: "Retrieve parameter metadata for a specific plugin.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"plugin_name"},
+				},
+			},
 		},
 	}
 }

@@ -36,3 +36,19 @@ class SuperDAWClient:
         if bpm: args["bpm"] = bpm
         if daw: args["daw"] = daw
         return self._call("tools/call", {"name": "superdaw_transport_control", "arguments": args})
+
+    def list_clips(self, track_id: str, daw: Optional[str] = None):
+        args = {"track_id": track_id}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_list_clips", "arguments": args})
+
+    def delete_clip(self, track_id: str, clip_idx: int, daw: Optional[str] = None):
+        args = {"track_id": track_id, "clip_idx": clip_idx}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_delete_clip", "arguments": args})
+
+    def list_plugins(self):
+        return self._call("tools/call", {"name": "superdaw_list_plugins", "arguments": {}})
+
+    def get_plugin_params(self, plugin_name: str):
+        return self._call("tools/call", {"name": "superdaw_get_plugin_params", "arguments": {"plugin_name": plugin_name}})

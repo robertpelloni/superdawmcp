@@ -23,3 +23,9 @@ func (a *ArdourDriver) SetTrackPan(id string, p float32) error {
 	return a.OSCClient.Send(msg)
 }
 func (a *ArdourDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
+func (a *ArdourDriver) ListClips(trackID string) ([]ClipInfo, error) {
+	return []ClipInfo{}, nil
+}
+func (a *ArdourDriver) DeleteClip(trackID string, clipIndex int) error {
+	return nil
+}

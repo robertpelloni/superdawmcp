@@ -105,6 +105,36 @@ func TestIntegration_EndToEnd(t *testing.T) {
 	stdin.Close(); cmd.Wait()
 }
 
+func TestIntegration_Plugins(t *testing.T) {
+	binPath := "./superdaw-mcp-plugin-test"
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw/main.go")
+	if err := buildCmd.Run(); err != nil { t.Fatalf("Failed to build: %v", err) }
+	defer os.Remove(binPath)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, binPath)
+	stdin, _ := cmd.StdinPipe(); stdout, _ := cmd.StdoutPipe()
+	cmd.Start()
+	writer := json.NewEncoder(stdin); reader := json.NewDecoder(stdout)
+
+	req := mcp.JSONRPCRequest{
+		JSONRPC: "2.0", Method: "tools/call",
+		Params: json.RawMessage(`{"name":"superdaw_list_plugins","arguments":{}}`),
+		ID: 1,
+	}
+	writer.Encode(req)
+	var res mcp.JSONRPCResponse
+	reader.Decode(&res)
+
+	if res.Error != nil {
+		t.Errorf("Unexpected error: %v", res.Error.Message)
+	}
+
+	stdin.Close(); cmd.Wait()
+}
+
 func TestIntegration_Bitwig(t *testing.T) {
 	binPath := "./superdaw-mcp-bitwig-test"
 	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw/main.go")

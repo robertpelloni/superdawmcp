@@ -106,3 +106,9 @@ func (b *BitwigDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDI
 		"notes":      notes,
 	})
 }
+func (b *BitwigDriver) ListClips(trackID string) ([]ClipInfo, error) {
+	return []ClipInfo{}, b.call("clip.list", map[string]interface{}{"trackIndex": trackID})
+}
+func (b *BitwigDriver) DeleteClip(trackID string, clipIndex int) error {
+	return b.call("clip.delete", map[string]interface{}{"trackIndex": trackID, "slotIndex": clipIndex})
+}
