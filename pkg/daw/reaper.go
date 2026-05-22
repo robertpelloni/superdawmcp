@@ -72,6 +72,14 @@ func (r *ReaperDriver) SetTrackVolume(trackID string, volume float32) error {
 	return r.OSCClient.Send(msg)
 }
 
+func (r *ReaperDriver) SetTrackPan(trackID string, pan float32) error {
+	// Unified Protocol: /superdaw/track/pan
+	msg := osc.NewMessage("/superdaw/track/pan")
+	msg.Append(trackID)
+	msg.Append(pan)
+	return r.OSCClient.Send(msg)
+}
+
 func (r *ReaperDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error {
 	// Unified Protocol: /superdaw/clip/write
 	msg := osc.NewMessage("/superdaw/clip/write")

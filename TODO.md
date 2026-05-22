@@ -16,6 +16,8 @@
 ## Features to Implement
 - [ ] `superdaw_set_mixer`: Set volume, pan, mute across DAWs.
 - [ ] `superdaw_write_midi`: Inject MIDI note arrays into clips.
+ - [x] `superdaw_generate_euclidean`: Generate rhythmic MIDI patterns.
+ - [x] `superdaw_separate_stems`: AI audio source separation.
 - [ ] `superdaw_get_tracks`: Retrieve track lists and status.
 - [ ] `superdaw_transport`: Play, Stop, Record, Tempo control.
 

@@ -6,6 +6,7 @@ To provide a unified, DAW-agnostic semantic interface for Digital Audio Workstat
 ## Core Concepts
 1. **Universal Abstraction**: Define a common language for transport, mixer, and MIDI operations that works across all DAWs.
 2. **Hybrid Architecture**: Use a high-performance Go daemon to handle MCP and routing, communicating with in-DAW agents via OSC, HTTP, or MIDI.
+3. **AI-Driven Creativity**: Native tools for stem separation and generative MIDI patterns empower modern workflows.
 3. **Low Latency**: Optimize for real-time interaction with network roundtrips under 2ms.
 4. **Extensibility**: Easily add new DAWs by implementing the `DAWDriver` interface.
 5. **AI-Ready**: Integrate advanced features like AI stem separation, Euclidean rhythm generation, and VST parameter discovery to empower creative workflows.

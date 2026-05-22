@@ -22,8 +22,8 @@
 
 ## Phase 3: VST & AI Enhancement
 - [ ] Global VST3 scanning and parameter caching engine.
-- [ ] AI-driven DSP integration (Spleeter, etc.).
-- [ ] Intelligent MIDI generation tools (Euclidean, etc.).
+ - [x] AI-driven DSP integration (Spleeter, etc.).
+ - [x] Intelligent MIDI generation tools (Euclidean, etc.).
 - [ ] LLM-native feature parity across all supported DAWs.
 
 ## Phase 4: Polish & Distribution

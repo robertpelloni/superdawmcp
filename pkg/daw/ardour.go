@@ -70,6 +70,14 @@ func (a *ArdourDriver) SetTrackVolume(trackID string, volume float32) error {
 	return a.OSCClient.Send(msg)
 }
 
+func (a *ArdourDriver) SetTrackPan(trackID string, pan float32) error {
+	addr := "/strip/pan_stereo_pan"
+	msg := osc.NewMessage(addr)
+	msg.Append(trackID)
+	msg.Append(pan)
+	return a.OSCClient.Send(msg)
+}
+
 func (a *ArdourDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error {
 	return fmt.Errorf("MIDI writing not natively supported via Ardour OSC")
 }

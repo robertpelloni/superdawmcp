@@ -115,7 +115,35 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		t.Errorf("Mock DAW did not receive expected OSC message for MIDI write.")
 	}
 
-	// 8. Cleanup
+	// 8. Test Euclidean Generation
+	reqEuclid := mcp.JSONRPCRequest{
+		JSONRPC: "2.0",
+		Method:  "tools/call",
+		Params:  json.RawMessage(`{"name":"superdaw_generate_euclidean","arguments":{"track_id":"1","hits":3,"steps":8,"pitch":60}}`),
+		ID:      3,
+	}
+	if err := writer.Encode(reqEuclid); err != nil {
+		t.Fatal(err)
+	}
+	if err := reader.Decode(&res); err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(200 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	foundEuclid := false
+	for _, m := range msgs {
+		// Euclidean generation also results in a clip write OSC
+		if m.Address == "/superdaw/clip/write" {
+			foundEuclid = true
+			break
+		}
+	}
+	if !foundEuclid {
+		t.Errorf("Mock DAW did not receive expected OSC message for Euclidean write.")
+	}
+
+	// 9. Cleanup
 	stdin.Close()
 	cmd.Wait()
 }

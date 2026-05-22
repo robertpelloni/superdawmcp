@@ -80,6 +80,14 @@ func (a *AbletonLiveDriver) SetTrackVolume(trackID string, volume float32) error
 	return a.OSCClient.Send(msg)
 }
 
+func (a *AbletonLiveDriver) SetTrackPan(trackID string, pan float32) error {
+	// Unified Protocol: /superdaw/track/pan
+	msg := osc.NewMessage("/superdaw/track/pan")
+	msg.Append(trackID)
+	msg.Append(pan)
+	return a.OSCClient.Send(msg)
+}
+
 func (a *AbletonLiveDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error {
 	// Unified Protocol: /superdaw/clip/write
 	msg := osc.NewMessage("/superdaw/clip/write")
