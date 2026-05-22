@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
@@ -13,122 +14,106 @@ import (
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-
-	// Instantiate active backend driver targets over loopback infrastructure
 	drivers := map[string]daw.DAWDriver{
 		"ableton": daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
 		"reaper":  daw.NewReaperDriver("127.0.0.1", 8000, 8080),
 		"ardour":  daw.NewArdourDriver("127.0.0.1", 3819),
 	}
-
-	// Default driver
 	activeDriver := drivers["ableton"]
 
 	for {
-		input, err := reader.ReadString('\n')
+		line, err := reader.ReadString('\n')
 		if err != nil {
-			os.Exit(0)
-		}
-
-		var req mcp.JSONRPCRequest
-		if err := json.Unmarshal([]byte(input), &req); err != nil {
-			sendError(req.ID, -32700, "Parse error processing incoming JSON raw stream package.")
+			if err == io.EOF {
+				return
+			}
 			continue
 		}
 
-		switch req.Method {
-		case "initialize":
+		var req mcp.JSONRPCRequest
+		if err := json.Unmarshal([]byte(line), &req); err != nil {
+			continue
+		}
+
+		if req.Method == "initialize" {
 			res := mcp.JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
 				Result: map[string]interface{}{
 					"protocolVersion": "2024-11-05",
-					"capabilities":    map[string]interface{}{},
 					"serverInfo": map[string]interface{}{
-						"name":    "SuperDAW-Universal-MCP",
-						"version": "1.0.0",
+						"name":    "SuperDAW-MCP",
+						"version": "1.5.0",
 					},
 				},
 			}
 			writeResponse(res)
-
-		case "tools/list":
+		} else if req.Method == "tools/list" {
 			res := mcp.JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
 				Result:  mcp.GenerateManifest(),
 			}
 			writeResponse(res)
-
-		case "tools/call":
-			// Process tool arguments and route them to your active driver implementation layer
-			var callParams struct {
+		} else if req.Method == "tools/call" {
+			var params struct {
 				Name      string                 `json:"name"`
 				Arguments map[string]interface{} `json:"arguments"`
 			}
-			json.Unmarshal(req.Params, &callParams)
+			if err := json.Unmarshal(req.Params, &params); err != nil {
+				sendError(req.ID, -32602, "Invalid params")
+				continue
+			}
 
-			// Routing logic: allow overriding target DAW via arguments
-			targetDAW, ok := callParams.Arguments["daw"].(string)
 			driver := activeDriver
-			if ok {
-				if d, found := drivers[targetDAW]; found {
-					driver = d
+			if d, ok := params.Arguments["daw"].(string); ok {
+				if drv, found := drivers[d]; found {
+					driver = drv
 				}
 			}
 
-			if callParams.Name == "superdaw_set_mixer" {
-				trackID, _ := callParams.Arguments["track_id"].(string)
-				volume, _ := callParams.Arguments["volume"].(float64)
-				_ = driver.SetTrackVolume(trackID, float32(volume))
-				if pan, ok := callParams.Arguments["pan"].(float64); ok {
-					_ = driver.SetTrackPan(trackID, float32(pan))
+			switch params.Name {
+			case "superdaw_set_mixer":
+				id, _ := params.Arguments["track_id"].(string)
+				vol, _ := params.Arguments["volume"].(float64)
+				driver.SetTrackVolume(id, float32(vol))
+				if p, ok := params.Arguments["pan"].(float64); ok {
+					driver.SetTrackPan(id, float32(p))
 				}
-			} else if callParams.Name == "superdaw_write_midi" {
-				trackID, _ := callParams.Arguments["track_id"].(string)
-				notesJSON, _ := json.Marshal(callParams.Arguments["notes"])
+			case "superdaw_write_midi":
+				id, _ := params.Arguments["track_id"].(string)
+				notesJSON, _ := json.Marshal(params.Arguments["notes"])
 				var notes []daw.MIDINote
 				json.Unmarshal(notesJSON, &notes)
-				_ = driver.WriteMIDIClip(trackID, 0, notes)
-			} else if callParams.Name == "superdaw_generate_euclidean" {
-				trackID, _ := callParams.Arguments["track_id"].(string)
-				hits := int(callParams.Arguments["hits"].(float64))
-				steps := int(callParams.Arguments["steps"].(float64))
-				pitch := int(callParams.Arguments["pitch"].(float64))
-
-				velocity := 100
-				if v, ok := callParams.Arguments["velocity"].(float64); ok {
-					velocity = int(v)
+				driver.WriteMIDIClip(id, 0, notes)
+			case "superdaw_generate_euclidean":
+				id, _ := params.Arguments["track_id"].(string)
+				hits, _ := params.Arguments["hits"].(float64)
+				steps, _ := params.Arguments["steps"].(float64)
+				pitch, _ := params.Arguments["pitch"].(float64)
+				notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 4.0)
+				driver.WriteMIDIClip(id, 0, notes)
+			case "superdaw_create_track":
+				n, _ := params.Arguments["name"].(string)
+				t, _ := params.Arguments["type"].(string)
+				driver.CreateTrack(n, t)
+			case "superdaw_transport_control":
+				p, _ := params.Arguments["playing"].(bool)
+				b, ok := params.Arguments["bpm"].(float64)
+				if !ok {
+					b = 120.0
 				}
-				rotate := 0
-				if r, ok := callParams.Arguments["rotate"].(float64); ok {
-					rotate = int(r)
-				}
-				length := float32(4.0)
-				if l, ok := callParams.Arguments["length"].(float64); ok {
-					length = float32(l)
-				}
-
-				notes := engine.GenerateEuclidean(hits, steps, pitch, velocity, rotate, length)
-				_ = driver.WriteMIDIClip(trackID, 0, notes)
-			} else if callParams.Name == "superdaw_separate_stems" {
-				inputPath, _ := callParams.Arguments["input_path"].(string)
-				outputDir, _ := callParams.Arguments["output_dir"].(string)
-				stems := 4
-				if s, ok := callParams.Arguments["stems"].(float64); ok {
-					stems = int(s)
-				}
-				_ = engine.SeparateStems(inputPath, outputDir, stems)
+				driver.SetTransportState(p, b)
 			}
 
 			res := mcp.JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
 				Result: map[string]interface{}{
-					"content": []map[string]interface{}{
-						{
+					"content": []interface{}{
+						map[string]string{
 							"type": "text",
-							"text": "Mixer values synchronized successfully across active targets.",
+							"text": "Success",
 						},
 					},
 				},
@@ -136,6 +121,11 @@ func main() {
 			writeResponse(res)
 		}
 	}
+}
+
+func writeResponse(res mcp.JSONRPCResponse) {
+	out, _ := json.Marshal(res)
+	fmt.Println(string(out))
 }
 
 func sendError(id interface{}, code int, message string) {
@@ -148,9 +138,4 @@ func sendError(id interface{}, code int, message string) {
 		},
 	}
 	writeResponse(res)
-}
-
-func writeResponse(res mcp.JSONRPCResponse) {
-	out, _ := json.Marshal(res)
-	fmt.Println(string(out))
 }
