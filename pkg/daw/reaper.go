@@ -2,8 +2,6 @@ package daw
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
 
 	"github.com/hypebeast/go-osc/osc"
 )
@@ -31,19 +29,20 @@ func (r *ReaperDriver) Disconnect() error {
 }
 
 func (r *ReaperDriver) SetTransportState(playing bool, bpm float64) error {
-	var addr string
+	var cmd int32 = 0
 	if playing {
-		addr = "/transport/play"
-	} else {
-		addr = "/transport/stop"
+		cmd = 1
 	}
-	msg := osc.NewMessage(addr)
-	if err := r.OSCClient.Send(msg); err != nil {
+
+	// Unified Protocol: /superdaw/transport/play
+	msg1 := osc.NewMessage("/superdaw/transport/play")
+	msg1.Append(cmd)
+	if err := r.OSCClient.Send(msg1); err != nil {
 		return err
 	}
 
-	// Set Tempo via Web API if possible, or OSC
-	tempoMsg := osc.NewMessage("/tempo")
+	// Unified Protocol: /superdaw/transport/tempo
+	tempoMsg := osc.NewMessage("/superdaw/transport/tempo")
 	tempoMsg.Append(float32(bpm))
 	return r.OSCClient.Send(tempoMsg)
 }
@@ -57,30 +56,27 @@ func (r *ReaperDriver) GetTracks() ([]TrackConfig, error) {
 }
 
 func (r *ReaperDriver) CreateTrack(name string, trackType string) (string, error) {
-	// Using REAPER Web API (wwr) to trigger an action
-	// 40001 is the command ID for 'Track: Insert new track'
-	url := fmt.Sprintf("http://%s:%d/wwr/_40001", r.Host, r.WebPort)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	return "reaper_track_new", nil
+	// Unified Protocol: /superdaw/track/create
+	msg := osc.NewMessage("/superdaw/track/create")
+	msg.Append(name)
+	msg.Append(trackType)
+	err := r.OSCClient.Send(msg)
+	return "reaper_track_new", err
 }
 
 func (r *ReaperDriver) SetTrackVolume(trackID string, volume float32) error {
-	// OSC: /track/1/volume
-	addr := fmt.Sprintf("/track/%s/volume", trackID)
-	msg := osc.NewMessage(addr)
+	// Unified Protocol: /superdaw/track/volume
+	msg := osc.NewMessage("/superdaw/track/volume")
+	msg.Append(trackID)
 	msg.Append(volume)
 	return r.OSCClient.Send(msg)
 }
 
 func (r *ReaperDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error {
-	// REAPER requires more complex logic for MIDI instantiation usually via ReaScript.
-	// We can use a custom OSC address if the bridge supports it.
-	msg := osc.NewMessage("/custom/midi/write")
+	// Unified Protocol: /superdaw/clip/write
+	msg := osc.NewMessage("/superdaw/clip/write")
 	msg.Append(trackID)
+	msg.Append(int32(clipIndex))
 
 	payload, _ := json.Marshal(notes)
 	msg.Append(string(payload))
@@ -89,26 +85,24 @@ func (r *ReaperDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MIDI
 }
 
 func (r *ReaperDriver) InstantiatePlugin(trackID string, pluginName string) (string, error) {
-	// Trigger custom ReaScript via Web API
-	url := fmt.Sprintf("http://%s:%d/wwr/instantiate_plugin?track=%s&plugin=%s", r.Host, r.WebPort, trackID, pluginName)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	return "reaper_fx_id", nil
+	// Unified Protocol: /superdaw/device/instantiate
+	msg := osc.NewMessage("/superdaw/device/instantiate")
+	msg.Append(trackID)
+	msg.Append(pluginName)
+	err := r.OSCClient.Send(msg)
+	return "reaper_fx_id", err
 }
 
 func (r *ReaperDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
-	// OSC: /track/1/fx/1/fxparam/1/value
-	addr := fmt.Sprintf("/track/%s/fx/%s/fxparam/%d/value", trackID, pluginID, paramIndex)
-	msg := osc.NewMessage(addr)
+	// Unified Protocol: /superdaw/device/param
+	msg := osc.NewMessage("/superdaw/device/param")
+	msg.Append(trackID)
+	msg.Append(pluginID)
+	msg.Append(int32(paramIndex))
 	msg.Append(value)
 	return r.OSCClient.Send(msg)
 }
 
-// LuaBridgeCall facilitates calling custom ReaScripts via the file-based bridge if needed.
 func (r *ReaperDriver) LuaBridgeCall(funcName string, args []interface{}) error {
-	// This would implement the file writing logic found in total-reaper-mcp
 	return nil
 }
