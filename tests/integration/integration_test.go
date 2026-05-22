@@ -37,6 +37,71 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		if m.Address == "/superdaw/track/volume" { found = true; break }
 	}
 	if !found { t.Error("No OSC volume message received") }
+
+	// Test MIDI Write
+	reqMIDI := mcp.JSONRPCRequest{
+		JSONRPC: "2.0", Method: "tools/call",
+		Params: json.RawMessage(`{"name":"superdaw_write_midi","arguments":{"track_id":"1","notes":[{"pitch":60,"velocity":100,"start_beat":0,"duration":1}]}}`),
+		ID: 2,
+	}
+	writer.Encode(reqMIDI)
+	reader.Decode(&res)
+	time.Sleep(100 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	foundMIDI := false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/clip/write" { foundMIDI = true; break }
+	}
+	if !foundMIDI { t.Error("No OSC MIDI write message received") }
+
+	// Test Euclidean Generation
+	reqEuclid := mcp.JSONRPCRequest{
+		JSONRPC: "2.0", Method: "tools/call",
+		Params: json.RawMessage(`{"name":"superdaw_generate_euclidean","arguments":{"track_id":"1","hits":3,"steps":8,"pitch":60}}`),
+		ID: 3,
+	}
+	writer.Encode(reqEuclid)
+	reader.Decode(&res)
+	time.Sleep(100 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	foundEuclid := false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/clip/write" { foundEuclid = true; break }
+	}
+	if !foundEuclid { t.Error("No OSC Euclidean write message received") }
+
+	// Test Create Track
+	reqTrack := mcp.JSONRPCRequest{
+		JSONRPC: "2.0", Method: "tools/call",
+		Params: json.RawMessage(`{"name":"superdaw_create_track","arguments":{"name":"Synth","type":"midi"}}`),
+		ID: 4,
+	}
+	writer.Encode(reqTrack)
+	reader.Decode(&res)
+	time.Sleep(100 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	foundTrack := false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/track/create" { foundTrack = true; break }
+	}
+	if !foundTrack { t.Error("No OSC create track message received") }
+
+	// Test Transport Control
+	reqTransport := mcp.JSONRPCRequest{
+		JSONRPC: "2.0", Method: "tools/call",
+		Params: json.RawMessage(`{"name":"superdaw_transport_control","arguments":{"playing":true,"bpm":128.0}}`),
+		ID: 5,
+	}
+	writer.Encode(reqTransport)
+	reader.Decode(&res)
+	time.Sleep(100 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	foundTransport := false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/transport/play" { foundTransport = true; break }
+	}
+	if !foundTransport { t.Error("No OSC transport play message received") }
+
 	stdin.Close(); cmd.Wait()
 }
 
