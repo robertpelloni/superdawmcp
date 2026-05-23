@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.3] - 2024-11-20
+### Added
+- High-performance C++ (header-only) and standard Java client libraries.
+- Comprehensive Stress Test suite for high-frequency DAW control.
+- Centralized versioning: Go daemon now reads version from `VERSION.md`.
+
 ## [1.2.2] - 2024-11-20
 ### Added
 - High-level Python CLI adapters for Bitwig Studio and FL Studio (`scripts/bitwig_adapter.py`, `scripts/flstudio_adapter.py`).

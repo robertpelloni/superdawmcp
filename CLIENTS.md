@@ -27,6 +27,25 @@ await client.connect();
 await client.transportControl(true, 128.0);
 ```
 
+## C++ Client
+Located in `pkg/client/cpp`. Header-only library for plugin developers.
+Usage:
+```cpp
+#include "SuperDAWClient.hpp"
+superdaw::Client client("./bin/superdaw-mcp");
+client.connect();
+client.transportControl(true, 128.0);
+```
+
+## Java Client
+Located in `pkg/client/java`.
+Usage:
+```java
+SuperDAWClient client = new SuperDAWClient("./bin/superdaw-mcp");
+client.connect();
+client.transportControl(true, 128.0, "ableton");
+```
+
 ## C# Client
 Located in `pkg/client/csharp`. Ideal for Unity and Godot.
 Usage:
@@ -62,25 +81,12 @@ Located in `scripts/`. These provide a convenient way to control specific DAWs f
 ```bash
 ./scripts/ableton_adapter.py transport play --bpm 120
 ./scripts/ableton_adapter.py mixer 1 --vol 0.8 --pan -0.2
-./scripts/ableton_adapter.py create-track "Acid Bass" --type midi
 ```
 
 ### REAPER Adapter
 ```bash
 ./scripts/reaper_adapter.py transport play --bpm 140
 ./scripts/reaper_adapter.py gen-euclidean 2 --hits 3 --steps 8 --pitch 42
-```
-
-### Bitwig Adapter
-```bash
-./scripts/bitwig_adapter.py transport play
-./scripts/bitwig_adapter.py mixer 0 --vol 0.9
-```
-
-### FL Studio Adapter
-```bash
-./scripts/flstudio_adapter.py transport play
-./scripts/flstudio_adapter.py create-track "Kick" --type audio
 ```
 
 ## Connectors (Real-time Integration)

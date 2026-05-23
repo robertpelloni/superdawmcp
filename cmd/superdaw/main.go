@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 	"github.com/robertpelloni/superdaw-mcp/pkg/engine"
@@ -40,6 +41,13 @@ func main() {
 	}
 	activeDriver := drivers["ableton"]
 
+	// Read version from VERSION.md
+	version := "1.2.3"
+	versionData, err := os.ReadFile("VERSION.md")
+	if err == nil {
+		version = strings.TrimSpace(string(versionData))
+	}
+
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
@@ -58,7 +66,7 @@ func main() {
 					"protocolVersion": "2024-11-05",
 					"serverInfo": map[string]interface{}{
 						"name":    "SuperDAW-MCP",
-						"version": "1.2.0",
+						"version": version,
 					},
 				},
 			}
