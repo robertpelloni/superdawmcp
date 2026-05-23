@@ -44,3 +44,19 @@ Located in `scripts/`. These provide a convenient way to control specific DAWs f
 ./scripts/reaper_adapter.py gen-euclidean 2 --hits 3 --steps 8 --pitch 42
 ./scripts/reaper_adapter.py stems input.wav ./output --count 5
 ```
+
+## Connectors (Real-time Integration)
+Specialized scripts in `examples/` for external hardware and multi-DAW workflows.
+
+### MIDI-to-MCP Bridge
+Translates physical MIDI controller input into MCP commands.
+```bash
+pip install mido python-rtmidi
+python3 examples/midi_bridge/midi_to_mcp.py --port "LPD8" --daw ableton
+```
+
+### Multi-DAW Sync
+Keeps multiple DAWs in sync.
+```bash
+python3 examples/multi_daw_jam/sync_connector.py --daws ableton,reaper,bitwig
+```
