@@ -98,7 +98,10 @@ func main() {
 				idx, _ := params.Arguments["clip_idx"].(float64)
 				driver.DeleteClip(id, int(idx))
 			case "superdaw_list_plugins":
-				// Scanner implementation would be called here
+				result = scanner.ListPlugins()
+			case "superdaw_get_plugin_params":
+				name, _ := params.Arguments["plugin_name"].(string)
+				result, _ = scanner.GetPluginMetadata(name)
 			}
 
 			res := mcp.JSONRPCResponse{

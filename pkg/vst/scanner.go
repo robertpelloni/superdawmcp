@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -77,17 +78,35 @@ func (s *Scanner) extractMetadata(path string) {
 		vendor = filepath.Base(filepath.Dir(path))
 	}
 
+	params := []ParamMetadata{
+		{Name: "Bypass", Index: 0},
+	}
+
+	lowerName := strings.ToLower(name)
+
+	if strings.Contains(lowerName, "comp") || strings.Contains(lowerName, "limiter") {
+		params = append(params, []ParamMetadata{
+			{Name: "Threshold", Index: 1}, {Name: "Ratio", Index: 2},
+			{Name: "Attack", Index: 3}, {Name: "Release", Index: 4},
+			{Name: "Gain", Index: 5},
+		}...)
+	} else if strings.Contains(lowerName, "eq") || strings.Contains(lowerName, "filter") {
+		params = append(params, []ParamMetadata{
+			{Name: "Frequency", Index: 1}, {Name: "Gain", Index: 2},
+			{Name: "Q", Index: 3}, {Name: "Type", Index: 4},
+		}...)
+	} else {
+		params = append(params, []ParamMetadata{
+			{Name: "Volume", Index: 1}, {Name: "Cutoff", Index: 2},
+			{Name: "Resonance", Index: 3}, {Name: "Mix", Index: 4},
+		}...)
+	}
+
 	s.cache[name] = PluginMetadata{
-		Name:   name,
-		ID:     fmt.Sprintf("vst-%s", name),
-		Vendor: vendor,
-		Parameters: []ParamMetadata{
-			{Name: "Volume", Index: 0, Min: 0.0, Max: 1.0},
-			{Name: "Cutoff", Index: 1, Min: 0.0, Max: 1.0},
-			{Name: "Resonance", Index: 2, Min: 0.0, Max: 1.0},
-			{Name: "Attack", Index: 3, Min: 0.0, Max: 1.0},
-			{Name: "Release", Index: 4, Min: 0.0, Max: 1.0},
-		},
+		Name:       name,
+		ID:         fmt.Sprintf("vst-%s", name),
+		Vendor:     vendor,
+		Parameters: params,
 	}
 }
 
@@ -96,4 +115,14 @@ func (s *Scanner) GetPluginMetadata(name string) (PluginMetadata, bool) {
 	defer s.cacheLock.RUnlock()
 	meta, ok := s.cache[name]
 	return meta, ok
+}
+
+func (s *Scanner) ListPlugins() []string {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+	var plugins []string
+	for name := range s.cache {
+		plugins = append(plugins, name)
+	}
+	return plugins
 }
