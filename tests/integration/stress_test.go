@@ -54,7 +54,8 @@ func TestStress_HighFrequency(t *testing.T) {
 
 func TestStress_ConcurrentDAWs(t *testing.T) {
 	binPath := "./superdaw-concurrent-test"
-	exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw").Run()
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
+	buildCmd.Run()
 	defer os.Remove(binPath)
 
 	client, _ := client.NewClient(binPath)

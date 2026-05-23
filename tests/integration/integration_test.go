@@ -11,8 +11,8 @@ import (
 
 func TestIntegration_EndToEnd(t *testing.T) {
 	binPath := "./superdaw-mcp-test"
-	// Build the main binary
-	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw/main.go")
+	// Build the main binary package
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
 	if out, err := buildCmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
 	}
@@ -78,7 +78,7 @@ func TestIntegration_EndToEnd(t *testing.T) {
 
 func TestIntegration_Bitwig(t *testing.T) {
 	binPath := "./superdaw-mcp-bitwig-test"
-	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw/main.go")
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
 	if out, err := buildCmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
 	}

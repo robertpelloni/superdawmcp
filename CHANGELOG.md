@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0] - 2024-11-20
+### Added
+- Repository Synchronization Protocol: All 25+ submodules verified and updated.
+- Automated installation logic for Bitwig and FL Studio agents in `scripts/install_adapters.sh`.
+- High-level `SuperDAWOrchestrator` Python class for multi-DAW session management.
+- Python E2E compatibility test suite in `tests/e2e/`.
+- Integrated all DAW-specific extensions into the main architecture.
+
 ## [1.2.3] - 2024-11-20
 ### Added
 - High-performance C++ (header-only) and standard Java client libraries.

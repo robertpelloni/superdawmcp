@@ -5,4 +5,6 @@
 - [x] FL Studio integration (Driver + Agent)
 - [x] DAW Compatibility Test Suite
 - [x] Bidirectional Client Connector Module
-- [ ] VST scanning refinement
+- [x] High-level Multi-DAW Orchestrator
+- [ ] Universal Audio Routing (Jack/ReRoute integration)
+- [ ] Generative AI Stem Import
