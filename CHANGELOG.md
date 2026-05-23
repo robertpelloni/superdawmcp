@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0] - 2024-11-20
+### Added
+- Logic Pro and Cubase high-level CLI adapters (`scripts/logic_adapter.py`, `scripts/cubase_adapter.py`).
+- Interactive SuperDAW Shell (`scripts/superdaw_shell.py`) for real-time multi-DAW orchestration.
+- Expanded `install_adapters.sh` with Logic Pro and Cubase support.
+- Fully synchronized all 7 DAW drivers into the universal orchestration CLI suite.
+
 ## [1.6.0] - 2024-11-20
 ### Added
 - Logic Pro and Cubase support via specialized Go drivers.

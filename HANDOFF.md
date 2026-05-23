@@ -1,20 +1,20 @@
-# Handoff - SuperDAW-MCP v1.6.0
+# Handoff - SuperDAW-MCP v1.7.0
 
 ## Overview
-SuperDAW-MCP is a universal orchestration layer for DAWs. v1.6.0 introduces support for Logic Pro and Cubase, along with a WebSocket-powered dashboard and a generative music engine.
+SuperDAW-MCP is a universal orchestration layer for DAWs. v1.7.0 focuses on interactive control and CLI completeness for all 7 supported engines.
 
 ## Achievements this Session
-1.  **Logic & Cubase Drivers**: Expanded universal support to the macOS flagship and Steinberg's standard.
-2.  **WebSocket Dashboard**: Upgraded from polling to real-time event broadcasting for the Web UI.
-3.  **Music Engine**: Added style-based generative MIDI logic (Techno, Ambient) in `pkg/engine/music.go`.
-4.  **Protocol v1.6**: Added `superdaw_generate_music` and updated version governance.
+1.  **Interactive Shell**: Added `scripts/superdaw_shell.py` for real-time protocol REPL.
+2.  **Logic & Cubase CLI**: Added high-level adapters for Logic Pro and Cubase.
+3.  **Unified Installer**: Updated `install_adapters.sh` with the full suite of agents.
+4.  **Version Governance**: Synchronized VERSION.md and CHANGELOG.md to v1.7.0.
 
 ## Repository State
-- **Version**: 1.6.0
-- **UI**: Live dashboard and Remote GUI both operational.
-- **Drivers**: 7 major DAWs now supported.
+- **Version**: 1.7.0
+- **CLI Tools**: Full parity for all 7 DAWs via specialized scripts.
+- **Verification**: Tested via universal compatibility and stress suites.
 
 ## Next Steps for Successor
-1.  **Deep VST Scanning**: Integrate with a C++ library to probe binary VST3 parameters.
-2.  **Collaborative Studio**: Add multi-user socket support and shared session state.
-3.  **UI Refinement**: Build out the Dashboard's routing matrix into a drag-and-drop node graph.
+1.  **VST3 libvst3**: Shift from heuristic scan to actual binary probing.
+2.  **Collaborative States**: Use WebSockets for multi-user visual studio orchestration.
+3.  **Generative AI Expansion**: More style heuristics and API hooks for Udio/Suno.

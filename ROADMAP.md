@@ -8,7 +8,8 @@
 - [x] Universal Audio Routing (Jack/ReRoute integration)
 - [x] Generative AI Stem Import
 - [x] Unified Remote Control GUI
-- [x] WebSocket Real-time Dashboard (v1.6.0)
-- [x] Generative MIDI Music Engine (v1.6.0)
+- [x] WebSocket Real-time Dashboard
+- [x] Generative MIDI Music Engine
+- [x] Interactive SuperDAW Shell (v1.7.0)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions

@@ -11,17 +11,26 @@ mkdir -p "$RDIR" && cp pkg/agents/reaper/superdaw_bridge.lua "$RDIR/"
 mkdir -p "$HOME/Library/Application Support/REAPER/OSC"
 cp pkg/agents/reaper/SuperDAW.ReaperOSC "$HOME/Library/Application Support/REAPER/OSC/"
 
-# Bitwig Extension (Heuristic install)
+# Bitwig Extension
 BDIR="$HOME/Documents/Bitwig Studio/Extensions"
-mkdir -p "$BDIR" && cp pkg/agents/bitwig/SuperDAW.bwextension "$BDIR/" 2>/dev/null || echo "Bitwig extension source not found, skipping..."
+mkdir -p "$BDIR" && cp pkg/agents/bitwig/SuperDAW.bwextension "$BDIR/" 2>/dev/null
 
 # FL Studio MIDI Script
 FDIR="$HOME/Documents/Image-Line/FL Studio/Settings/Hardware/SuperDAW"
 mkdir -p "$FDIR" && cp pkg/agents/flstudio/device_SuperDAW.py "$FDIR/"
 
-# Make examples executable
+# Logic Pro OSC Mapping
+LDIR="$HOME/Music/Audio Music Apps/Custom OSC"
+mkdir -p "$LDIR" && cp pkg/agents/logic/SuperDAW.logic_osc "$LDIR/" 2>/dev/null
+
+# Cubase MIDI Remote
+CDIR="$HOME/Documents/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/SuperDAW"
+mkdir -p "$CDIR" && cp pkg/agents/cubase/SuperDAW_Cubase.js "$CDIR/" 2>/dev/null
+
+# Make examples and tools executable
 chmod +x examples/midi_bridge/midi_to_mcp.py
 chmod +x examples/multi_daw_jam/sync_connector.py
 chmod +x examples/multi_daw_jam/orchestration.py
+chmod +x scripts/*.py
 
 echo "Installation complete."
