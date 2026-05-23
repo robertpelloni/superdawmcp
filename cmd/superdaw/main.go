@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 	"github.com/robertpelloni/superdaw-mcp/pkg/engine"
@@ -16,7 +17,17 @@ import (
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
-	scanner.ScanDirectories([]string{"/Library/Audio/Plug-Ins/VST3"})
+
+	// Cross-platform VST scanning paths
+	vstDirs := []string{}
+	if runtime.GOOS == "darwin" {
+		vstDirs = append(vstDirs, "/Library/Audio/Plug-Ins/VST3")
+	} else if runtime.GOOS == "windows" {
+		vstDirs = append(vstDirs, `C:\Program Files\Common Files\VST3`)
+	} else {
+		vstDirs = append(vstDirs, "/usr/lib/vst3", "/usr/local/lib/vst3")
+	}
+	scanner.ScanDirectories(vstDirs)
 
 	drivers := map[string]daw.DAWDriver{
 		"ableton": daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
@@ -44,7 +55,7 @@ func main() {
 					"protocolVersion": "2024-11-05",
 					"serverInfo": map[string]interface{}{
 						"name":    "SuperDAW-MCP",
-						"version": "1.8.0",
+						"version": "1.0.1",
 					},
 				},
 			}
@@ -116,6 +127,12 @@ func main() {
 			case "superdaw_get_plugin_params":
 				name, _ := params.Arguments["plugin_name"].(string)
 				result, _ = scanner.GetPluginMetadata(name)
+			case "superdaw_separate_stems":
+				in, _ := params.Arguments["input_path"].(string)
+				out, _ := params.Arguments["output_dir"].(string)
+				stems, ok := params.Arguments["stems"].(float64)
+				if !ok { stems = 4 }
+				result, _ = engine.SeparateStems(in, out, int(stems))
 			}
 
 			res := mcp.JSONRPCResponse{

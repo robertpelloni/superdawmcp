@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2024-11-20
+### Added
+- High-level Python CLI adapters for Ableton Live and REAPER (`scripts/ableton_adapter.py`, `scripts/reaper_adapter.py`).
+- Enhanced thread-safety for Ableton native agent.
+- Modernized Go VST scanning logic (removed deprecated `ioutil`).
+
 ## [1.0.0] - 2024-11-20
 ### Added
 - Initial implementation of SuperDAW-MCP.

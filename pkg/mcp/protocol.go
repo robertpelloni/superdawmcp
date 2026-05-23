@@ -157,6 +157,19 @@ func GenerateManifest() ListToolsResult {
 					"required": []string{"plugin_name"},
 				},
 			},
+			{
+				Name:        "superdaw_separate_stems",
+				Description: "Separate audio into stems using AI (Spleeter).",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"input_path": map[string]interface{}{"type": "string"},
+						"output_dir": map[string]interface{}{"type": "string"},
+						"stems":      map[string]interface{}{"type": "integer", "default": 4},
+					},
+					"required": []string{"input_path", "output_dir"},
+				},
+			},
 		},
 	}
 }

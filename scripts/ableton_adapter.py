@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+import sys
+import os
+import argparse
+
+# Add pkg/client/py to sys.path to import superdaw_client
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'pkg', 'client', 'py')))
+
+from superdaw_client.client import SuperDAWClient
+
+def main():
+    parser = argparse.ArgumentParser(description="SuperDAW Ableton Adapter CLI")
+    parser.add_argument("--server", default="./bin/superdaw-mcp", help="Path to SuperDAW MCP server binary")
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    # Transport
+    tp = subparsers.add_parser("transport", help="Control transport")
+    tp.add_argument("action", choices=["play", "stop"], help="Play or stop")
+    tp.add_argument("--bpm", type=float, help="Set BPM")
+
+    # Mixer
+    mx = subparsers.add_parser("mixer", help="Control mixer")
+    mx.add_argument("track_id", help="Track ID")
+    mx.add_argument("--vol", type=float, help="Volume (0.0-1.0)")
+    mx.add_argument("--pan", type=float, help="Panning (-1.0 to 1.0)")
+
+    # Create Track
+    ct = subparsers.add_parser("create-track", help="Create a new track")
+    ct.add_argument("name", help="Track name")
+    ct.add_argument("--type", choices=["audio", "midi"], default="midi", help="Track type")
+
+    # Euclidean
+    eu = subparsers.add_parser("gen-euclidean", help="Generate Euclidean rhythm")
+    eu.add_argument("track_id", help="Track ID")
+    eu.add_argument("--hits", type=int, required=True, help="Number of pulses")
+    eu.add_argument("--steps", type=int, required=True, help="Number of steps")
+    eu.add_argument("--pitch", type=int, default=60, help="MIDI pitch")
+
+    args = parser.parse_args()
+
+    client = SuperDAWClient(args.server)
+    client.connect()
+
+    try:
+        if args.command == "transport":
+            playing = (args.action == "play")
+            client.transport_control(playing, args.bpm, daw="ableton")
+            print(f"Transport: {args.action} (BPM: {args.bpm})")
+
+        elif args.command == "mixer":
+            client.set_mixer(args.track_id, args.vol if args.vol is not None else 0.8, args.pan if args.pan is not None else 0.0, daw="ableton")
+            print(f"Mixer: Track {args.track_id} (Vol: {args.vol}, Pan: {args.pan})")
+
+        elif args.command == "create-track":
+            client.create_track(args.name, args.type, daw="ableton")
+            print(f"Track Created: {args.name} ({args.type})")
+
+        elif args.command == "gen-euclidean":
+            client.generate_euclidean(args.track_id, args.hits, args.steps, args.pitch, daw="ableton")
+            print(f"Euclidean Generated: {args.hits}/{args.steps} on track {args.track_id}")
+
+        else:
+            parser.print_help()
+    finally:
+        client.disconnect()
+
+if __name__ == "__main__":
+    main()
