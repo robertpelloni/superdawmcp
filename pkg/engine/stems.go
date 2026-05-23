@@ -7,7 +7,7 @@ import (
 
 // SeparateStems invokes the Spleeter CLI to separate an audio file into stems.
 func SeparateStems(inputPath, outputDir string, stems int) (string, error) {
-	// Heuristic: Ensure Spleeter is installed and in PATH.
+	// Ensure Spleeter is in PATH.
 	// Command: spleeter separate -p spleeter:2stems -o output_dir input_path
 
 	params := fmt.Sprintf("spleeter:%dstems", stems)
@@ -17,11 +17,12 @@ func SeparateStems(inputPath, outputDir string, stems int) (string, error) {
 
 	cmd := exec.Command("spleeter", "separate", "-p", params, "-o", outputDir, inputPath)
 
-	// In a real environment, we would run this. For now, we mock the success.
-	// err := cmd.Run()
-	// if err != nil { return "", err }
+	// We run the command but don't block indefinitely in the MCP loop.
+	// In a real scenario, this would be a background task with status reporting.
+	err := cmd.Start()
+	if err != nil {
+		return "", fmt.Errorf("failed to start spleeter: %w. ensures spleeter is installed: pip install spleeter", err)
+	}
 
-	_ = cmd // Suppress unused warning for now as it's a mock implementation
-
-	return fmt.Sprintf("Triggered Spleeter separation for %s into %s", inputPath, outputDir), nil
+	return fmt.Sprintf("Started Spleeter separation for %s into %s (stems: %d). PID: %d", inputPath, outputDir, stems, cmd.Process.Pid), nil
 }

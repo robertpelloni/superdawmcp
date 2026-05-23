@@ -20,6 +20,8 @@ func main() {
 	scanner := vst.NewScanner("vst_cache.json")
 
 	dashboard := StartDashboard(8080)
+	router := daw.NewAudioRouter("127.0.0.1", 12000)
+	genImporter := engine.NewGenerativeImporter()
 
 	// Cross-platform VST scanning paths
 	vstDirs := []string{}
@@ -41,8 +43,17 @@ func main() {
 	}
 	activeDriver := drivers["ableton"]
 
+	// Initialize drivers that require permanent connections
+	if drv, ok := drivers["bitwig"]; ok {
+		go func() {
+			if err := drv.Connect("127.0.0.1:8181"); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to connect to Bitwig: %v\n", err)
+			}
+		}()
+	}
+
 	// Read version from VERSION.md
-	version := "1.2.3"
+	version := "1.4.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -64,6 +75,9 @@ func main() {
 				ID:      req.ID,
 				Result: map[string]interface{}{
 					"protocolVersion": "2024-11-05",
+					"capabilities": map[string]interface{}{
+						"tools": map[string]interface{}{"listChanged": true},
+					},
 					"serverInfo": map[string]interface{}{
 						"name":    "SuperDAW-MCP",
 						"version": version,
@@ -149,6 +163,20 @@ func main() {
 				cmd, _ := params.Arguments["command"].(string)
 				args, _ := params.Arguments["args"].(map[string]interface{})
 				result, _ = driver.ExecuteCustomCommand(cmd, args)
+
+			// PHASE 4 TOOLS
+			case "superdaw_patch_audio":
+				srcDaw, _ := params.Arguments["source_daw"].(string)
+				srcTrack, _ := params.Arguments["source_track"].(string)
+				dstDaw, _ := params.Arguments["dest_daw"].(string)
+				dstTrack, _ := params.Arguments["dest_track"].(string)
+				router.Patch(srcDaw, srcTrack, dstDaw, dstTrack)
+				dashboard.AddPatch(AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+
+			case "superdaw_import_generative":
+				prompt, _ := params.Arguments["prompt"].(string)
+				target, _ := params.Arguments["target_daw"].(string)
+				result, _ = genImporter.ImportStems(prompt, target)
 			}
 
 			res := mcp.JSONRPCResponse{
@@ -170,7 +198,7 @@ func main() {
 
 func writeResponse(res mcp.JSONRPCResponse) {
 	out, _ := json.Marshal(res)
-	fmt.Println(string(out))
+	os.Stdout.Write(append(out, '\n'))
 }
 
 func sendError(id interface{}, code int, message string) {

@@ -5,5 +5,7 @@
 - [x] Comprehensive End-to-End Integration Testing
 - [x] MIDI Clip Management & Plugin Discovery Tools
 - [x] Multi-DAW Orchestration Layer
-- [ ] Universal Audio Routing (Jack/ReRoute integration)
-- [ ] Generative AI Stem Import
+- [x] Universal Audio Routing (Jack/ReRoute integration)
+- [x] Generative AI Stem Import
+- [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
+- [ ] Multi-user Collaborative Studio Sessions

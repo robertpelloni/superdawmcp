@@ -1,21 +1,21 @@
-# Handoff - SuperDAW-MCP v1.3.0
+# Handoff - SuperDAW-MCP v1.4.0
 
 ## Overview
-SuperDAW-MCP is a universal orchestration layer for DAWs. v1.3.0 focuses on multi-DAW session management and repository synchronization.
+SuperDAW-MCP is a universal orchestration layer for DAWs. v1.4.0 introduces the critical "Universal Audio Routing" capability and "Generative AI" integration.
 
 ## Achievements this Session
-1.  **Repository Sync**: Verified and updated 25+ submodules.
-2.  **High-Level Orchestrator**: Added `SuperDAWOrchestrator` for parallel DAW session control.
-3.  **Automated Install**: Enhanced `install_adapters.sh` for Bitwig and FL Studio.
-4.  **E2E Testing**: Added Python-based cross-DAW E2E test suite in `tests/e2e/`.
-5.  **Version Governance**: Synchronized VERSION.md and CHANGELOG.md to v1.3.0.
+1.  **Audio Routing**: Implemented `AudioRouter` driver for virtual inter-DAW patching.
+2.  **Generative AI**: Added `GenerativeImporter` for prompt-based stem generation and import.
+3.  **Spleeter Integration**: Refined `stems.go` to handle background CLI execution.
+4.  **Dashboard v2**: Added a "Routing Matrix" visualization to the Web Dashboard.
+5.  **Sanitization**: Full submodule verification across all 25+ dependencies.
 
 ## Repository State
-- **Version**: 1.3.0
-- **Build**: `make build` verified.
-- **Tests**: E2E and integration suites passing.
+- **Version**: 1.4.0
+- **Build**: `make build` verified (v1.4.0 Go core daemon).
+- **Architecture**: Bidirectional orchestration is now fully bridged from prompt to routing.
 
 ## Next Steps for Successor
-1.  **Universal Audio Routing**: This is the major missing piece. Integrate JACK or ReRoute.
-2.  **Generative AI**: Connect with Suno/Udio APIs for automated stem import.
-3.  **Wasm VSTs**: Prototype internal instrument hosting.
+1.  **Deep-Scanning VSTs**: Integrate a C++ bridge to `libvst3` for actual parameter probing instead of heuristics.
+2.  **Collaborative Sessions**: Implement WebSockets in the Go daemon for multi-user dashboard control.
+3.  **Mobile Client**: Build a Flutter or React Native client using the Java/C# SDKs.

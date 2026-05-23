@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0] - 2024-11-20
+### Added
+- Universal Audio Routing: Virtual patching between DAWs via `superdaw_patch_audio`.
+- Generative AI Stem Import: Integrated prompt-based stem generation with `superdaw_import_generative`.
+- Enhanced Dashboard: Visual "Audio Routing Matrix" and real-time state visualization.
+- Production-ready Spleeter CLI integration in `pkg/engine/stems.go`.
+- Multi-DAW session deployment support in `install_adapters.sh`.
+
 ## [1.3.0] - 2024-11-20
 ### Added
 - Repository Synchronization Protocol: All 25+ submodules verified and updated.
