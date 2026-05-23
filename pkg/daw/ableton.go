@@ -1,54 +1,28 @@
 package daw
-import (
-	"github.com/hypebeast/go-osc/osc"
-)
-type AbletonLiveDriver struct {
-	OSCClient *osc.Client
-	OSCHost   string
-	OSCPort   int
-}
-func NewAbletonDriver(host string, port int, localPort int) *AbletonLiveDriver {
-	return &AbletonLiveDriver{OSCClient: osc.NewClient(host, port), OSCHost: host, OSCPort: port}
-}
+import "github.com/hypebeast/go-osc/osc"
+type AbletonLiveDriver struct { OSCClient *osc.Client }
+func NewAbletonDriver(h string, p, l int) *AbletonLiveDriver { return &AbletonLiveDriver{OSCClient: osc.NewClient(h, p)} }
 func (a *AbletonLiveDriver) Connect(e string) error { return nil }
 func (a *AbletonLiveDriver) Disconnect() error { return nil }
-func (a *AbletonLiveDriver) SetTransportState(p bool, bpm float64) error {
-	msg := osc.NewMessage("/superdaw/transport/play")
-	val := int32(0); if p { val = 1 }
-	msg.Append(val)
-	a.OSCClient.Send(msg)
-	msg2 := osc.NewMessage("/superdaw/transport/tempo")
-	msg2.Append(float32(bpm))
-	return a.OSCClient.Send(msg2)
+func (a *AbletonLiveDriver) SetTransportState(p bool, b float64) error {
+	m := osc.NewMessage("/superdaw/transport/play"); v := int32(0); if p { v = 1 }; m.Append(v); a.OSCClient.Send(m)
+	m2 := osc.NewMessage("/superdaw/transport/tempo"); m2.Append(float32(b)); return a.OSCClient.Send(m2)
 }
 func (a *AbletonLiveDriver) CreateTrack(n, t string) (string, error) {
-	msg := osc.NewMessage("/superdaw/track/create")
-	msg.Append(n); msg.Append(t)
-	return "id", a.OSCClient.Send(msg)
+	m := osc.NewMessage("/superdaw/track/create"); m.Append(n); m.Append(t); return "id", a.OSCClient.Send(m)
 }
 func (a *AbletonLiveDriver) SetTrackVolume(id string, v float32) error {
-	msg := osc.NewMessage("/superdaw/track/volume")
-	msg.Append(id); msg.Append(v)
-	return a.OSCClient.Send(msg)
+	m := osc.NewMessage("/superdaw/track/volume"); m.Append(id); m.Append(v); return a.OSCClient.Send(m)
 }
 func (a *AbletonLiveDriver) SetTrackPan(id string, p float32) error {
-	msg := osc.NewMessage("/superdaw/track/pan")
-	msg.Append(id); msg.Append(p)
-	return a.OSCClient.Send(msg)
+	m := osc.NewMessage("/superdaw/track/pan"); m.Append(id); m.Append(p); return a.OSCClient.Send(m)
 }
 func (a *AbletonLiveDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
-	msg := osc.NewMessage("/superdaw/clip/write")
-	msg.Append(id); msg.Append(int32(idx))
-	for _, n := range notes {
-		msg.Append(int32(n.Pitch)); msg.Append(int32(n.Velocity)); msg.Append(n.StartBeat); msg.Append(n.Duration)
-	}
-	return a.OSCClient.Send(msg)
+	m := osc.NewMessage("/superdaw/clip/write"); m.Append(id); m.Append(int32(idx))
+	for _, n := range notes { m.Append(int32(n.Pitch)); m.Append(int32(n.Velocity)); m.Append(n.StartBeat); m.Append(n.Duration) }
+	return a.OSCClient.Send(m)
 }
-func (a *AbletonLiveDriver) ListClips(trackID string) ([]ClipInfo, error) {
-	return []ClipInfo{}, nil
-}
-func (a *AbletonLiveDriver) DeleteClip(trackID string, clipIndex int) error {
-	msg := osc.NewMessage("/superdaw/clip/delete")
-	msg.Append(trackID); msg.Append(int32(clipIndex))
-	return a.OSCClient.Send(msg)
+func (a *AbletonLiveDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
+func (a *AbletonLiveDriver) DeleteClip(id string, idx int) error {
+	m := osc.NewMessage("/superdaw/clip/delete"); m.Append(id); m.Append(int32(idx)); return a.OSCClient.Send(m)
 }

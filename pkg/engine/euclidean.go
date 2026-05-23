@@ -1,15 +1,8 @@
 package engine
 import "github.com/robertpelloni/superdaw-mcp/pkg/daw"
-func GenerateEuclidean(hits, steps, pitch, velocity, rotate int, length float32) []daw.MIDINote {
-	pattern := make([]int, steps)
-	for i := 0; i < steps; i++ { if (i*hits)%steps < hits { pattern[i] = 1 } }
-	stepSize := length / float32(steps)
-	var notes []daw.MIDINote
-	for i, val := range pattern {
-		if val == 1 {
-			idx := (i + rotate) % steps
-			notes = append(notes, daw.MIDINote{Pitch: pitch, Velocity: velocity, StartBeat: float32(idx) * stepSize, Duration: stepSize})
-		}
-	}
-	return notes
+func GenerateEuclidean(h, s, p, v, r int, l float32) []daw.MIDINote {
+	pat := make([]int, s); for i := 0; i < s; i++ { if (i*h)%s < h { pat[i] = 1 } }
+	sz := l / float32(s); var res []daw.MIDINote
+	for i, val := range pat { if val == 1 { idx := (i + r) % s; res = append(res, daw.MIDINote{Pitch: p, Velocity: v, StartBeat: float32(idx) * sz, Duration: sz}) } }
+	return res
 }

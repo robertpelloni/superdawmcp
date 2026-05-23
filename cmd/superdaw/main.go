@@ -37,10 +37,24 @@ func main() {
 		if err := json.Unmarshal([]byte(line), &req); err != nil { continue }
 
 		if req.Method == "initialize" {
-			res := mcp.JSONRPCResponse{JSONRPC: "2.0", ID: req.ID, Result: map[string]interface{}{"protocolVersion": "2024-11-05"}}
+			res := mcp.JSONRPCResponse{
+				JSONRPC: "2.0",
+				ID:      req.ID,
+				Result: map[string]interface{}{
+					"protocolVersion": "2024-11-05",
+					"serverInfo": map[string]interface{}{
+						"name":    "SuperDAW-MCP",
+						"version": "1.8.0",
+					},
+				},
+			}
 			writeResponse(res)
 		} else if req.Method == "tools/list" {
-			res := mcp.JSONRPCResponse{JSONRPC: "2.0", ID: req.ID, Result: mcp.GenerateManifest()}
+			res := mcp.JSONRPCResponse{
+				JSONRPC: "2.0",
+				ID:      req.ID,
+				Result:  mcp.GenerateManifest(),
+			}
 			writeResponse(res)
 		} else if req.Method == "tools/call" {
 			var params struct {

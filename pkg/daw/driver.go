@@ -1,32 +1,14 @@
 package daw
-
-type TrackConfig struct {
-	ID     string  `json:"id"`
-	Name   string  `json:"name"`
-	Volume float32 `json:"volume"`
-	Pan    float32 `json:"pan"`
-}
-
-type MIDINote struct {
-	Pitch     int     `json:"pitch"`
-	Velocity  int     `json:"velocity"`
-	StartBeat float32 `json:"start_beat"`
-	Duration  float32 `json:"duration"`
-}
-
-type ClipInfo struct {
-	Index int    `json:"index"`
-	Name  string `json:"name"`
-}
-
+type TrackConfig struct { ID, Name string; Volume, Pan float32 }
+type MIDINote struct { Pitch, Velocity int; StartBeat, Duration float32 }
+type ClipInfo struct { Index int; Name string }
 type DAWDriver interface {
-	Connect(endpoint string) error
-	Disconnect() error
-	SetTransportState(playing bool, bpm float64) error
-	CreateTrack(name string, trackType string) (string, error)
-	SetTrackVolume(trackID string, volume float32) error
-	SetTrackPan(trackID string, pan float32) error
-	WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error
-	ListClips(trackID string) ([]ClipInfo, error)
-	DeleteClip(trackID string, clipIndex int) error
+	Connect(e string) error; Disconnect() error
+	SetTransportState(p bool, b float64) error
+	CreateTrack(n, t string) (string, error)
+	SetTrackVolume(id string, v float32) error
+	SetTrackPan(id string, p float32) error
+	WriteMIDIClip(id string, idx int, notes []MIDINote) error
+	ListClips(id string) ([]ClipInfo, error)
+	DeleteClip(id string, idx int) error
 }

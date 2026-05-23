@@ -20,9 +20,9 @@ Run the automated installation script:
 
 #### Manual Steps per DAW:
 - **Ableton Live**: Ensure "SuperDAW" is selected as a Control Surface in Link/MIDI preferences.
-- **REAPER**: Ensure the SuperDAW OSC configuration is added in Control/OSC/web settings (Port 8000).
+- **REAPER**: Copy `pkg/agents/reaper/SuperDAW.ReaperOSC` to your REAPER/OSC folder and select it in Control/OSC/web settings (Port 8000).
 - **Bitwig Studio**: Copy `pkg/agents/bitwig/superdaw-bitwig.bwextension` to your Extensions folder.
-- **Ardour**: Enable OSC in preferences. SuperDAW communicates with Ardour's native OSC port (default 3819).
+- **Ardour**: Copy `pkg/agents/ardour/superdaw.osc` to your Ardour/osc folder and enable OSC in preferences.
 
 ## Running the Server
 ```bash

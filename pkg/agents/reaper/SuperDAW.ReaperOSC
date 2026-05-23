@@ -1,0 +1,4 @@
+TRANSPORT_PLAY /superdaw/transport/play i/play_state
+TRANSPORT_TEMPO /superdaw/transport/tempo f/bpm
+TRACK_VOLUME /superdaw/track/volume s/track_id f/volume
+TRACK_PAN /superdaw/track/pan s/track_id f/pan

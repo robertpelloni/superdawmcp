@@ -1,31 +1,21 @@
 package daw
-import (
-	"github.com/hypebeast/go-osc/osc"
-)
+import ( "github.com/hypebeast/go-osc/osc" )
 type ArdourDriver struct { OSCClient *osc.Client }
 func NewArdourDriver(h string, p int) *ArdourDriver { return &ArdourDriver{OSCClient: osc.NewClient(h, p)} }
 func (a *ArdourDriver) Connect(e string) error { return nil }
 func (a *ArdourDriver) Disconnect() error { return nil }
-func (a *ArdourDriver) SetTransportState(p bool, bpm float64) error {
-	addr := "/transport_stop"; if p { addr = "/transport_play" }
-	return a.OSCClient.Send(osc.NewMessage(addr))
+func (a *ArdourDriver) SetTransportState(p bool, b float64) error {
+	addr := "/transport_stop"; if p { addr = "/transport_play" }; return a.OSCClient.Send(osc.NewMessage(addr))
 }
 func (a *ArdourDriver) CreateTrack(n, t string) (string, error) {
-	msg := osc.NewMessage("/access_action"); msg.Append("Track/add-audio-track")
-	return "id", a.OSCClient.Send(msg)
+	m := osc.NewMessage("/access_action"); m.Append("Track/add-audio-track"); return "id", a.OSCClient.Send(m)
 }
 func (a *ArdourDriver) SetTrackVolume(id string, v float32) error {
-	msg := osc.NewMessage("/strip/fader"); msg.Append(id); msg.Append(v)
-	return a.OSCClient.Send(msg)
+	m := osc.NewMessage("/strip/fader"); m.Append(id); m.Append(v); return a.OSCClient.Send(m)
 }
 func (a *ArdourDriver) SetTrackPan(id string, p float32) error {
-	msg := osc.NewMessage("/strip/pan_stereo_pan"); msg.Append(id); msg.Append(p)
-	return a.OSCClient.Send(msg)
+	m := osc.NewMessage("/strip/pan_stereo_pan"); m.Append(id); m.Append(p); return a.OSCClient.Send(m)
 }
-func (a *ArdourDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
-func (a *ArdourDriver) ListClips(trackID string) ([]ClipInfo, error) {
-	return []ClipInfo{}, nil
-}
-func (a *ArdourDriver) DeleteClip(trackID string, clipIndex int) error {
-	return nil
-}
+func (a *ArdourDriver) WriteMIDIClip(id string, idx int, n []MIDINote) error { return nil }
+func (a *ArdourDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
+func (a *ArdourDriver) DeleteClip(id string, idx int) error { return nil }
