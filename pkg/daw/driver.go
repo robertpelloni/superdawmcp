@@ -26,9 +26,10 @@ type DAWDriver interface {
 
 	// Transport Actions
 	SetTransportState(playing bool, bpm float64) error
+	GetTransportState() (bool, float64, error)
 
 	// Mixer Actions
-	CreateTrack(name string, trackType string) (string, error)
+	CreateTrack(name, trackType string) (string, error)
 	SetTrackVolume(trackID string, volume float32) error
 	SetTrackPan(trackID string, pan float32) error
 

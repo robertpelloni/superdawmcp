@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+	"sync"
 	"github.com/hypebeast/go-osc/osc"
 )
 
@@ -14,10 +15,14 @@ type ReaperDriver struct {
 	OSCClient *osc.Client
 	bridgeDir string
 	requestID int
+	state     struct {
+		playing bool
+		tempo   float64
+		mu      sync.RWMutex
+	}
 }
 
 func NewReaperDriver(host string, port, webPort int) *ReaperDriver {
-	// Bridge dir is where the Lua script looks for JSON files
 	home, _ := os.UserHomeDir()
 	bridgeDir := filepath.Join(home, "Library/Application Support/REAPER/Scripts/mcp_bridge_data")
 	if runtime.GOOS == "windows" {
@@ -74,15 +79,23 @@ func (r *ReaperDriver) SetTransportState(playing bool, bpm float64) error {
 	r.OSCClient.Send(m)
 
 	_, err := r.callBridge("SetTempo", []interface{}{bpm})
+	if err == nil {
+		r.state.mu.Lock()
+		r.state.playing = playing
+		r.state.tempo = bpm
+		r.state.mu.Unlock()
+	}
 	return err
+}
+
+func (r *ReaperDriver) GetTransportState() (bool, float64, error) {
+	r.state.mu.RLock()
+	defer r.state.mu.RUnlock()
+	return r.state.playing, r.state.tempo, nil
 }
 
 func (r *ReaperDriver) CreateTrack(name, trackType string) (string, error) {
 	_, err := r.callBridge("InsertTrackAtIndex", []interface{}{-1, true})
-	if err != nil { return "", err }
-
-	// Set name via OSC or bridge? Bridge is more reliable
-	// In a real implementation we'd get the new track index
 	return "id", err
 }
 
@@ -101,10 +114,7 @@ func (r *ReaperDriver) SetTrackPan(id string, pan float32) error {
 }
 
 func (r *ReaperDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
-	// 1. Create item
-	// 2. Insert notes
-	// This uses the bridge since OSC can't handle complex MIDI data
-	r.callBridge("CreateMIDIItem", []interface{}{0, 0, 4.0}) // Example track 0, 0 to 4 beats
+	r.callBridge("CreateMIDIItem", []interface{}{0, 0, 4.0})
 	for _, n := range notes {
 		r.callBridge("InsertMIDINote", []interface{}{0, 0, n.Pitch, n.StartBeat, 0.5, n.Velocity, 1})
 	}

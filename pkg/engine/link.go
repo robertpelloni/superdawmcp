@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -35,5 +36,5 @@ func (l *LinkBridge) Sync(playing bool, bpm float64) {
 	}
 	l.IsPlaying = playing
 	l.BPM = bpm
-	fmt.Printf("Link Bridge: Sync state -> playing=%v, bpm=%.2f\n", playing, bpm)
+	fmt.Fprintf(os.Stderr, "Link Bridge: Sync state -> playing=%v, bpm=%.2f\n", playing, bpm)
 }

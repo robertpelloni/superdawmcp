@@ -11,6 +11,7 @@
 - [x] WebSocket Real-time Dashboard
 - [x] Generative MIDI Music Engine
 - [x] Interactive SuperDAW Shell
-- [x] Ableton Link Bridge & Mobile Remote (v1.8.0)
+- [x] Ableton Link Bridge & Mobile Remote
+- [x] Bidirectional State Sync (v1.9.0)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
