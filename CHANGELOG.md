@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0] - 2024-11-20
+### Added
+- Logic Pro and Cubase support via specialized Go drivers.
+- WebSocket-powered Web Dashboard for real-time state synchronization.
+- Generative MIDI Music Engine with style-based composition heuristics.
+- `superdaw_generate_music` tool added to MCP manifest.
+- Centralized version governance synchronized to v1.6.0.
+
 ## [1.5.0] - 2024-11-20
 ### Added
 - Unified DAW Remote Control GUI (`scripts/superdaw_remote.py`) using tkinter.

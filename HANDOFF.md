@@ -1,20 +1,20 @@
-# Handoff - SuperDAW-MCP v1.5.0
+# Handoff - SuperDAW-MCP v1.6.0
 
 ## Overview
-SuperDAW-MCP is a universal orchestration layer for DAWs. v1.5.0 introduces a Unified Remote Control GUI and enhanced C++ plugin examples.
+SuperDAW-MCP is a universal orchestration layer for DAWs. v1.6.0 introduces support for Logic Pro and Cubase, along with a WebSocket-powered dashboard and a generative music engine.
 
 ## Achievements this Session
-1.  **Unified Remote GUI**: Added `scripts/superdaw_remote.py` (tkinter) for real-time DAW control.
-2.  **C++ VST Bridge**: Added `examples/vst_bridge/RemoteControlVST.cpp` for plugin-to-core communication.
-3.  **Discovery API**: Enhanced `SuperDAWOrchestrator` with active driver query logic.
-4.  **Version Governance**: Synchronized VERSION.md and CHANGELOG.md to v1.5.0.
+1.  **Logic & Cubase Drivers**: Expanded universal support to the macOS flagship and Steinberg's standard.
+2.  **WebSocket Dashboard**: Upgraded from polling to real-time event broadcasting for the Web UI.
+3.  **Music Engine**: Added style-based generative MIDI logic (Techno, Ambient) in `pkg/engine/music.go`.
+4.  **Protocol v1.6**: Added `superdaw_generate_music` and updated version governance.
 
 ## Repository State
-- **Version**: 1.5.0
-- **UI**: Visual remote control and updated dashboard matrix.
-- **SDKs**: Verified C++, Java, and Python high-level APIs.
+- **Version**: 1.6.0
+- **UI**: Live dashboard and Remote GUI both operational.
+- **Drivers**: 7 major DAWs now supported.
 
 ## Next Steps for Successor
-1.  **VST3 Deep Scanning**: Replace heuristic scanning in `pkg/vst` with a native `libvst3` library link to probe actual parameter lists.
-2.  **Multi-user Dashboards**: Add WebSockets to the Go dashboard for multi-client collaboration.
-3.  **Advanced MIDI Engines**: Implement generative MIDI logic (e.g. Chord progressions or AI melody generation) in `pkg/engine`.
+1.  **Deep VST Scanning**: Integrate with a C++ library to probe binary VST3 parameters.
+2.  **Collaborative Studio**: Add multi-user socket support and shared session state.
+3.  **UI Refinement**: Build out the Dashboard's routing matrix into a drag-and-drop node graph.

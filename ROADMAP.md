@@ -1,12 +1,14 @@
 # SuperDAW-MCP Roadmap
 - [x] Core architecture
-- [x] DAW Drivers (Ableton, REAPER, Ardour, Bitwig, FL Studio)
+- [x] DAW Drivers (Ableton, REAPER, Ardour, Bitwig, FL Studio, Logic, Cubase)
 - [x] Multi-language Client SDKs (Go, TS, Python, C#, Rust, Ruby, C++, Java)
 - [x] Comprehensive End-to-End Integration Testing
 - [x] MIDI Clip Management & Plugin Discovery Tools
 - [x] Multi-DAW Orchestration Layer
 - [x] Universal Audio Routing (Jack/ReRoute integration)
 - [x] Generative AI Stem Import
-- [x] Unified Remote Control GUI (v1.5.0)
+- [x] Unified Remote Control GUI
+- [x] WebSocket Real-time Dashboard (v1.6.0)
+- [x] Generative MIDI Music Engine (v1.6.0)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions

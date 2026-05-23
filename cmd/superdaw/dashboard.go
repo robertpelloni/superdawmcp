@@ -5,12 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
 
 type DashboardState struct {
 	DAWs    map[string]DAWState `json:"daws"`
 	Patches []AudioPatch       `json:"patches"`
 	mu      sync.RWMutex
+	clients map[*websocket.Conn]bool
 }
 
 type DAWState struct {
@@ -30,19 +36,25 @@ func StartDashboard(port int) *DashboardState {
 	state := &DashboardState{
 		DAWs:    make(map[string]DAWState),
 		Patches: []AudioPatch{},
+		clients: make(map[*websocket.Conn]bool),
 	}
 
-	http.HandleFunc("/api/state", func(w http.ResponseWriter, r *http.Request) {
-		state.mu.RLock()
-		defer state.mu.RUnlock()
-		json.NewEncoder(w).Encode(state)
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil { return }
+		state.mu.Lock()
+		state.clients[conn] = true
+		state.mu.Unlock()
+
+		// Send initial state
+		state.broadcast()
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
-					<title>SuperDAW Dashboard</title>
+					<title>SuperDAW Dashboard v1.6</title>
 					<style>
 						body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 20px; }
 						.card { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
@@ -52,7 +64,7 @@ func StartDashboard(port int) *DashboardState {
 					</style>
 				</head>
 				<body>
-					<h1>SuperDAW Universal Dashboard</h1>
+					<h1>SuperDAW Universal Dashboard (WebSocket)</h1>
 					<div class="grid">
 						<div class="card" style="flex: 1; min-width: 300px;">
 							<h2>DAW Status</h2>
@@ -65,15 +77,12 @@ func StartDashboard(port int) *DashboardState {
 					</div>
 
 					<script>
-						async function update() {
-							const res = await fetch('/api/state');
-							const state = await res.json();
-
+						const ws = new WebSocket('ws://' + window.location.host + '/ws');
+						ws.onmessage = (event) => {
+							const state = JSON.parse(event.data);
 							document.getElementById('daws').innerHTML = '<pre>' + JSON.stringify(state.daws, null, 2) + '</pre>';
 							document.getElementById('routing').innerHTML = '<pre>' + JSON.stringify(state.patches, null, 2) + '</pre>';
-						}
-						setInterval(update, 1000);
-						update();
+						};
 					</script>
 				</body>
 			</html>
@@ -86,12 +95,23 @@ func StartDashboard(port int) *DashboardState {
 
 func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.DAWs[name] = DAWState{Name: name, IsPlaying: playing, BPM: bpm}
+	s.mu.Unlock()
+	s.broadcast()
 }
 
 func (s *DashboardState) AddPatch(p AudioPatch) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.Patches = append(s.Patches, p)
+	s.mu.Unlock()
+	s.broadcast()
+}
+
+func (s *DashboardState) broadcast() {
+	s.mu.RLock()
+	data, _ := json.Marshal(s)
+	for conn := range s.clients {
+		conn.WriteMessage(websocket.TextMessage, data)
+	}
+	s.mu.RUnlock()
 }

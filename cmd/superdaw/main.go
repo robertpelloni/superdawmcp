@@ -40,6 +40,8 @@ func main() {
 		"ardour":   daw.NewArdourDriver("127.0.0.1", 3819),
 		"bitwig":   daw.NewBitwigDriver("127.0.0.1", 8181),
 		"flstudio": daw.NewFLStudioDriver("127.0.0.1", 9000),
+		"logic":    daw.NewLogicProDriver("127.0.0.1", 7000),
+		"cubase":   daw.NewCubaseDriver("127.0.0.1", 7001),
 	}
 	activeDriver := drivers["ableton"]
 
@@ -53,7 +55,7 @@ func main() {
 	}
 
 	// Read version from VERSION.md
-	version := "1.4.0"
+	version := "1.5.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -177,6 +179,15 @@ func main() {
 				prompt, _ := params.Arguments["prompt"].(string)
 				target, _ := params.Arguments["target_daw"].(string)
 				result, _ = genImporter.ImportStems(prompt, target)
+
+			// PHASE 5 TOOLS
+			case "superdaw_generate_music":
+				style, _ := params.Arguments["style"].(string)
+				bars, _ := params.Arguments["bars"].(float64)
+				trackID, _ := params.Arguments["track_id"].(string)
+				notes := engine.GenerateMusic(style, int(bars))
+				driver.WriteMIDIClip(trackID, 0, notes)
+				result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
 			}
 
 			res := mcp.JSONRPCResponse{
