@@ -20,8 +20,11 @@ func main() {
 	scanner := vst.NewScanner("vst_cache.json")
 
 	dashboard := StartDashboard(8080)
+	RegisterMobileRemote()
+
 	router := daw.NewAudioRouter("127.0.0.1", 12000)
 	genImporter := engine.NewGenerativeImporter()
+	link := engine.NewLinkBridge()
 
 	// Cross-platform VST scanning paths
 	vstDirs := []string{}
@@ -55,7 +58,7 @@ func main() {
 	}
 
 	// Read version from VERSION.md
-	version := "1.5.0"
+	version := "1.7.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -143,6 +146,7 @@ func main() {
 				if !ok { b = 120.0 }
 				driver.SetTransportState(p, b)
 				dashboard.UpdateDAW(dawName, p, b)
+				link.Sync(p, b)
 			case "superdaw_list_clips":
 				id, _ := params.Arguments["track_id"].(string)
 				result, _ = driver.ListClips(id)

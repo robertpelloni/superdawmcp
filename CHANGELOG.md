@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0] - 2024-11-20
+### Added
+- Ableton Link Bridge: Unified network clock for all connected DAWs.
+- Mobile-Optimized Web Remote for session control on the go.
+- Universal Feature Parity Report (`docs/PARITY_REPORT.md`).
+- Multi-DAW tempo and transport synchronization via network clock.
+- Updated documentation and roadmap for v1.8.0.
+
 ## [1.7.0] - 2024-11-20
 ### Added
 - Logic Pro and Cubase high-level CLI adapters (`scripts/logic_adapter.py`, `scripts/cubase_adapter.py`).

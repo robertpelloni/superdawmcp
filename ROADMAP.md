@@ -10,6 +10,7 @@
 - [x] Unified Remote Control GUI
 - [x] WebSocket Real-time Dashboard
 - [x] Generative MIDI Music Engine
-- [x] Interactive SuperDAW Shell (v1.7.0)
+- [x] Interactive SuperDAW Shell
+- [x] Ableton Link Bridge & Mobile Remote (v1.8.0)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
