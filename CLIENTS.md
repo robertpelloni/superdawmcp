@@ -27,6 +27,34 @@ await client.connect();
 await client.transportControl(true, 128.0);
 ```
 
+## C# Client
+Located in `pkg/client/csharp`. Ideal for Unity and Godot.
+Usage:
+```csharp
+using SuperDAW.Client;
+var client = new SuperDAWClient("./bin/superdaw-mcp");
+client.Connect();
+await client.TransportControlAsync(true, 128.0);
+```
+
+## Ruby Client
+Located in `pkg/client/rb`. Ideal for Sonic Pi integration.
+Usage:
+```ruby
+require './pkg/client/rb/superdaw_client'
+client = SuperDAW::Client.new("./bin/superdaw-mcp")
+client.connect
+client.transport_control(true, bpm: 128.0)
+```
+
+## Rust Client
+Located in `pkg/client/rust`.
+Usage:
+```rust
+let mut client = SuperDAWClient::new("./bin/superdaw-mcp")?;
+client.transport_control(true, Some(128.0), None)?;
+```
+
 ## High-Level CLI Adapters
 Located in `scripts/`. These provide a convenient way to control specific DAWs from the terminal.
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] - 2024-11-20
+### Added
+- Multi-language client libraries for C#, Ruby, and Rust.
+- Expanded `CLIENTS.md` with integration guides for Unity, Godot, and Sonic Pi.
+
 ## [1.2.0] - 2024-11-20
 ### Added
 - FL Studio support via specialized Go driver and MIDI scripting Agent.
