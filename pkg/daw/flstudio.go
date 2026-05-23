@@ -28,6 +28,8 @@ func (f *FLStudioDriver) SetTransportState(playing bool, bpm float64) error {
 	return f.OSCClient.Send(m2)
 }
 
+func (f *FLStudioDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
+
 func (f *FLStudioDriver) CreateTrack(name, trackType string) (string, error) {
 	m := osc.NewMessage("/flstudio/track/create")
 	m.Append(name)
@@ -50,8 +52,6 @@ func (f *FLStudioDriver) SetTrackPan(id string, pan float32) error {
 }
 
 func (f *FLStudioDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
-	// FL Studio MIDI scripting has limited direct clip writing via MIDI,
-	// so we use a high-level command that the agent will interpret.
 	m := osc.NewMessage("/flstudio/clip/write")
 	m.Append(id)
 	m.Append(int32(idx))
@@ -67,6 +67,5 @@ func (f *FLStudioDriver) DeleteClip(id string, idx int) error { return nil }
 
 func (f *FLStudioDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
 	m := osc.NewMessage("/flstudio/custom/" + cmd)
-	// Append args as a simple string for now
 	return "Sent to FL Studio", f.OSCClient.Send(m)
 }

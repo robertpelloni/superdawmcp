@@ -25,15 +25,14 @@ func (l *LogicProDriver) SetTransportState(playing bool, bpm float64) error {
 	return l.OSCClient.Send(m)
 }
 
+func (l *LogicProDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
+
 func (l *LogicProDriver) CreateTrack(name, trackType string) (string, error) {
-	// Logic Pro lacks a direct "create track" OSC message in standard mapping,
-	// but we can trigger a shortcut.
 	m := osc.NewMessage("/shortcut/create_track")
 	return "logic_track", l.OSCClient.Send(m)
 }
 
 func (l *LogicProDriver) SetTrackVolume(id string, volume float32) error {
-	// Logic uses /faderN addresses where N is track ID
 	m := osc.NewMessage("/fader" + id)
 	m.Append(volume)
 	return l.OSCClient.Send(m)
@@ -46,8 +45,6 @@ func (l *LogicProDriver) SetTrackPan(id string, pan float32) error {
 }
 
 func (l *LogicProDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
-	// Standard Logic OSC doesn't support direct MIDI injection,
-	// so we use a high-level trigger for the agent side if implemented.
 	return nil
 }
 

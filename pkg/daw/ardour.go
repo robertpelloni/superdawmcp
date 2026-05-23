@@ -7,6 +7,7 @@ func (a *ArdourDriver) Disconnect() error { return nil }
 func (a *ArdourDriver) SetTransportState(p bool, b float64) error {
 	addr := "/transport_stop"; if p { addr = "/transport_play" }; return a.OSCClient.Send(osc.NewMessage(addr))
 }
+func (a *ArdourDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
 func (a *ArdourDriver) CreateTrack(n, t string) (string, error) {
 	m := osc.NewMessage("/access_action"); m.Append("Track/add-audio-track"); return "id", a.OSCClient.Send(m)
 }

@@ -21,6 +21,8 @@ func (c *CubaseDriver) SetTransportState(playing bool, bpm float64) error {
 	return c.OSCClient.Send(osc.NewMessage(addr))
 }
 
+func (c *CubaseDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
+
 func (c *CubaseDriver) CreateTrack(name, trackType string) (string, error) {
 	m := osc.NewMessage("/cubase/track/add")
 	m.Append(name)

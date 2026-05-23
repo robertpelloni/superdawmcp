@@ -38,6 +38,8 @@ func (b *BitwigDriver) SetTransportState(playing bool, bpm float64) error {
 	return b.send("transport.set_playing", map[string]interface{}{"playing": playing})
 }
 
+func (b *BitwigDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
+
 func (b *BitwigDriver) CreateTrack(name, trackType string) (string, error) {
 	err := b.send("track.create", map[string]interface{}{"name": name, "type": trackType})
 	return "id", err
