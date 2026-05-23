@@ -13,7 +13,7 @@ type JSONRPCResponse struct {
 	JSONRPC string      `json:"jsonrpc"`
 	Result  interface{} `json:"result,omitempty"`
 	Error   *RPCError   `json:"error,omitempty"`
-	ID      interface{} `json:"id"`
+	ID      interface{}     `json:"id"`
 }
 
 type RPCError struct {
@@ -168,6 +168,19 @@ func GenerateManifest() ListToolsResult {
 						"stems":      map[string]interface{}{"type": "integer", "default": 4},
 					},
 					"required": []string{"input_path", "output_dir"},
+				},
+			},
+			{
+				Name:        "superdaw_custom_command",
+				Description: "Execute a DAW-specific custom command.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"command": map[string]interface{}{"type": "string"},
+						"args":    map[string]interface{}{"type": "object"},
+						"daw":     map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"command"},
 				},
 			},
 		},

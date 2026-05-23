@@ -18,6 +18,8 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
 
+	dashboard := StartDashboard(8080)
+
 	// Cross-platform VST scanning paths
 	vstDirs := []string{}
 	if runtime.GOOS == "darwin" {
@@ -55,7 +57,7 @@ func main() {
 					"protocolVersion": "2024-11-05",
 					"serverInfo": map[string]interface{}{
 						"name":    "SuperDAW-MCP",
-						"version": "1.0.1",
+						"version": "1.1.0",
 					},
 				},
 			}
@@ -77,10 +79,10 @@ func main() {
 				continue
 			}
 
-			driver := activeDriver
-			if d, ok := params.Arguments["daw"].(string); ok {
-				if drv, found := drivers[d]; found { driver = drv }
-			}
+			dawName := "ableton"
+			if d, ok := params.Arguments["daw"].(string); ok { dawName = d }
+			driver := drivers[dawName]
+			if driver == nil { driver = activeDriver }
 
 			var result interface{}
 			result = "Success"
@@ -115,6 +117,7 @@ func main() {
 				b, ok := params.Arguments["bpm"].(float64)
 				if !ok { b = 120.0 }
 				driver.SetTransportState(p, b)
+				dashboard.UpdateDAW(dawName, p, b)
 			case "superdaw_list_clips":
 				id, _ := params.Arguments["track_id"].(string)
 				result, _ = driver.ListClips(id)
@@ -133,6 +136,10 @@ func main() {
 				stems, ok := params.Arguments["stems"].(float64)
 				if !ok { stems = 4 }
 				result, _ = engine.SeparateStems(in, out, int(stems))
+			case "superdaw_custom_command":
+				cmd, _ := params.Arguments["command"].(string)
+				args, _ := params.Arguments["args"].(map[string]interface{})
+				result, _ = driver.ExecuteCustomCommand(cmd, args)
 			}
 
 			res := mcp.JSONRPCResponse{

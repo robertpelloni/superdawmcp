@@ -1,5 +1,5 @@
 package daw
-import ( "github.com/hypebeast/go-osc/osc" )
+import ( "fmt"; "github.com/hypebeast/go-osc/osc" )
 type ArdourDriver struct { OSCClient *osc.Client }
 func NewArdourDriver(h string, p int) *ArdourDriver { return &ArdourDriver{OSCClient: osc.NewClient(h, p)} }
 func (a *ArdourDriver) Connect(e string) error { return nil }
@@ -19,3 +19,6 @@ func (a *ArdourDriver) SetTrackPan(id string, p float32) error {
 func (a *ArdourDriver) WriteMIDIClip(id string, idx int, n []MIDINote) error { return nil }
 func (a *ArdourDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (a *ArdourDriver) DeleteClip(id string, idx int) error { return nil }
+func (a *ArdourDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
+	return nil, fmt.Errorf("custom commands not implemented for Ardour")
+}

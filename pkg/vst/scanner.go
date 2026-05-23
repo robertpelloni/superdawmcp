@@ -12,6 +12,7 @@ import (
 type PluginMetadata struct {
 	Name       string          `json:"name"`
 	Vendor     string          `json:"vendor"`
+	Version    string          `json:"version"`
 	Path       string          `json:"path"`
 	Parameters []ParamMetadata `json:"parameters"`
 }
@@ -70,13 +71,31 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 			if strings.HasSuffix(info.Name(), ".vst3") {
 				name := strings.TrimSuffix(info.Name(), ".vst3")
 				if _, exists := s.cache[name]; !exists {
-					// In a real scenario, we'd use a VST3 host library to probe parameters.
-					// Pure Go binary parsing of VST3 is out of scope for a simple tool,
-					// so we use a heuristic/placeholder for parameters.
+					vendor := "Unknown"
+					version := "1.0.0"
+
+					// Refined metadata extraction for macOS
+					if runtime.GOOS == "darwin" {
+						plistPath := filepath.Join(path, "Contents", "Info.plist")
+						if data, err := os.ReadFile(plistPath); err == nil {
+							// Simple heuristic for plist parsing
+							content := string(data)
+							if idx := strings.Index(content, "CFBundleGetInfoString"); idx != -1 {
+								// Extract vendor/version from Info string
+								parts := strings.Split(content[idx:], "<string>")
+								if len(parts) > 1 {
+									val := strings.Split(parts[1], "</string>")[0]
+									vendor = val
+								}
+							}
+						}
+					}
+
 					s.cache[name] = PluginMetadata{
-						Name:   name,
-						Vendor: "Unknown",
-						Path:   path,
+						Name:    name,
+						Vendor:  vendor,
+						Version: version,
+						Path:    path,
 						Parameters: []ParamMetadata{
 							{Name: "Volume", Index: 0},
 							{Name: "Cutoff", Index: 1},

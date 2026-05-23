@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0] - 2024-11-20
+### Added
+- Real-time Web Dashboard for visual DAW orchestration (port 8080).
+- `superdaw_custom_command` for DAW-specific extended functionality.
+- Enhanced VST scanning with macOS `Info.plist` metadata extraction.
+- Aggressive feature expansion roadmap in `IDEAS.md`.
+
 ## [1.0.1] - 2024-11-20
 ### Added
 - High-level Python CLI adapters for Ableton Live and REAPER (`scripts/ableton_adapter.py`, `scripts/reaper_adapter.py`).
