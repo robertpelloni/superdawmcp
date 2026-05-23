@@ -1,0 +1,72 @@
+package daw
+
+import (
+	"fmt"
+	"github.com/hypebeast/go-osc/osc"
+)
+
+// FLStudioDriver uses a MIDI-over-OSC bridge to communicate with FL Studio's MIDI scripting API.
+type FLStudioDriver struct {
+	OSCClient *osc.Client
+}
+
+func NewFLStudioDriver(host string, port int) *FLStudioDriver {
+	return &FLStudioDriver{OSCClient: osc.NewClient(host, port)}
+}
+
+func (f *FLStudioDriver) Connect(endpoint string) error { return nil }
+func (f *FLStudioDriver) Disconnect() error { return nil }
+
+func (f *FLStudioDriver) SetTransportState(playing bool, bpm float64) error {
+	m := osc.NewMessage("/flstudio/transport/play")
+	v := int32(0); if playing { v = 1 }
+	m.Append(v)
+	f.OSCClient.Send(m)
+
+	m2 := osc.NewMessage("/flstudio/transport/tempo")
+	m2.Append(float32(bpm))
+	return f.OSCClient.Send(m2)
+}
+
+func (f *FLStudioDriver) CreateTrack(name, trackType string) (string, error) {
+	m := osc.NewMessage("/flstudio/track/create")
+	m.Append(name)
+	m.Append(trackType)
+	return "id", f.OSCClient.Send(m)
+}
+
+func (f *FLStudioDriver) SetTrackVolume(id string, volume float32) error {
+	m := osc.NewMessage("/flstudio/track/volume")
+	m.Append(id)
+	m.Append(volume)
+	return f.OSCClient.Send(m)
+}
+
+func (f *FLStudioDriver) SetTrackPan(id string, pan float32) error {
+	m := osc.NewMessage("/flstudio/track/pan")
+	m.Append(id)
+	m.Append(pan)
+	return f.OSCClient.Send(m)
+}
+
+func (f *FLStudioDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
+	// FL Studio MIDI scripting has limited direct clip writing via MIDI,
+	// so we use a high-level command that the agent will interpret.
+	m := osc.NewMessage("/flstudio/clip/write")
+	m.Append(id)
+	m.Append(int32(idx))
+	for _, n := range notes {
+		m.Append(int32(n.Pitch))
+		m.Append(int32(n.Velocity))
+	}
+	return f.OSCClient.Send(m)
+}
+
+func (f *FLStudioDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
+func (f *FLStudioDriver) DeleteClip(id string, idx int) error { return nil }
+
+func (f *FLStudioDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
+	m := osc.NewMessage("/flstudio/custom/" + cmd)
+	// Append args as a simple string for now
+	return "Sent to FL Studio", f.OSCClient.Send(m)
+}

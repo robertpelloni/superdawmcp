@@ -43,7 +43,7 @@ func GenerateManifest() ListToolsResult {
 						"track_id": map[string]interface{}{"type": "string"},
 						"volume":   map[string]interface{}{"type": "number"},
 						"pan":      map[string]interface{}{"type": "number"},
-						"daw":      map[string]interface{}{"type": "string", "enum": []string{"ableton", "reaper", "ardour", "bitwig"}},
+						"daw":      map[string]interface{}{"type": "string", "enum": []string{"ableton", "reaper", "ardour", "bitwig", "flstudio"}},
 					},
 					"required": []string{"track_id"},
 				},

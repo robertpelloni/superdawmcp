@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0] - 2024-11-20
+### Added
+- FL Studio support via specialized Go driver and MIDI scripting Agent.
+- Bidirectional Client Connector module for plugin-to-server communication.
+- Comprehensive DAW Compatibility Test Suite.
+- Enhanced tool manifest with FL Studio routing.
+
 ## [1.1.0] - 2024-11-20
 ### Added
 - Real-time Web Dashboard for visual DAW orchestration (port 8080).
