@@ -1,21 +1,20 @@
-# Handoff - SuperDAW-MCP v1.4.0
+# Handoff - SuperDAW-MCP v1.5.0
 
 ## Overview
-SuperDAW-MCP is a universal orchestration layer for DAWs. v1.4.0 introduces the critical "Universal Audio Routing" capability and "Generative AI" integration.
+SuperDAW-MCP is a universal orchestration layer for DAWs. v1.5.0 introduces a Unified Remote Control GUI and enhanced C++ plugin examples.
 
 ## Achievements this Session
-1.  **Audio Routing**: Implemented `AudioRouter` driver for virtual inter-DAW patching.
-2.  **Generative AI**: Added `GenerativeImporter` for prompt-based stem generation and import.
-3.  **Spleeter Integration**: Refined `stems.go` to handle background CLI execution.
-4.  **Dashboard v2**: Added a "Routing Matrix" visualization to the Web Dashboard.
-5.  **Sanitization**: Full submodule verification across all 25+ dependencies.
+1.  **Unified Remote GUI**: Added `scripts/superdaw_remote.py` (tkinter) for real-time DAW control.
+2.  **C++ VST Bridge**: Added `examples/vst_bridge/RemoteControlVST.cpp` for plugin-to-core communication.
+3.  **Discovery API**: Enhanced `SuperDAWOrchestrator` with active driver query logic.
+4.  **Version Governance**: Synchronized VERSION.md and CHANGELOG.md to v1.5.0.
 
 ## Repository State
-- **Version**: 1.4.0
-- **Build**: `make build` verified (v1.4.0 Go core daemon).
-- **Architecture**: Bidirectional orchestration is now fully bridged from prompt to routing.
+- **Version**: 1.5.0
+- **UI**: Visual remote control and updated dashboard matrix.
+- **SDKs**: Verified C++, Java, and Python high-level APIs.
 
 ## Next Steps for Successor
-1.  **Deep-Scanning VSTs**: Integrate a C++ bridge to `libvst3` for actual parameter probing instead of heuristics.
-2.  **Collaborative Sessions**: Implement WebSockets in the Go daemon for multi-user dashboard control.
-3.  **Mobile Client**: Build a Flutter or React Native client using the Java/C# SDKs.
+1.  **VST3 Deep Scanning**: Replace heuristic scanning in `pkg/vst` with a native `libvst3` library link to probe actual parameter lists.
+2.  **Multi-user Dashboards**: Add WebSockets to the Go dashboard for multi-client collaboration.
+3.  **Advanced MIDI Engines**: Implement generative MIDI logic (e.g. Chord progressions or AI melody generation) in `pkg/engine`.

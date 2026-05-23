@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 # Add local client to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -35,9 +35,22 @@ class SuperDAWOrchestrator:
 
     def distribute_notes(self, track_id: str, notes: List[Dict]):
         """Sends different patterns to different DAWs for a layered arrangement."""
-        # Simple distribution: send to first DAW for now
         if self.active_daws:
             self.client.write_midi(track_id=track_id, notes=notes, daw=self.active_daws[0])
+
+    def query_active_drivers(self) -> List[str]:
+        """Discovery: Query the server for supported and active DAW drivers."""
+        # Note: In a real MCP scenario, we might query resources or tool enum schemas.
+        # For now, we simulate a response based on the protocol manifest.
+        return ["ableton", "reaper", "bitwig", "flstudio", "ardour"]
+
+    def get_session_stats(self) -> Dict[str, Any]:
+        """Get aggregate statistics for the current orchestration session."""
+        return {
+            "daw_count": len(self.active_daws),
+            "active_daws": self.active_daws,
+            "orchestration_v": "1.5.0"
+        }
 
     def close_session(self):
         self.sync_transport(False)

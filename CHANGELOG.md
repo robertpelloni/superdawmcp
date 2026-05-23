@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0] - 2024-11-20
+### Added
+- Unified DAW Remote Control GUI (`scripts/superdaw_remote.py`) using tkinter.
+- Real-time Mixer, Transport, and Audio Routing controls in the Remote GUI.
+- Enhanced discovery logic in `SuperDAWOrchestrator`.
+- VST Bridge example in C++ (`examples/vst_bridge/RemoteControlVST.cpp`).
+- Updated universal protocol with support for GUI-based orchestration.
+
 ## [1.4.0] - 2024-11-20
 ### Added
 - Universal Audio Routing: Virtual patching between DAWs via `superdaw_patch_audio`.

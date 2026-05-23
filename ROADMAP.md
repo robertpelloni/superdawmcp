@@ -7,5 +7,6 @@
 - [x] Multi-DAW Orchestration Layer
 - [x] Universal Audio Routing (Jack/ReRoute integration)
 - [x] Generative AI Stem Import
+- [x] Unified Remote Control GUI (v1.5.0)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
