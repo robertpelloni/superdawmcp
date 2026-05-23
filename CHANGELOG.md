@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.2] - 2024-11-20
+### Added
+- High-level Python CLI adapters for Bitwig Studio and FL Studio (`scripts/bitwig_adapter.py`, `scripts/flstudio_adapter.py`).
+- Completed CLI adapter suite for all major supported DAWs.
+
 ## [1.2.1] - 2024-11-20
 ### Added
 - Multi-language client libraries for C#, Ruby, and Rust.
