@@ -1,14 +1,12 @@
 # Changelog
 
-## [1.8.0] - 2026-05-23
+## [1.0.0] - 2024-11-20
 ### Added
-- Native support for Bitwig Studio via Java Controller Extension.
-- Comprehensive End-to-End integration testing framework.
-- Enhanced VST3 parameter scanning with common plugin heuristics.
-- Automated distribution packaging logic in Makefile.
-- Expanded client libraries (Go, TS, Python) with full tool coverage.
-
-### Fixed
-- Improved server robustness for EOF and malformed parameters.
-- Corrected MIDI note timing schema alignment.
-- Resolved build issues in Bitwig agent.
+- Initial implementation of SuperDAW-MCP.
+- Universal Go-based MCP server for DAW control.
+- Drivers for Ableton Live, REAPER, Ardour, and Bitwig Studio.
+- Native agents for Ableton (Python), REAPER (Lua), and Bitwig (Java).
+- VST3 scanning engine with path-based discovery.
+- Euclidean rhythm generation engine.
+- Client libraries for Go, TypeScript, and Python.
+- Integration testing framework.

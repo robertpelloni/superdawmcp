@@ -27,6 +27,10 @@ class SuperDAWClient:
         args = {"track_id": track_id, "volume": volume, "pan": pan}
         if daw: args["daw"] = daw
         return self._call("tools/call", {"name": "superdaw_set_mixer", "arguments": args})
+    def write_midi(self, track_id: str, notes: List[Dict[str, Any]], daw: Optional[str] = None):
+        args = {"track_id": track_id, "notes": notes}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_write_midi", "arguments": args})
     def create_track(self, name: str, track_type: str, daw: Optional[str] = None):
         args = {"name": name, "type": track_type}
         if daw: args["daw"] = daw
@@ -36,19 +40,22 @@ class SuperDAWClient:
         if bpm: args["bpm"] = bpm
         if daw: args["daw"] = daw
         return self._call("tools/call", {"name": "superdaw_transport_control", "arguments": args})
-
+    def generate_euclidean(self, track_id: str, hits: int, steps: int, pitch: int, daw: Optional[str] = None):
+        args = {"track_id": track_id, "hits": hits, "steps": steps, "pitch": pitch}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_generate_euclidean", "arguments": args})
+    def separate_stems(self, input_path: str, output_dir: str, stems: int = 4):
+        args = {"input_path": input_path, "output_dir": output_dir, "stems": stems}
+        return self._call("tools/call", {"name": "superdaw_separate_stems", "arguments": args})
     def list_clips(self, track_id: str, daw: Optional[str] = None):
         args = {"track_id": track_id}
         if daw: args["daw"] = daw
         return self._call("tools/call", {"name": "superdaw_list_clips", "arguments": args})
-
     def delete_clip(self, track_id: str, clip_idx: int, daw: Optional[str] = None):
         args = {"track_id": track_id, "clip_idx": clip_idx}
         if daw: args["daw"] = daw
         return self._call("tools/call", {"name": "superdaw_delete_clip", "arguments": args})
-
     def list_plugins(self):
         return self._call("tools/call", {"name": "superdaw_list_plugins", "arguments": {}})
-
     def get_plugin_params(self, plugin_name: str):
         return self._call("tools/call", {"name": "superdaw_get_plugin_params", "arguments": {"plugin_name": plugin_name}})

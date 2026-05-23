@@ -1,14 +1,108 @@
 package integration
-import ( "context"; "encoding/json"; "os"; "os/exec"; "testing"; "time"; "github.com/robertpelloni/superdaw-mcp/pkg/mcp" )
+
+import (
+	"os"
+	"os/exec"
+	"testing"
+	"time"
+
+	"github.com/robertpelloni/superdaw-mcp/pkg/client/go"
+)
+
 func TestIntegration_EndToEnd(t *testing.T) {
-	bin := "./superdaw-mcp-test"; exec.Command("go", "build", "-o", bin, "../../cmd/superdaw/main.go").Run(); defer os.Remove(bin)
-	mock := NewMockDAW(11000); go mock.Start(); defer mock.Stop()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second); defer cancel()
-	cmd := exec.CommandContext(ctx, bin); stdin, _ := cmd.StdinPipe(); stdout, _ := cmd.StdoutPipe(); cmd.Start()
-	writer := json.NewEncoder(stdin); reader := json.NewDecoder(stdout)
-	req := mcp.JSONRPCRequest{JSONRPC: "2.0", Method: "tools/call", Params: json.RawMessage(`{"name":"superdaw_set_mixer","arguments":{"track_id":"1","volume":0.5}}`), ID: 1}
-	writer.Encode(req); var res mcp.JSONRPCResponse; reader.Decode(&res)
-	time.Sleep(100 * time.Millisecond); msgs := mock.GetMessages()
-	found := false; for _, m := range msgs { if m.Address == "/superdaw/track/volume" { found = true; break } }; if !found { t.Error("No OSC volume message received") }
-	stdin.Close(); cmd.Wait()
+	binPath := "./superdaw-mcp-test"
+	// Build the main binary
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw/main.go")
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
+	}
+	defer os.Remove(binPath)
+
+	mockDAW := NewMockDAW(11000)
+	go mockDAW.Start()
+	defer mockDAW.Stop()
+
+	client, err := client.NewClient(binPath)
+	if err != nil {
+		t.Fatalf("Failed to initialize client: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Client is nil")
+	}
+	defer client.Close()
+
+	err = client.SetMixer("1", 0.7, -0.5)
+	if err != nil { t.Errorf("SetMixer failed: %v", err) }
+
+	time.Sleep(200 * time.Millisecond)
+	msgs := mockDAW.GetMessages()
+	found := false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/track/volume" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("No volume message received")
+	}
+
+	client.CreateTrack("Synth", "midi")
+	time.Sleep(200 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	found = false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/track/create" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("No track creation message received")
+	}
+
+	client.TransportControl(true, 130.0)
+	time.Sleep(200 * time.Millisecond)
+	msgs = mockDAW.GetMessages()
+	found = false
+	for _, m := range msgs {
+		if m.Address == "/superdaw/transport/play" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("No transport message received")
+	}
+}
+
+func TestIntegration_Bitwig(t *testing.T) {
+	binPath := "./superdaw-mcp-bitwig-test"
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw/main.go")
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
+	}
+	defer os.Remove(binPath)
+
+	mockBitwig := NewMockTCPDAW(8181)
+	go mockBitwig.Start()
+	defer mockBitwig.Stop()
+
+	client, err := client.NewClient(binPath)
+	if err != nil {
+		t.Fatalf("Failed to initialize client: %v", err)
+	}
+	if client == nil {
+		t.Fatal("Client is nil")
+	}
+	defer client.Close()
+
+	err = client.SetMixer("1", 0.8, 0.0, "bitwig")
+	if err != nil { t.Errorf("SetMixer failed: %v", err) }
+
+	time.Sleep(200 * time.Millisecond)
+	msgs := mockBitwig.GetMessages()
+	if len(msgs) == 0 {
+		t.Error("No TCP messages received")
+	}
 }

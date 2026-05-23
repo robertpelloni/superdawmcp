@@ -1,30 +1,34 @@
-# SuperDAW-Universal-MCP Deployment
+# Deployment Guide
 
-## Prerequisites
-- Go 1.24+
-- Python 3.x (for Ableton)
-- Java 11+ (for Bitwig)
+## System Requirements
+- Go 1.23+
+- Python 3.9+ (for Ableton and REAPER drivers)
+- Java 11+ (for Bitwig driver)
+- Ableton Live 11/12, REAPER 6+, Bitwig Studio 5+, or Ardour 8+
 
-## Installation
+## Quick Start
+1. Clone the repository with submodules:
+   ```bash
+   git clone --recursive https://github.com/robertpelloni/superdaw-mcp.git
+   ```
+2. Build the server:
+   ```bash
+   make build
+   ```
+3. Install DAW agents:
+   - **Ableton Live:** Copy `pkg/agents/ableton/SuperDAW` to your MIDI Remote Scripts folder.
+   - **REAPER:** Copy `pkg/agents/reaper/.ReaperOSC` to your REAPER resource path.
+   - **Bitwig Studio:** Copy `pkg/agents/bitwig/SuperDAW.bwextension` to your Extensions folder.
 
-### 1. Build the Server
-```bash
-make build
-```
-
-### 2. Install DAW Adapters
-Run the automated installation script:
-```bash
-./scripts/install_adapters.sh
-```
-
-#### Manual Steps per DAW:
-- **Ableton Live**: Ensure "SuperDAW" is selected as a Control Surface in Link/MIDI preferences.
-- **REAPER**: Copy `pkg/agents/reaper/SuperDAW.ReaperOSC` to your REAPER/OSC folder and select it in Control/OSC/web settings (Port 8000).
-- **Bitwig Studio**: Copy `pkg/agents/bitwig/superdaw-bitwig.bwextension` to your Extensions folder.
-- **Ardour**: Copy `pkg/agents/ardour/superdaw.osc` to your Ardour/osc folder and enable OSC in preferences.
-
-## Running the Server
-```bash
-./bin/superdaw-mcp
+## MCP Configuration
+Add the following to your MCP client configuration (e.g., Claude Desktop config):
+```json
+{
+  "mcpServers": {
+    "superdaw": {
+      "command": "/path/to/superdaw-mcp",
+      "args": []
+    }
+  }
+}
 ```

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
 )
 
@@ -83,6 +84,85 @@ func (c *Client) SetMixer(trackID string, volume float32, pan float32, targetDAW
 	return err
 }
 
+func (c *Client) WriteMIDI(trackID string, notes []daw.MIDINote, targetDAW ...string) error {
+	args := map[string]interface{}{
+		"track_id": trackID,
+		"notes":    notes,
+	}
+	if len(targetDAW) > 0 {
+		args["daw"] = targetDAW[0]
+	}
+	params := map[string]interface{}{
+		"name":      "superdaw_write_midi",
+		"arguments": args,
+	}
+	_, err := c.call("tools/call", params)
+	return err
+}
+
+func (c *Client) CreateTrack(name string, trackType string, targetDAW ...string) error {
+	args := map[string]interface{}{
+		"name": name,
+		"type": trackType,
+	}
+	if len(targetDAW) > 0 {
+		args["daw"] = targetDAW[0]
+	}
+	params := map[string]interface{}{
+		"name":      "superdaw_create_track",
+		"arguments": args,
+	}
+	_, err := c.call("tools/call", params)
+	return err
+}
+
+func (c *Client) TransportControl(playing bool, bpm float64, targetDAW ...string) error {
+	args := map[string]interface{}{
+		"playing": playing,
+		"bpm":     bpm,
+	}
+	if len(targetDAW) > 0 {
+		args["daw"] = targetDAW[0]
+	}
+	params := map[string]interface{}{
+		"name":      "superdaw_transport_control",
+		"arguments": args,
+	}
+	_, err := c.call("tools/call", params)
+	return err
+}
+
+func (c *Client) GenerateEuclidean(trackID string, hits, steps, pitch int, targetDAW ...string) error {
+	args := map[string]interface{}{
+		"track_id": trackID,
+		"hits":     hits,
+		"steps":    steps,
+		"pitch":    pitch,
+	}
+	if len(targetDAW) > 0 {
+		args["daw"] = targetDAW[0]
+	}
+	params := map[string]interface{}{
+		"name":      "superdaw_generate_euclidean",
+		"arguments": args,
+	}
+	_, err := c.call("tools/call", params)
+	return err
+}
+
+func (c *Client) SeparateStems(inputPath, outputDir string, stems int) error {
+	params := map[string]interface{}{
+		"name": "superdaw_separate_stems",
+		"arguments": map[string]interface{}{
+			"input_path": inputPath,
+			"output_dir": outputDir,
+			"stems":      stems,
+		},
+	}
+	_, err := c.call("tools/call", params)
+	return err
+}
+
 func (c *Client) ListClips(trackID string, targetDAW ...string) (interface{}, error) {
 	args := map[string]interface{}{"track_id": trackID}
 	if len(targetDAW) > 0 {
@@ -106,30 +186,4 @@ func (c *Client) ListPlugins() (interface{}, error) {
 
 func (c *Client) GetPluginParams(pluginName string) (interface{}, error) {
 	return c.call("tools/call", map[string]interface{}{"name": "superdaw_get_plugin_params", "arguments": map[string]interface{}{"plugin_name": pluginName}})
-}
-
-func (c *Client) CreateTrack(name string, trackType string, targetDAW ...string) error {
-	args := map[string]interface{}{"name": name, "type": trackType}
-	if len(targetDAW) > 0 {
-		args["daw"] = targetDAW[0]
-	}
-	params := map[string]interface{}{
-		"name":      "superdaw_create_track",
-		"arguments": args,
-	}
-	_, err := c.call("tools/call", params)
-	return err
-}
-
-func (c *Client) TransportControl(playing bool, bpm float64, targetDAW ...string) error {
-	args := map[string]interface{}{"playing": playing, "bpm": bpm}
-	if len(targetDAW) > 0 {
-		args["daw"] = targetDAW[0]
-	}
-	params := map[string]interface{}{
-		"name":      "superdaw_transport_control",
-		"arguments": args,
-	}
-	_, err := c.call("tools/call", params)
-	return err
 }
