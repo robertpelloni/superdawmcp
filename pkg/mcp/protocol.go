@@ -220,6 +220,16 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_get_transport_state",
+				Description: "Retrieve the current transport state (playing, bpm) from the DAW.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"daw": map[string]interface{}{"type": "string"},
+					},
+				},
+			},
+			{
 				Name:        "superdaw_generate_music",
 				Description: "Generate musical patterns using AI heuristics.",
 				InputSchema: map[string]interface{}{

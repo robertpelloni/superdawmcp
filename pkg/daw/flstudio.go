@@ -1,7 +1,6 @@
 package daw
 
 import (
-	"fmt"
 	"github.com/hypebeast/go-osc/osc"
 )
 

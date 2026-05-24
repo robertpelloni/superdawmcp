@@ -195,6 +195,12 @@ func main() {
 				notes := engine.GenerateMusic(style, int(bars))
 				driver.WriteMIDIClip(trackID, 0, notes)
 				result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
+			case "superdaw_get_transport_state":
+				playing, bpm, _ := driver.GetTransportState()
+				result = map[string]interface{}{
+					"playing": playing,
+					"bpm":     bpm,
+				}
 			}
 
 			res := mcp.JSONRPCResponse{
