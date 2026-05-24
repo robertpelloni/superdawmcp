@@ -17,7 +17,7 @@ func TestDAWCompatibility(t *testing.T) {
 	}
 	defer os.Remove(binPath)
 
-	daws := []string{"ableton", "reaper", "ardour", "bitwig", "flstudio"}
+	daws := []string{"ableton", "reaper", "ardour", "bitwig", "flstudio", "logic", "cubase"}
 
 	for _, dawName := range daws {
 		t.Run(dawName, func(t *testing.T) {

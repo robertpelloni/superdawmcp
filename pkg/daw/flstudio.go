@@ -29,6 +29,8 @@ func (f *FLStudioDriver) SetTransportState(playing bool, bpm float64) error {
 
 func (f *FLStudioDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
 
+func (f *FLStudioDriver) GetTracks() ([]TrackConfig, error) { return []TrackConfig{}, nil }
+
 func (f *FLStudioDriver) CreateTrack(name, trackType string) (string, error) {
 	m := osc.NewMessage("/flstudio/track/create")
 	m.Append(name)
@@ -63,6 +65,9 @@ func (f *FLStudioDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) err
 
 func (f *FLStudioDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (f *FLStudioDriver) DeleteClip(id string, idx int) error { return nil }
+
+func (f *FLStudioDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+}
 
 func (f *FLStudioDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
 	m := osc.NewMessage("/flstudio/custom/" + cmd)

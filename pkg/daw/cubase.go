@@ -23,6 +23,8 @@ func (c *CubaseDriver) SetTransportState(playing bool, bpm float64) error {
 
 func (c *CubaseDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
 
+func (c *CubaseDriver) GetTracks() ([]TrackConfig, error) { return []TrackConfig{}, nil }
+
 func (c *CubaseDriver) CreateTrack(name, trackType string) (string, error) {
 	m := osc.NewMessage("/cubase/track/add")
 	m.Append(name)
@@ -47,6 +49,9 @@ func (c *CubaseDriver) SetTrackPan(id string, pan float32) error {
 func (c *CubaseDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
 func (c *CubaseDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (c *CubaseDriver) DeleteClip(id string, idx int) error { return nil }
+
+func (c *CubaseDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+}
 
 func (c *CubaseDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
 	m := osc.NewMessage("/cubase/custom/" + cmd)

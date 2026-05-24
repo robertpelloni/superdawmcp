@@ -46,6 +46,17 @@ func main() {
 		"logic":    daw.NewLogicProDriver("127.0.0.1", 7000),
 		"cubase":   daw.NewCubaseDriver("127.0.0.1", 7001),
 	}
+
+	for _, drv := range drivers {
+		drv.SetNotifyHandler(func(method string, params interface{}) {
+			notif := map[string]interface{}{
+				"jsonrpc": "2.0",
+				"method":  method,
+				"params":  params,
+			}
+			writeResponseRaw(notif)
+		})
+	}
 	activeDriver := drivers["ableton"]
 
 	// Initialize drivers that require permanent connections
@@ -221,6 +232,10 @@ func main() {
 }
 
 func writeResponse(res mcp.JSONRPCResponse) {
+	writeResponseRaw(res)
+}
+
+func writeResponseRaw(res interface{}) {
 	out, _ := json.Marshal(res)
 	os.Stdout.Write(append(out, '\n'))
 }

@@ -27,6 +27,8 @@ func (l *LogicProDriver) SetTransportState(playing bool, bpm float64) error {
 
 func (l *LogicProDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
 
+func (l *LogicProDriver) GetTracks() ([]TrackConfig, error) { return []TrackConfig{}, nil }
+
 func (l *LogicProDriver) CreateTrack(name, trackType string) (string, error) {
 	// Trigger shortcut mapping in Logic
 	m := osc.NewMessage("/shortcut/create_track")
@@ -48,6 +50,9 @@ func (l *LogicProDriver) SetTrackPan(id string, pan float32) error {
 func (l *LogicProDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
 func (l *LogicProDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (l *LogicProDriver) DeleteClip(id string, idx int) error { return nil }
+
+func (l *LogicProDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+}
 
 func (l *LogicProDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
 	m := osc.NewMessage("/logic/custom/" + cmd)

@@ -29,6 +29,7 @@ type DAWDriver interface {
 	GetTransportState() (bool, float64, error)
 
 	// Mixer Actions
+	GetTracks() ([]TrackConfig, error)
 	CreateTrack(name, trackType string) (string, error)
 	SetTrackVolume(trackID string, volume float32) error
 	SetTrackPan(trackID string, pan float32) error
@@ -40,4 +41,7 @@ type DAWDriver interface {
 
 	// Custom DAW-specific extensions
 	ExecuteCustomCommand(command string, args map[string]interface{}) (interface{}, error)
+
+	// Notifications
+	SetNotifyHandler(handler func(method string, params interface{}))
 }

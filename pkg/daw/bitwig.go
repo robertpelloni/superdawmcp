@@ -40,6 +40,8 @@ func (b *BitwigDriver) SetTransportState(playing bool, bpm float64) error {
 
 func (b *BitwigDriver) GetTransportState() (bool, float64, error) { return false, 120.0, nil }
 
+func (b *BitwigDriver) GetTracks() ([]TrackConfig, error) { return []TrackConfig{}, nil }
+
 func (b *BitwigDriver) CreateTrack(name, trackType string) (string, error) {
 	err := b.send("track.create", map[string]interface{}{"name": name, "type": trackType})
 	return "id", err
@@ -61,6 +63,9 @@ func (b *BitwigDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipI
 
 func (b *BitwigDriver) DeleteClip(id string, idx int) error {
 	return b.send("clip.delete", map[string]interface{}{"track_id": id, "clip_index": idx})
+}
+
+func (b *BitwigDriver) SetNotifyHandler(handler func(method string, params interface{})) {
 }
 
 func (b *BitwigDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {

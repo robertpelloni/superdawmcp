@@ -12,10 +12,11 @@ import (
 )
 
 type ReaperDriver struct {
-	OSCClient *osc.Client
-	bridgeDir string
-	requestID int
-	state     struct {
+	OSCClient     *osc.Client
+	notifyHandler func(method string, params interface{})
+	bridgeDir     string
+	requestID     int
+	state         struct {
 		playing bool
 		tempo   float64
 		mu      sync.RWMutex
@@ -94,6 +95,10 @@ func (r *ReaperDriver) GetTransportState() (bool, float64, error) {
 	return r.state.playing, r.state.tempo, nil
 }
 
+func (r *ReaperDriver) GetTracks() ([]TrackConfig, error) {
+	return []TrackConfig{}, nil
+}
+
 func (r *ReaperDriver) CreateTrack(name, trackType string) (string, error) {
 	_, err := r.callBridge("InsertTrackAtIndex", []interface{}{-1, true})
 	return "id", err
@@ -128,6 +133,10 @@ func (r *ReaperDriver) DeleteClip(id string, idx int) error {
 	m.Append(id)
 	m.Append(int32(idx))
 	return r.OSCClient.Send(m)
+}
+
+func (r *ReaperDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+	r.notifyHandler = handler
 }
 
 func (r *ReaperDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {

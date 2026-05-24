@@ -7,8 +7,9 @@ import (
 )
 
 type AbletonLiveDriver struct {
-	OSCClient *osc.Client
-	state     struct {
+	OSCClient     *osc.Client
+	notifyHandler func(method string, params interface{})
+	state         struct {
 		playing bool
 		tempo   float32
 		mu      sync.RWMutex
@@ -28,21 +29,33 @@ func (a *AbletonLiveDriver) listen(port int) {
 	dispatcher := osc.NewStandardDispatcher()
 	dispatcher.AddMsgHandler("/superdaw/state/playing", func(msg *osc.Message) {
 		a.state.mu.Lock()
-		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if b, ok := msg.Arguments[0].(bool); ok {
 				a.state.playing = b
+				if a.notifyHandler != nil {
+					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
+						"daw":     "ableton",
+						"playing": b,
+					})
+				}
 			}
 		}
+		a.state.mu.Unlock()
 	})
 	dispatcher.AddMsgHandler("/superdaw/state/tempo", func(msg *osc.Message) {
 		a.state.mu.Lock()
-		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if f, ok := msg.Arguments[0].(float32); ok {
 				a.state.tempo = f
+				if a.notifyHandler != nil {
+					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
+						"daw":   "ableton",
+						"tempo": f,
+					})
+				}
 			}
 		}
+		a.state.mu.Unlock()
 	})
 
 	server := &osc.Server{Addr: fmt.Sprintf("127.0.0.1:%d", port), Dispatcher: dispatcher}
@@ -66,6 +79,10 @@ func (a *AbletonLiveDriver) GetTransportState() (bool, float64, error) {
 	a.state.mu.RLock()
 	defer a.state.mu.RUnlock()
 	return a.state.playing, float64(a.state.tempo), nil
+}
+
+func (a *AbletonLiveDriver) GetTracks() ([]TrackConfig, error) {
+	return []TrackConfig{}, nil
 }
 
 func (a *AbletonLiveDriver) CreateTrack(name, trackType string) (string, error) {
@@ -109,6 +126,10 @@ func (a *AbletonLiveDriver) DeleteClip(id string, idx int) error {
 	m.Append(id)
 	m.Append(int32(idx))
 	return a.OSCClient.Send(m)
+}
+
+func (a *AbletonLiveDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+	a.notifyHandler = handler
 }
 
 func (a *AbletonLiveDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {

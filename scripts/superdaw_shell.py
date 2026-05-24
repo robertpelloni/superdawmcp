@@ -17,6 +17,11 @@ class SuperDAWShell(cmd.Cmd):
         self.client = SuperDAWClient(server_path)
         self.client.connect()
         self.active_daw = "ableton"
+        self.client.on_notification("superdaw/transport_update", self._handle_update)
+
+    def _handle_update(self, params):
+        print(f"\n[NOTIF] {params.get('daw')} update: {params}")
+        print(self.prompt, end="", flush=True)
 
     def do_daw(self, arg):
         """Switch active DAW: daw ableton"""
