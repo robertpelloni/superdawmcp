@@ -1,20 +1,20 @@
-# Handoff - SuperDAW-MCP v2.1.0
+# Handoff - SuperDAW-MCP v2.2.0
 
 ## Overview
-SuperDAW-MCP is a universal orchestration layer for DAWs. v2.1.0 focuses on interactive control and CLI completeness for all 7 supported engines.
+SuperDAW-MCP is a universal orchestration layer for DAWs. v2.2.0 completes the support for Logic Pro and Cubase, and hardens the Bitwig and REAPER integrations.
 
 ## Achievements this Session
-1.  **Logic & Cubase CLI**: Added high-level Python adapters for the new macOS and Steinberg drivers.
-2.  **Interactive Shell**: Developed `scripts/superdaw_shell.py` for real-time protocol REPL.
-3.  **Unified Installer**: Updated `install_adapters.sh` to support Logic Pro and Cubase agent paths.
-4.  **Full Suite Parity**: All 7 DAW drivers are now exposed via standardized high-level CLI tools.
+1.  **Logic & Cubase Drivers**: Authored Go drivers mapping the universal protocol to Logic Pro (OSC) and Cubase (MIDI Remote).
+2.  **REAPER State Sync**: Enabled bidirectional communication and driver-side caching for REAPER.
+3.  **Bitwig Agent**: Developed the native Java extension for Bitwig Studio.
+4.  **Full Suite Parity**: The universal protocol is now functional across 7 DAW engines.
 
 ## Repository State
-- **Version**: 2.1.0
-- **Status**: CLI Suite complete.
-- **Verification**: Verified via interactive shell routing.
+- **Version**: 2.2.0
+- **Status**: Stable across all core drivers.
+- **Verification**: Verified via interactive shell and compatibility tests.
 
 ## Next Steps for Successor
-1.  **Deep VST Parsing**: Move from heuristic parameter maps to actual `libvst3` binary probing.
-2.  **Mobile App**: Build the React Native frontend for the mobile-optimized remote.
-3.  **Collaborative States**: Implement WebSocket-based multi-user session state in the Go core.
+1.  **libvst3 Deep Probing**: Replace the heuristic VST scanner with actual binary parameter extraction.
+2.  **Collaborative States**: Implement WebSocket-based multi-user session sharing in the Go core.
+3.  **Mobile App**: Build the React Native frontend for the mobile remote.

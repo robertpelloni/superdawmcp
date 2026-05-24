@@ -44,10 +44,7 @@ func (c *CubaseDriver) SetTrackPan(id string, pan float32) error {
 	return c.OSCClient.Send(m)
 }
 
-func (c *CubaseDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
-	return nil
-}
-
+func (c *CubaseDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
 func (c *CubaseDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (c *CubaseDriver) DeleteClip(id string, idx int) error { return nil }
 

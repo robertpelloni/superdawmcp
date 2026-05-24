@@ -9,6 +9,7 @@
 - [x] Bidirectional State Sync (v1.9)
 - [x] Native Bitwig Agent & Major Release (v2.0)
 - [x] Interactive Shell & CLI Parity (v2.1)
+- [x] Logic Pro & Cubase Drivers (v2.2)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
 - [ ] Mobile Control Application (React Native)
