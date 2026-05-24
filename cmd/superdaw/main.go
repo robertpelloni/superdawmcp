@@ -185,6 +185,9 @@ func main() {
 				result, _ = genImporter.ImportStems(prompt, target)
 
 			// PHASE 5 TOOLS
+			case "superdaw_get_tracks":
+				tracks, _ := driver.GetTracks()
+				result = tracks
 			case "superdaw_generate_music":
 				style, _ := params.Arguments["style"].(string)
 				bars, _ := params.Arguments["bars"].(float64)

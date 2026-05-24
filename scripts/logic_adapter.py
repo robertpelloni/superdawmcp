@@ -16,12 +16,18 @@ def main():
     # Transport
     tp = subparsers.add_parser("transport", help="Control transport")
     tp.add_argument("action", choices=["play", "stop"], help="Play or stop")
+    tp.add_argument("--bpm", type=float, help="Set BPM")
 
     # Mixer
     mx = subparsers.add_parser("mixer", help="Control mixer")
     mx.add_argument("track_id", help="Track ID")
     mx.add_argument("--vol", type=float, help="Volume (0.0-1.0)")
     mx.add_argument("--pan", type=float, help="Panning (-1.0 to 1.0)")
+
+    # Create Track
+    ct = subparsers.add_parser("create-track", help="Create a new track")
+    ct.add_argument("name", help="Track name")
+    ct.add_argument("--type", choices=["audio", "midi"], default="midi", help="Track type")
 
     args = parser.parse_args()
 
@@ -31,12 +37,16 @@ def main():
     try:
         if args.command == "transport":
             playing = (args.action == "play")
-            client.transport_control(playing, daw="logic")
-            print(f"Logic Pro Transport: {args.action}")
+            client.transport_control(playing, args.bpm, daw="logic")
+            print(f"Logic Pro Transport: {args.action} (BPM: {args.bpm})")
 
         elif args.command == "mixer":
             client.set_mixer(args.track_id, args.vol if args.vol is not None else 0.8, args.pan if args.pan is not None else 0.0, daw="logic")
             print(f"Logic Pro Mixer: Track {args.track_id} (Vol: {args.vol}, Pan: {args.pan})")
+
+        elif args.command == "create-track":
+            client.create_track(args.name, args.type, daw="logic")
+            print(f"Logic Pro Track Created: {args.name} ({args.type})")
 
         else:
             parser.print_help()

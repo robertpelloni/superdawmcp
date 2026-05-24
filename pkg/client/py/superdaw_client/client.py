@@ -59,3 +59,23 @@ class SuperDAWClient:
         return self._call("tools/call", {"name": "superdaw_list_plugins", "arguments": {}})
     def get_plugin_params(self, plugin_name: str):
         return self._call("tools/call", {"name": "superdaw_get_plugin_params", "arguments": {"plugin_name": plugin_name}})
+    def patch_audio(self, source_daw: str, source_track: str, dest_daw: str, dest_track: str):
+        args = {"source_daw": source_daw, "source_track": source_track, "dest_daw": dest_daw, "dest_track": dest_track}
+        return self._call("tools/call", {"name": "superdaw_patch_audio", "arguments": args})
+    def import_generative(self, prompt: str, target_daw: str):
+        args = {"prompt": prompt, "target_daw": target_daw}
+        return self._call("tools/call", {"name": "superdaw_import_generative", "arguments": args})
+    def generate_music(self, style: str, bars: int = 4, track_id: str = "0", daw: Optional[str] = None):
+        args = {"style": style, "bars": bars, "track_id": track_id}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_generate_music", "arguments": args})
+    def get_tracks(self, daw: Optional[str] = None) -> List[Dict[str, Any]]:
+        args = {}
+        if daw: args["daw"] = daw
+        res = self._call("tools/call", {"name": "superdaw_get_tracks", "arguments": args})
+        if isinstance(res, list): return res
+        return []
+    def list_tools(self) -> List[Dict[str, Any]]:
+        res = self._call("tools/list", {})
+        if res and "tools" in res: return res["tools"]
+        return []

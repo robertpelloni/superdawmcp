@@ -210,6 +210,16 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_get_tracks",
+				Description: "Get a list of tracks and their configurations from the active DAW.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"daw": map[string]interface{}{"type": "string"},
+					},
+				},
+			},
+			{
 				Name:        "superdaw_generate_music",
 				Description: "Generate musical patterns using AI heuristics.",
 				InputSchema: map[string]interface{}{

@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'p
 from superdaw_client.client import SuperDAWClient
 
 def main():
-    parser = argparse.ArgumentParser(description="SuperDAW Cubase Adapter CLI")
+    parser = argparse.ArgumentParser(description="SuperDAW Ardour Adapter CLI")
     parser.add_argument("--server", default="./bin/superdaw-mcp", help="Path to SuperDAW MCP server binary")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
@@ -37,16 +37,16 @@ def main():
     try:
         if args.command == "transport":
             playing = (args.action == "play")
-            client.transport_control(playing, args.bpm, daw="cubase")
-            print(f"Cubase Transport: {args.action} (BPM: {args.bpm})")
+            client.transport_control(playing, args.bpm, daw="ardour")
+            print(f"Ardour Transport: {args.action} (BPM: {args.bpm})")
 
         elif args.command == "mixer":
-            client.set_mixer(args.track_id, args.vol if args.vol is not None else 0.8, args.pan if args.pan is not None else 0.0, daw="cubase")
-            print(f"Cubase Mixer: Track {args.track_id} (Vol: {args.vol}, Pan: {args.pan})")
+            client.set_mixer(args.track_id, args.vol if args.vol is not None else 0.8, args.pan if args.pan is not None else 0.0, daw="ardour")
+            print(f"Ardour Mixer: Track {args.track_id} (Vol: {args.vol}, Pan: {args.pan})")
 
         elif args.command == "create-track":
-            client.create_track(args.name, args.type, daw="cubase")
-            print(f"Cubase Track Created: {args.name} ({args.type})")
+            client.create_track(args.name, args.type, daw="ardour")
+            print(f"Ardour Track Created: {args.name} ({args.type})")
 
         else:
             parser.print_help()

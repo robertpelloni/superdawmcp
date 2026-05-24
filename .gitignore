@@ -11,7 +11,6 @@ __pycache__/
 env/
 venv/
 pkg/vst/cache.json
-go.sum
 node_modules/
 dist/
 *.log
