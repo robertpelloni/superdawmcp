@@ -29,12 +29,20 @@ func (a *AbletonLiveDriver) listen(port int) {
 	dispatcher.AddMsgHandler("/superdaw/state/playing", func(msg *osc.Message) {
 		a.state.mu.Lock()
 		defer a.state.mu.Unlock()
-		a.state.playing = msg.Arguments[0].(bool)
+		if len(msg.Arguments) > 0 {
+			if b, ok := msg.Arguments[0].(bool); ok {
+				a.state.playing = b
+			}
+		}
 	})
 	dispatcher.AddMsgHandler("/superdaw/state/tempo", func(msg *osc.Message) {
 		a.state.mu.Lock()
 		defer a.state.mu.Unlock()
-		a.state.tempo = msg.Arguments[0].(float32)
+		if len(msg.Arguments) > 0 {
+			if f, ok := msg.Arguments[0].(float32); ok {
+				a.state.tempo = f
+			}
+		}
 	})
 
 	server := &osc.Server{Addr: fmt.Sprintf("127.0.0.1:%d", port), Dispatcher: dispatcher}
@@ -54,7 +62,6 @@ func (a *AbletonLiveDriver) SetTransportState(playing bool, bpm float64) error {
 	return a.OSCClient.Send(m2)
 }
 
-// GetTransportState returns cached state from the agent
 func (a *AbletonLiveDriver) GetTransportState() (bool, float64, error) {
 	a.state.mu.RLock()
 	defer a.state.mu.RUnlock()

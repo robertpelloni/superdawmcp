@@ -1,21 +1,20 @@
-# Handoff - SuperDAW-MCP v2.0.0
+# Handoff - SuperDAW-MCP v2.1.0
 
 ## Overview
-SuperDAW-MCP is a universal orchestration layer for DAWs. v2.0.0 is the first major stable release, featuring full bidirectional sync for Ableton/REAPER and native Java support for Bitwig Studio.
+SuperDAW-MCP is a universal orchestration layer for DAWs. v2.1.0 focuses on interactive control and CLI completeness for all 7 supported engines.
 
 ## Achievements this Session
-1.  **Major Release v2.0.0**: Stabilized the core daemon and standardized all driver interfaces.
-2.  **Native Bitwig Agent**: Migrated and authored a native Java extension for Bitwig Studio.
-3.  **Enhanced VST Scanner**: Added vendor heuristics and common parameter maps for quicker plugin discovery.
-4.  **Universal Importer**: Added `importer.go` for distributing MIDI projects across multiple DAW engines.
-5.  **Repository Sync**: Finalized the executive protocol for recursive submodule management.
+1.  **Logic & Cubase CLI**: Added high-level Python adapters for the new macOS and Steinberg drivers.
+2.  **Interactive Shell**: Developed `scripts/superdaw_shell.py` for real-time protocol REPL.
+3.  **Unified Installer**: Updated `install_adapters.sh` to support Logic Pro and Cubase agent paths.
+4.  **Full Suite Parity**: All 7 DAW drivers are now exposed via standardized high-level CLI tools.
 
 ## Repository State
-- **Version**: 2.0.0 (Major)
-- **Status**: Stable. Verified across 7 DAW drivers.
-- **Latency**: Sub-2ms loopback confirmed.
+- **Version**: 2.1.0
+- **Status**: CLI Suite complete.
+- **Verification**: Verified via interactive shell routing.
 
 ## Next Steps for Successor
-1.  **Deep VST Parsing**: Link `libvst3` (C++) to `scanner.go` via CGO to probe binary parameter strings.
-2.  **Visual Node Editor**: Replace the Dashboard's routing matrix with a React-based node graph editor.
-3.  **Collaborative Studio**: Add WebSocket-based multi-user session sharing.
+1.  **Deep VST Parsing**: Move from heuristic parameter maps to actual `libvst3` binary probing.
+2.  **Mobile App**: Build the React Native frontend for the mobile-optimized remote.
+3.  **Collaborative States**: Implement WebSocket-based multi-user session state in the Go core.
