@@ -31,6 +31,13 @@ class SuperDAWShell(cmd.Cmd):
         """Stop transport playback"""
         self.client.transport_control(playing=False, daw=self.active_daw)
 
+    def do_bpm(self, arg):
+        """Set BPM: bpm 128"""
+        if not arg:
+            print("Usage: bpm <value>")
+            return
+        self.client.transport_control(bpm=float(arg), daw=self.active_daw)
+
     def do_vol(self, arg):
         """Set track volume: vol <track_id> <0.0-1.0>"""
         args = arg.split()
@@ -38,6 +45,18 @@ class SuperDAWShell(cmd.Cmd):
             print("Usage: vol <track_id> <volume>")
             return
         self.client.set_mixer(args[0], float(args[1]), daw=self.active_daw)
+
+    def do_ls(self, arg):
+        """List tracks: ls"""
+        tracks = self.client.get_tracks(daw=self.active_daw)
+        for t in tracks:
+            print(f"[{t.get('id')}] {t.get('name')} (Vol: {t.get('volume')}, Pan: {t.get('pan')}, Mute: {t.get('mute')})")
+
+    def do_tools(self, arg):
+        """List available MCP tools"""
+        tools = self.client.list_tools()
+        for t in tools:
+            print(f"- {t['name']}: {t['description']}")
 
     def do_exit(self, arg):
         """Exit the shell"""

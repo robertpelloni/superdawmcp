@@ -1,0 +1,7 @@
+# SuperDAW Logic Pro OSC Mapping
+# Default OSC paths for SuperDAW integration
+
+/transport/play     f 1.0
+/transport/stop     f 1.0
+/mixer/volume       f $1
+/mixer/pan          f $1

@@ -207,9 +207,9 @@ public class TrackHandler {
 
         // Color as RGB
         JsonObject color = new JsonObject();
-        color.addProperty("red", track.color().red());
-        color.addProperty("green", track.color().green());
-        color.addProperty("blue", track.color().blue());
+        color.addProperty("red", track.color().red().get());
+        color.addProperty("green", track.color().green().get());
+        color.addProperty("blue", track.color().blue().get());
         obj.add("color", color);
 
         return obj;

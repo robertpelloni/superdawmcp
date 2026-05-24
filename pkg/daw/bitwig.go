@@ -46,11 +46,11 @@ func (b *BitwigDriver) CreateTrack(name, trackType string) (string, error) {
 }
 
 func (b *BitwigDriver) SetTrackVolume(id string, volume float32) error {
-	return b.send("track.set_volume", map[string]interface{}{"id": id, "volume": volume})
+	return b.send("track.set_volume", map[string]interface{}{"index": id, "volume": volume})
 }
 
 func (b *BitwigDriver) SetTrackPan(id string, pan float32) error {
-	return b.send("track.set_pan", map[string]interface{}{"id": id, "pan": pan})
+	return b.send("track.set_pan", map[string]interface{}{"index": id, "pan": pan})
 }
 
 func (b *BitwigDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {

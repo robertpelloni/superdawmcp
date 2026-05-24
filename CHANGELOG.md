@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0] - 2024-11-20
+### Added
+- Interactive SuperDAW Shell in `scripts/superdaw_shell.py` for real-time multi-DAW orchestration.
+- Logic Pro and Cubase agent installation support in `scripts/install_adapters.sh`.
+- Native agent stubs for Logic Pro (`SuperDAW.logic_osc`) and Cubase (`SuperDAW_Cubase.js`).
+- Integrated Logic Pro and Cubase drivers into the core orchestration daemon.
+
 ## [2.2.0] - 2024-11-20
 ### Added
 - Logic Pro and Cubase high-level Go drivers implemented.
