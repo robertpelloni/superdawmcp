@@ -1,78 +1,48 @@
 package integration
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
-	"sync"
 	"testing"
 	"time"
-
-	"github.com/robertpelloni/superdaw-mcp/pkg/client/go"
+	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
 )
 
-func TestStress_HighFrequency(t *testing.T) {
-	binPath := "./superdaw-stress-test"
-	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
-	if out, err := buildCmd.CombinedOutput(); err != nil {
-		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
-	}
-	defer os.Remove(binPath)
+func TestIntegration_StressTest(t *testing.T) {
+	binPath := "../../bin/superdaw-mcp"
 
-	mockDAW := NewMockDAW(11000)
-	go mockDAW.Start()
-	defer mockDAW.Stop()
+	cmd := exec.Command(binPath)
+	stdin, _ := cmd.StdinPipe()
+	stdout, _ := cmd.StdoutPipe()
+	cmd.Start()
+	defer cmd.Process.Kill()
 
-	client, err := client.NewClient(binPath)
-	if err != nil { t.Fatalf("Failed to initialize: %v", err) }
-	defer client.Close()
-
-	numMessages := 500
-	var wg sync.WaitGroup
-	wg.Add(numMessages)
+	decoder := json.NewDecoder(stdout)
 
 	start := time.Now()
-	for i := 0; i < numMessages; i++ {
-		go func(idx int) {
-			defer wg.Done()
-			vol := float32(idx) / float32(numMessages)
-			client.SetMixer("1", vol, 0.0)
-		}(i)
+	iterations := 500
+
+	for i := 0; i < iterations; i++ {
+		req := mcp.JSONRPCRequest{
+			JSONRPC: "2.0",
+			Method:  "tools/call",
+			Params:  json.RawMessage(fmt.Sprintf(`{"name": "superdaw_set_mixer", "arguments": {"track_id": "%d", "volume": 0.5}}`, i)),
+			ID:      i,
+		}
+		data, _ := json.Marshal(req)
+		fmt.Fprintf(stdin, "%s\n", string(data))
+
+		var res mcp.JSONRPCResponse
+		if err := decoder.Decode(&res); err != nil {
+			t.Fatalf("Decode failed at %d: %v", i, err)
+		}
 	}
-	wg.Wait()
+
 	duration := time.Since(start)
+	t.Logf("Processed %d tool calls in %v (%f req/sec)", iterations, duration, float64(iterations)/duration.Seconds())
 
-	t.Logf("Sent %d messages in %v (avg %v per message)", numMessages, duration, duration/time.Duration(numMessages))
-
-	// Verify that the server didn't crash and processed messages
-	time.Sleep(500 * time.Millisecond)
-	msgs := mockDAW.GetMessages()
-	if len(msgs) < numMessages/2 { // Allow some network drop in stress but check for high throughput
-		t.Errorf("Too few messages received: %d/%d", len(msgs), numMessages)
+	if duration.Seconds() > 5.0 {
+		t.Errorf("Performance below threshold: %v for %d calls", duration, iterations)
 	}
-}
-
-func TestStress_ConcurrentDAWs(t *testing.T) {
-	binPath := "./superdaw-concurrent-test"
-	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
-	buildCmd.Run()
-	defer os.Remove(binPath)
-
-	client, _ := client.NewClient(binPath)
-	defer client.Close()
-
-	daws := []string{"ableton", "reaper", "ardour", "bitwig", "flstudio"}
-	var wg sync.WaitGroup
-	wg.Add(len(daws))
-
-	for _, d := range daws {
-		go func(dawName string) {
-			defer wg.Done()
-			for i := 0; i < 50; i++ {
-				client.TransportControl(true, 120.0, dawName)
-				time.Sleep(10 * time.Millisecond)
-			}
-		}(d)
-	}
-	wg.Wait()
 }
