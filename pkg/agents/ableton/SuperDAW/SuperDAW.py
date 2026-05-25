@@ -47,6 +47,28 @@ class SuperDAW(ControlSurface):
         # Listen to transport
         self.song().add_is_playing_listener(self._on_playing_changed)
         self.song().add_tempo_listener(self._on_tempo_changed)
+        self.song().add_tracks_listener(self._on_arrangement_changed)
+
+    def _on_arrangement_changed(self):
+        self._send_arrangement_state()
+
+    def _send_arrangement_state(self):
+        arrangement = []
+        for track in self.song().tracks:
+            clips = []
+            if hasattr(track, 'arrangement_clips'):
+                for clip in track.arrangement_clips:
+                    clips.append({
+                        "name": clip.name,
+                        "start": clip.start_time,
+                        "end": clip.end_time
+                    })
+            arrangement.append({
+                "track": track.name,
+                "clips": clips
+            })
+        import json
+        self._client.send_message("/superdaw/state/arrangement", json.dumps(arrangement))
 
     def _on_playing_changed(self):
         self._client.send_message("/superdaw/state/playing", self.song().is_playing)

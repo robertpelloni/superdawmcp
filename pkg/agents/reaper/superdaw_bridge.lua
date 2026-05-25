@@ -642,6 +642,33 @@ local function SetTrackSolo(track_index, solo)
     return {ok = true}
 end
 
+-- Arrangement data extraction
+local function GetArrangementData()
+    local data = {}
+    local track_count = reaper.CountTracks(0)
+    for i = 0, track_count - 1 do
+        local track = reaper.GetTrack(0, i)
+        local _, track_name = reaper.GetTrackName(track)
+        local items = {}
+        local item_count = reaper.CountTrackMediaItems(track)
+        for j = 0, item_count - 1 do
+            local item = reaper.GetTrackMediaItem(track, j)
+            local take = reaper.GetActiveTake(item)
+            local _, item_name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+            table.insert(items, {
+                name = item_name,
+                start = reaper.GetMediaItemInfo_Value(item, "D_POSITION"),
+                length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+            })
+        end
+        table.insert(data, {
+            track = track_name,
+            items = items
+        })
+    end
+    return {ok = true, data = data}
+end
+
 -- Transport operations
 local function Play()
     reaper.Main_OnCommand(1007, 0) -- Transport: Play
@@ -705,6 +732,7 @@ DSL_FUNCTIONS = {
     -- Transport
     Play = Play,
     Stop = Stop,
+    GetArrangementData = GetArrangementData,
     GetTempo = GetTempo,
     SetTempo = SetTempo,
     GetTimeSignature = GetTimeSignature

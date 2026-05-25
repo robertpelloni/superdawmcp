@@ -20,9 +20,10 @@ type DashboardState struct {
 }
 
 type DAWState struct {
-	Name      string  `json:"name"`
-	IsPlaying bool    `json:"is_playing"`
-	BPM       float64 `json:"bpm"`
+	Name        string  `json:"name"`
+	IsPlaying   bool    `json:"is_playing"`
+	BPM         float64 `json:"bpm"`
+	Arrangement string  `json:"arrangement"`
 }
 
 type AudioPatch struct {
@@ -50,6 +51,37 @@ func StartDashboard(port int) *DashboardState {
 		state.broadcast()
 	})
 
+	http.HandleFunc("/obs", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `
+			<html>
+				<head>
+					<style>
+						body { font-family: sans-serif; color: #fff; background: transparent; padding: 10px; font-weight: bold; text-shadow: 2px 2px 4px #000; }
+						.obs-stat { font-size: 24px; color: #00ff88; }
+						.obs-badge { background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 8px; margin: 5px 0; border-left: 5px solid #00bcd4; }
+					</style>
+				</head>
+				<body>
+					<div id="stats"></div>
+					<script>
+						const ws = new WebSocket('ws://' + window.location.host + '/ws');
+						ws.onmessage = (event) => {
+							const state = JSON.parse(event.data);
+							let html = '';
+							for (const name in state.daws) {
+								const d = state.daws[name];
+								if (d.is_playing) {
+									html += '<div class="obs-badge">DAW: ' + name.toUpperCase() + ' <span class="obs-stat">' + d.bpm.toFixed(1) + ' BPM</span></div>';
+								}
+							}
+							document.getElementById('stats').innerHTML = html;
+						};
+					</script>
+				</body>
+			</html>
+		`)
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 			<html>
@@ -65,6 +97,9 @@ func StartDashboard(port int) *DashboardState {
 						.patch-item { background: #252525; padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
 						.patch-arrow { color: #00ff88; font-weight: bold; }
 						.badge { background: #333; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; color: #aaa; }
+						#timeline { width: 100%; height: 300px; background: #000; margin-top: 20px; border: 1px solid #444; position: relative; overflow-x: auto; }
+						.track-lane { height: 40px; border-bottom: 1px solid #222; display: flex; align-items: center; white-space: nowrap; }
+						.clip-block { position: absolute; background: #00bcd4; height: 30px; border-radius: 4px; border: 1px solid #fff; font-size: 10px; color: #000; padding: 2px; overflow: hidden; }
 					</style>
 				</head>
 				<body>
@@ -82,6 +117,11 @@ func StartDashboard(port int) *DashboardState {
 							<h2>Virtual Audio Patching</h2>
 							<div id="routing"></div>
 						</div>
+					</div>
+
+					<div class="card">
+						<h2>Live Studio Arrangement</h2>
+						<div id="timeline"></div>
 					</div>
 
 					<script>
@@ -115,6 +155,29 @@ func StartDashboard(port int) *DashboardState {
 								`;
 							});
 							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
+
+							// Render Timeline
+							let timelineHtml = '';
+							let top = 0;
+							for (const name in state.daws) {
+								const d = state.daws[name];
+								if (d.arrangement) {
+									try {
+										const arrangement = JSON.parse(d.arrangement);
+										arrangement.forEach(track => {
+											timelineHtml += `<div class="track-lane" style="top: ${top}px; position: relative;"><span style="width: 100px; display: inline-block;">${track.track}</span>`;
+											track.clips.forEach(clip => {
+												const left = clip.start * 20; // 20 pixels per second
+												const width = (clip.end - clip.start) * 20;
+												timelineHtml += `<div class="clip-block" style="left: ${100+left}px; width: ${width}px;">${clip.name}</div>`;
+											});
+											timelineHtml += `</div>`;
+											top += 40;
+										});
+									} catch(e) {}
+								}
+							}
+							document.getElementById('timeline').innerHTML = timelineHtml || '<p style="color: #666; padding: 20px;">No arrangement data available.</p>';
 						};
 					</script>
 				</body>
@@ -128,7 +191,20 @@ func StartDashboard(port int) *DashboardState {
 
 func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {
 	s.mu.Lock()
-	s.DAWs[name] = DAWState{Name: name, IsPlaying: playing, BPM: bpm}
+	state := s.DAWs[name]
+	state.Name = name
+	state.IsPlaying = playing
+	state.BPM = bpm
+	s.DAWs[name] = state
+	s.mu.Unlock()
+	s.broadcast()
+}
+
+func (s *DashboardState) UpdateArrangement(name string, arrangement string) {
+	s.mu.Lock()
+	state := s.DAWs[name]
+	state.Arrangement = arrangement
+	s.DAWs[name] = state
 	s.mu.Unlock()
 	s.broadcast()
 }

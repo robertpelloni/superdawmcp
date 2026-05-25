@@ -10,9 +10,10 @@ type AbletonLiveDriver struct {
 	OSCClient     *osc.Client
 	notifyHandler func(method string, params interface{})
 	state         struct {
-		playing bool
-		tempo   float32
-		mu      sync.RWMutex
+		playing     bool
+		tempo       float32
+		arrangement string
+		mu          sync.RWMutex
 	}
 }
 
@@ -36,6 +37,21 @@ func (a *AbletonLiveDriver) listen(port int) {
 					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
 						"daw":     "ableton",
 						"playing": b,
+					})
+				}
+			}
+		}
+		a.state.mu.Unlock()
+	})
+	dispatcher.AddMsgHandler("/superdaw/state/arrangement", func(msg *osc.Message) {
+		a.state.mu.Lock()
+		if len(msg.Arguments) > 0 {
+			if s, ok := msg.Arguments[0].(string); ok {
+				a.state.arrangement = s
+				if a.notifyHandler != nil {
+					a.notifyHandler("superdaw/arrangement_update", map[string]interface{}{
+						"daw":         "ableton",
+						"arrangement": s,
 					})
 				}
 			}

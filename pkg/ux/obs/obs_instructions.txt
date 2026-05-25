@@ -1,0 +1,18 @@
+# OBS Studio SuperDAW-MCP Browser Source Script
+# ---------------------------------------------
+# Instructions:
+# 1. Add a 'Browser Source' to your OBS Scene.
+# 2. Set the URL to: http://localhost:8081/obs
+# 3. Use the CSS below to style for your stream.
+
+import obspython as obs
+import os
+
+# This is a stub for an OBS Python script if one were needed for native text GDI+ sources.
+# However, the Dashboard now provides a dedicated /obs endpoint for better styling.
+
+def script_description():
+    return "Display SuperDAW studio state (BPM, active track) in OBS via Browser Source."
+
+def script_load(settings):
+    print("SuperDAW OBS Bridge Loaded.")

@@ -41,7 +41,8 @@ func main() {
 		"cubase":   daw.NewCubaseDriver("127.0.0.1", 7001),
 	}
 
-	for _, drv := range drivers {
+	for name, drv := range drivers {
+		dawName := name
 		drv.SetNotifyHandler(func(method string, params interface{}) {
 			notif := map[string]interface{}{
 				"jsonrpc": "2.0",
@@ -49,6 +50,12 @@ func main() {
 				"params":  params,
 			}
 			writeResponseRaw(notif)
+
+			// Update dashboard on specific notifications
+			if method == "superdaw/arrangement_update" {
+				p := params.(map[string]interface{})
+				dash.UpdateArrangement(dawName, p["arrangement"].(string))
+			}
 		})
 	}
 

@@ -23,9 +23,10 @@ type ReaperDriver struct {
 	webHost       string
 	webPort       int
 	state         struct {
-		playing bool
-		tempo   float64
-		mu      sync.RWMutex
+		playing     bool
+		tempo       float64
+		arrangement string
+		mu          sync.RWMutex
 	}
 }
 
@@ -51,6 +52,12 @@ func (r *ReaperDriver) Connect(endpoint string) error {
 }
 
 func (r *ReaperDriver) Disconnect() error { return nil }
+
+func (r *ReaperDriver) GetArrangement() (string, error) {
+	res, err := r.callBridge("GetArrangementData", []interface{}{})
+	if err != nil { return "", err }
+	return fmt.Sprintf("%v", res["data"]), nil
+}
 
 func (r *ReaperDriver) callBridge(funcName string, args []interface{}) (map[string]interface{}, error) {
 	id := r.requestID
