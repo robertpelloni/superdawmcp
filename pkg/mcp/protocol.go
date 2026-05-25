@@ -198,6 +198,20 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_unpatch_audio",
+				Description: "Remove a virtual audio patch.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"source_daw":   map[string]interface{}{"type": "string"},
+						"source_track": map[string]interface{}{"type": "string"},
+						"dest_daw":     map[string]interface{}{"type": "string"},
+						"dest_track":   map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"source_daw", "source_track", "dest_daw", "dest_track"},
+				},
+			},
+			{
 				Name:        "superdaw_import_generative",
 				Description: "Import AI-generated stems from a prompt.",
 				InputSchema: map[string]interface{}{

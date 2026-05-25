@@ -7,6 +7,7 @@ This report analyzes the core capabilities of the SuperDAW-MCP protocol across a
 |-----------------------|---------|--------|--------|-----------|-------|--------|--------|
 | Transport (Play/Stop) | Native  | Native | Native | Agent     | Native| Native | Native |
 | Tempo (BPM)           | Native  | WebAPI | Native | Agent     | Native| Native | Native |
+| Track List (ls)       | API     | WebAPI | API    | No        | No    | No     | No     |
 | Track Creation        | API     | Native | API    | API       | Keys  | Native | Native |
 | Volume/Pan            | Native  | Native | Native | Agent     | Native| Native | Native |
 | MIDI Note Injection   | API     | Lua    | API    | Limited   | No    | No     | No     |

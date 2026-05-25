@@ -3,11 +3,15 @@ package daw
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
-	"time"
+	"strings"
 	"sync"
+	"time"
+
 	"github.com/hypebeast/go-osc/osc"
 )
 
@@ -16,6 +20,8 @@ type ReaperDriver struct {
 	notifyHandler func(method string, params interface{})
 	bridgeDir     string
 	requestID     int
+	webHost       string
+	webPort       int
 	state         struct {
 		playing bool
 		tempo   float64
@@ -34,6 +40,8 @@ func NewReaperDriver(host string, port, webPort int) *ReaperDriver {
 		OSCClient: osc.NewClient(host, port),
 		bridgeDir: bridgeDir,
 		requestID: 1,
+		webHost:   host,
+		webPort:   webPort,
 	}
 }
 
@@ -96,7 +104,30 @@ func (r *ReaperDriver) GetTransportState() (bool, float64, error) {
 }
 
 func (r *ReaperDriver) GetTracks() ([]TrackConfig, error) {
-	return []TrackConfig{}, nil
+	// Query REAPER Web Interface for track list
+	url := fmt.Sprintf("http://%s:%d/wwr/_", r.webHost, r.webPort)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	lines := strings.Split(string(body), "\n")
+
+	var tracks []TrackConfig
+	for _, line := range lines {
+		if strings.HasPrefix(line, "TRACK") {
+			parts := strings.Split(line, "\t")
+			if len(parts) > 2 {
+				tracks = append(tracks, TrackConfig{
+					ID:   parts[1],
+					Name: parts[2],
+				})
+			}
+		}
+	}
+	return tracks, nil
 }
 
 func (r *ReaperDriver) CreateTrack(name, trackType string) (string, error) {

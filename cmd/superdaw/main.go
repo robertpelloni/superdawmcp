@@ -12,15 +12,19 @@ import (
 	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 	"github.com/robertpelloni/superdaw-mcp/pkg/engine"
 	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
+	"github.com/robertpelloni/superdaw-mcp/pkg/ux/dashboard"
+	"sync"
 	"github.com/robertpelloni/superdaw-mcp/pkg/vst"
 )
+
+var stdoutMu sync.Mutex
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
 
-	dashboard := StartDashboard(8080)
-	RegisterMobileRemote()
+	dash := dashboard.StartDashboard(8080)
+	dashboard.RegisterMobileRemote()
 
 	router := daw.NewAudioRouter("127.0.0.1", 12000)
 	genImporter := engine.NewGenerativeImporter()
@@ -156,7 +160,7 @@ func main() {
 				b, ok := params.Arguments["bpm"].(float64)
 				if !ok { b = 120.0 }
 				driver.SetTransportState(p, b)
-				dashboard.UpdateDAW(dawName, p, b)
+				dash.UpdateDAW(dawName, p, b)
 				link.Sync(p, b)
 			case "superdaw_list_clips":
 				id, _ := params.Arguments["track_id"].(string)
@@ -188,7 +192,15 @@ func main() {
 				dstDaw, _ := params.Arguments["dest_daw"].(string)
 				dstTrack, _ := params.Arguments["dest_track"].(string)
 				router.Patch(srcDaw, srcTrack, dstDaw, dstTrack)
-				dashboard.AddPatch(AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+				dash.AddPatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+
+			case "superdaw_unpatch_audio":
+				srcDaw, _ := params.Arguments["source_daw"].(string)
+				srcTrack, _ := params.Arguments["source_track"].(string)
+				dstDaw, _ := params.Arguments["dest_daw"].(string)
+				dstTrack, _ := params.Arguments["dest_track"].(string)
+				router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack)
+				dash.RemovePatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
 
 			case "superdaw_import_generative":
 				prompt, _ := params.Arguments["prompt"].(string)
@@ -236,6 +248,8 @@ func writeResponse(res mcp.JSONRPCResponse) {
 }
 
 func writeResponseRaw(res interface{}) {
+	stdoutMu.Lock()
+	defer stdoutMu.Unlock()
 	out, _ := json.Marshal(res)
 	os.Stdout.Write(append(out, '\n'))
 }
