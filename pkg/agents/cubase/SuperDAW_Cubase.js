@@ -1,7 +1,8 @@
 // SuperDAW Cubase MIDI Remote Driver
 // Full implementation using Steinberg MIDI Remote API
 
-var deviceDriver = makeDefaultDeviceDriver("SuperDAW", "Universal Controller");
+var midiremote_api = require('midiremote_api')
+var deviceDriver = midiremote_api.makeDeviceDriver("SuperDAW", "Universal Controller", "PX Audio");
 
 var activeDevice = deviceDriver.mSurface.makeCustomControlSurface();
 

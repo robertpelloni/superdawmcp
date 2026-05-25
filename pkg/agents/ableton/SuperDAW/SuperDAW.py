@@ -108,6 +108,33 @@ class SuperDAW(ControlSurface):
             idx = int(args[0]); pan = float(args[1])
             if idx < len(self.song().tracks):
                 self.song().tracks[idx].mixer_device.panning.value = pan
+        elif addr == "/superdaw/clip/write":
+            track_idx = int(args[0])
+            clip_idx = int(args[1])
+            if track_idx < len(self.song().tracks):
+                track = self.song().tracks[track_idx]
+                if clip_idx < len(track.clip_slots):
+                    slot = track.clip_slots[clip_idx]
+                    if not slot.has_clip:
+                        slot.create_clip(4.0) # 1 bar default
+                    clip = slot.clip
+                    # Process notes passed as alternating pitch, velocity, start, duration
+                    # or potentially a JSON string in args[2]
+                    try:
+                        import json
+                        notes_data = json.loads(args[2])
+                        notes = []
+                        for n in notes_data:
+                            notes.append(Live.Clip.MidiNoteSpecification(
+                                pitch=int(n['pitch']),
+                                start_time=float(n['start_beat']),
+                                duration=float(n['duration']),
+                                velocity=int(n['velocity']),
+                                mute=False
+                            ))
+                        clip.add_new_notes(tuple(notes))
+                    except:
+                        pass
 
     def disconnect(self):
         self.song().remove_is_playing_listener(self._on_playing_changed)

@@ -41,6 +41,8 @@ func main() {
 		"cubase":   daw.NewCubaseDriver("127.0.0.1", 7001),
 	}
 
+	activeDriver := drivers["ableton"]
+
 	for name, drv := range drivers {
 		dawName := name
 		drv.SetNotifyHandler(func(method string, params interface{}) {
@@ -60,21 +62,59 @@ func main() {
 	}
 
 	// Global OSC Input Gateway (Hardware -> SuperDAW)
+	// Supports dynamic DAW targeting via address: /superdaw/{daw_name}/...
 	go func() {
 		disp := osc.NewStandardDispatcher()
+
+		handler := func(m *osc.Message) {
+			parts := strings.Split(m.Address, "/")
+			if len(parts) < 4 { return }
+			dawName := parts[2]
+			cmd := parts[3]
+
+			driver, ok := drivers[dawName]
+			if !ok { return }
+
+			switch cmd {
+			case "transport":
+				if len(m.Arguments) > 0 {
+					p, _ := m.Arguments[0].(int32)
+					driver.SetTransportState(p == 1, 120.0)
+				}
+			case "volume":
+				if len(m.Arguments) > 1 {
+					id, _ := m.Arguments[0].(string)
+					vol, _ := m.Arguments[1].(float32)
+					driver.SetTrackVolume(id, vol)
+				}
+			case "pan":
+				if len(m.Arguments) > 1 {
+					id, _ := m.Arguments[0].(string)
+					p, _ := m.Arguments[1].(float32)
+					driver.SetTrackPan(id, p)
+				}
+			case "track_create":
+				if len(m.Arguments) > 1 {
+					name, _ := m.Arguments[0].(string)
+					t, _ := m.Arguments[1].(string)
+					driver.CreateTrack(name, t)
+				}
+			}
+		}
+
+		disp.AddMsgHandler("/superdaw/*/transport", handler)
+		disp.AddMsgHandler("/superdaw/*/volume", handler)
+		disp.AddMsgHandler("/superdaw/*/pan", handler)
+		disp.AddMsgHandler("/superdaw/*/track_create", handler)
+
+		// Legacy support
 		disp.AddMsgHandler("/superdaw/transport/play", func(m *osc.Message) {
 			if len(m.Arguments) > 0 {
 				p, _ := m.Arguments[0].(int32)
-				drivers["ableton"].SetTransportState(p == 1, 120.0)
+				activeDriver.SetTransportState(p == 1, 120.0)
 			}
 		})
-		disp.AddMsgHandler("/superdaw/mixer/volume", func(m *osc.Message) {
-			if len(m.Arguments) > 1 {
-				id, _ := m.Arguments[0].(string)
-				vol, _ := m.Arguments[1].(float32)
-				drivers["ableton"].SetTrackVolume(id, vol)
-			}
-		})
+
 		server := &osc.Server{Addr: "0.0.0.0:12001", Dispatcher: disp}
 		server.ListenAndServe()
 	}()
@@ -89,8 +129,6 @@ func main() {
 		vstDirs = append(vstDirs, "/usr/lib/vst3", "/usr/local/lib/vst3")
 	}
 	scanner.ScanDirectories(vstDirs)
-
-	activeDriver := drivers["ableton"]
 
 	// Initialize drivers that require permanent connections
 	if drv, ok := drivers["bitwig"]; ok {
@@ -242,6 +280,22 @@ func main() {
 			case "superdaw_get_tracks":
 				tracks, _ := driver.GetTracks()
 				result = tracks
+			case "superdaw_save_session":
+				fname, _ := params.Arguments["filename"].(string)
+				if fname == "" { fname = "studio_session.json" }
+				data, _ := json.Marshal(dash.GetState())
+				os.WriteFile(fname, data, 0644)
+				result = "Session saved."
+
+			case "superdaw_load_session":
+				fname, _ := params.Arguments["filename"].(string)
+				if fname == "" { fname = "studio_session.json" }
+				data, _ := os.ReadFile(fname)
+				var state dashboard.DashboardState
+				json.Unmarshal(data, &state)
+				dash.SetState(state)
+				result = "Session loaded."
+
 			case "superdaw_generate_music":
 				style, _ := params.Arguments["style"].(string)
 				bars, _ := params.Arguments["bars"].(float64)

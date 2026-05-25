@@ -98,14 +98,23 @@ func StartDashboard(port int) *DashboardState {
 						.patch-arrow { color: #00ff88; font-weight: bold; }
 						.badge { background: #333; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; color: #aaa; }
 						#timeline { width: 100%; height: 300px; background: #000; margin-top: 20px; border: 1px solid #444; position: relative; overflow-x: auto; }
+						#blueprint { width: 100%; height: 200px; background: #1a1a1a; border: 1px dashed #444; margin-top: 10px; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #00ff88; }
 						.track-lane { height: 40px; border-bottom: 1px solid #222; display: flex; align-items: center; white-space: nowrap; }
 						.clip-block { position: absolute; background: #00bcd4; height: 30px; border-radius: 4px; border: 1px solid #fff; font-size: 10px; color: #000; padding: 2px; overflow: hidden; }
+						.keyboard { display: flex; justify-content: center; margin-top: 20px; }
+						.key { width: 40px; height: 120px; border: 1px solid #000; background: white; cursor: pointer; }
+						.key.black { background: black; height: 80px; width: 30px; margin-left: -15px; margin-right: -15px; z-index: 2; }
+						.key:active { background: #00ff88; }
 					</style>
 				</head>
 				<body>
 					<div style="display: flex; justify-content: space-between; align-items: center;">
 						<h1>SuperDAW Universal Dashboard</h1>
-						<div id="version-badge" class="badge">v2.3.0 (Active)</div>
+						<div>
+							<button onclick="callMcp('superdaw_save_session', {})" class="badge" style="cursor: pointer; background: #00ff88; color: #000; border: none;">SAVE SESSION</button>
+							<button onclick="callMcp('superdaw_load_session', {})" class="badge" style="cursor: pointer; background: #00bcd4; color: #000; border: none;">LOAD SESSION</button>
+							<div id="version-badge" class="badge">v2.3.0 (Active)</div>
+						</div>
 					</div>
 
 					<div class="grid">
@@ -116,12 +125,32 @@ func StartDashboard(port int) *DashboardState {
 						<div class="card">
 							<h2>Virtual Audio Patching</h2>
 							<div id="routing"></div>
+							<div id="blueprint"></div>
 						</div>
 					</div>
 
 					<div class="card">
 						<h2>Live Studio Arrangement</h2>
 						<div id="timeline"></div>
+					</div>
+
+					<div class="card">
+						<h2>Virtual MIDI Performance</h2>
+						<div class="keyboard">
+							<div class="key" onclick="playNote(60)"></div>
+							<div class="key black" onclick="playNote(61)"></div>
+							<div class="key" onclick="playNote(62)"></div>
+							<div class="key black" onclick="playNote(63)"></div>
+							<div class="key" onclick="playNote(64)"></div>
+							<div class="key" onclick="playNote(65)"></div>
+							<div class="key black" onclick="playNote(66)"></div>
+							<div class="key" onclick="playNote(67)"></div>
+							<div class="key black" onclick="playNote(68)"></div>
+							<div class="key" onclick="playNote(69)"></div>
+							<div class="key black" onclick="playNote(70)"></div>
+							<div class="key" onclick="playNote(71)"></div>
+							<div class="key" onclick="playNote(72)"></div>
+						</div>
 					</div>
 
 					<script>
@@ -156,6 +185,13 @@ func StartDashboard(port int) *DashboardState {
 							});
 							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
 
+							// Render Blueprint (Mermaid-style text graph)
+							let blueprint = 'graph LR\n';
+							state.patches.forEach(p => {
+								blueprint += `  ${p.source_daw} --> ${p.dest_daw}\n`;
+							});
+							document.getElementById('blueprint').innerText = blueprint === 'graph LR\n' ? 'No connections.' : blueprint;
+
 							// Render Timeline
 							let timelineHtml = '';
 							let top = 0;
@@ -179,6 +215,24 @@ func StartDashboard(port int) *DashboardState {
 							}
 							document.getElementById('timeline').innerHTML = timelineHtml || '<p style="color: #666; padding: 20px;">No arrangement data available.</p>';
 						};
+
+						function playNote(pitch) {
+							callMcp('superdaw_write_midi', {
+								track_id: '0',
+								notes: [{pitch: pitch, velocity: 100, start_beat: 0, duration: 0.5}]
+							});
+						}
+
+						async function callMcp(name, args) {
+							// For this simplified dashboard, we assume a local API proxy exists or
+							// we just log the intent. In a real build, this uses the server's internal RPC.
+							console.log("MCP Call:", name, args);
+							fetch('/api/call', {
+								method: 'POST',
+								headers: {'Content-Type': 'application/json'},
+								body: JSON.stringify({name, arguments: args})
+							});
+						}
 					</script>
 				</body>
 			</html>
@@ -196,6 +250,20 @@ func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {
 	state.IsPlaying = playing
 	state.BPM = bpm
 	s.DAWs[name] = state
+	s.mu.Unlock()
+	s.broadcast()
+}
+
+func (s *DashboardState) GetState() DashboardState {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return *s
+}
+
+func (s *DashboardState) SetState(state DashboardState) {
+	s.mu.Lock()
+	s.DAWs = state.DAWs
+	s.Patches = state.Patches
 	s.mu.Unlock()
 	s.broadcast()
 }

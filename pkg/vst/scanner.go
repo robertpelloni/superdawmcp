@@ -83,6 +83,24 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 					else if strings.Contains(pLower, "izotope") { vendor = "iZotope" }
 					else if strings.Contains(pLower, "native instruments") { vendor = "Native Instruments" }
 
+					// macOS Info.plist parsing for deep metadata
+					if runtime.GOOS == "darwin" {
+						plistPath := filepath.Join(path, "Contents", "Info.plist")
+						if _, err := os.Stat(plistPath); err == nil {
+							// Simple heuristic for vendor in plist
+							data, _ := os.ReadFile(plistPath)
+							sData := string(data)
+							if strings.Contains(sData, "CFBundleIdentifier") {
+								// Extract identifiers like com.fabfilter.pro-q3
+								parts := strings.Split(sData, "com.")
+								if len(parts) > 1 {
+									id := strings.Split(parts[1], ".")[0]
+									vendor = strings.Title(id)
+								}
+							}
+						}
+					}
+
 					// Parameter heuristics for common plugin types
 					params := []ParamMetadata{
 						{Name: "Volume", Index: 0},

@@ -244,6 +244,26 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_save_session",
+				Description: "Save the current studio state (routing, patches) to a file.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"filename": map[string]interface{}{"type": "string", "default": "studio_session.json"},
+					},
+				},
+			},
+			{
+				Name:        "superdaw_load_session",
+				Description: "Load a previously saved studio state from a file.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"filename": map[string]interface{}{"type": "string", "default": "studio_session.json"},
+					},
+				},
+			},
+			{
 				Name:        "superdaw_generate_music",
 				Description: "Generate musical patterns using AI heuristics.",
 				InputSchema: map[string]interface{}{
