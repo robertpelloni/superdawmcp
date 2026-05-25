@@ -58,6 +58,12 @@ func main() {
 				p := params.(map[string]interface{})
 				dash.UpdateArrangement(dawName, p["arrangement"].(string))
 			}
+
+			// Periodically update jobs in dashboard
+			jobs := genImporter.GetJobs()
+			jList := make([]interface{}, len(jobs))
+			for i, j := range jobs { jList[i] = j }
+			dash.UpdateJobs(jList)
 		})
 	}
 
@@ -140,7 +146,7 @@ func main() {
 	}
 
 	// Read version from VERSION.md
-	version := "1.7.0"
+	version := "2.3.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -275,6 +281,9 @@ func main() {
 				prompt, _ := params.Arguments["prompt"].(string)
 				target, _ := params.Arguments["target_daw"].(string)
 				result, _ = genImporter.ImportStems(prompt, target)
+
+			case "superdaw_list_generative_jobs":
+				result = genImporter.GetJobs()
 
 			// PHASE 5 TOOLS
 			case "superdaw_get_tracks":

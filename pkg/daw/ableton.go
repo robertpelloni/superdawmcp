@@ -126,12 +126,11 @@ func (a *AbletonLiveDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) 
 	m := osc.NewMessage("/superdaw/clip/write")
 	m.Append(id)
 	m.Append(int32(idx))
-	for _, n := range notes {
-		m.Append(int32(n.Pitch))
-		m.Append(int32(n.Velocity))
-		m.Append(n.StartBeat)
-		m.Append(n.Duration)
-	}
+
+	// Agent expects JSON string
+	data, _ := json.Marshal(notes)
+	m.Append(string(data))
+
 	return a.OSCClient.Send(m)
 }
 

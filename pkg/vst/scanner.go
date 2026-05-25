@@ -15,6 +15,7 @@ type PluginMetadata struct {
 	Version    string          `json:"version"`
 	Path       string          `json:"path"`
 	Parameters []ParamMetadata `json:"parameters"`
+	Presets    []string        `json:"presets"`
 }
 
 type ParamMetadata struct {
@@ -101,6 +102,18 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 						}
 					}
 
+					// VST Preset Scanning
+					presets := []string{}
+					presetDir := filepath.Join(filepath.Dir(path), "Presets")
+					if _, err := os.Stat(presetDir); err == nil {
+						filepath.Walk(presetDir, func(p string, i os.FileInfo, e error) error {
+							if !i.IsDir() && (strings.HasSuffix(p, ".vstpreset") || strings.HasSuffix(p, ".fxp")) {
+								presets = append(presets, strings.TrimSuffix(i.Name(), filepath.Ext(i.Name())))
+							}
+							return nil
+						})
+					}
+
 					// Parameter heuristics for common plugin types
 					params := []ParamMetadata{
 						{Name: "Volume", Index: 0},
@@ -113,8 +126,9 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 						Name:    name,
 						Vendor:  vendor,
 						Version: version,
-						Path:    path,
+						Path:       path,
 						Parameters: params,
+						Presets:    presets,
 					}
 				}
 			}

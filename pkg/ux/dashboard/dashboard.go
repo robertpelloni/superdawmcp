@@ -14,7 +14,8 @@ var upgrader = websocket.Upgrader{
 
 type DashboardState struct {
 	DAWs    map[string]DAWState `json:"daws"`
-	Patches []AudioPatch       `json:"patches"`
+	Patches []AudioPatch        `json:"patches"`
+	Jobs    []interface{}       `json:"jobs"`
 	mu      sync.RWMutex
 	clients map[*websocket.Conn]bool
 }
@@ -127,6 +128,10 @@ func StartDashboard(port int) *DashboardState {
 							<div id="routing"></div>
 							<div id="blueprint"></div>
 						</div>
+						<div class="card">
+							<h2>Generative AI Activity</h2>
+							<div id="jobs"></div>
+						</div>
 					</div>
 
 					<div class="card">
@@ -184,6 +189,23 @@ func StartDashboard(port int) *DashboardState {
 								`;
 							});
 							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
+
+							// Render Jobs
+							let jobHtml = '';
+							if (state.jobs) {
+								state.jobs.forEach(j => {
+									jobHtml += `
+										<div class="patch-item">
+											<span>${j.prompt}</span>
+											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;">
+												<div style="background: #00ff88; width: ${j.progress*100}%; height: 10px; border-radius: 5px;"></div>
+											</span>
+											<span>${j.status}</span>
+										</div>
+									`;
+								});
+							}
+							document.getElementById('jobs').innerHTML = jobHtml || '<p style="color: #666">No active generation jobs.</p>';
 
 							// Render Blueprint (Mermaid-style text graph)
 							let blueprint = 'graph LR\n';
@@ -250,6 +272,13 @@ func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {
 	state.IsPlaying = playing
 	state.BPM = bpm
 	s.DAWs[name] = state
+	s.mu.Unlock()
+	s.broadcast()
+}
+
+func (s *DashboardState) UpdateJobs(jobs []interface{}) {
+	s.mu.Lock()
+	s.Jobs = jobs
 	s.mu.Unlock()
 	s.broadcast()
 }

@@ -224,6 +224,14 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_list_generative_jobs",
+				Description: "List all active and completed AI generation jobs.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{},
+				},
+			},
+			{
 				Name:        "superdaw_get_tracks",
 				Description: "Get a list of tracks and their configurations from the active DAW.",
 				InputSchema: map[string]interface{}{
