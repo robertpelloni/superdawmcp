@@ -148,7 +148,13 @@ class SuperDAWClient:
         args = {}
         if daw: args["daw"] = daw
         res = self._call("tools/call", {"name": "superdaw_get_tracks", "arguments": args})
-        if isinstance(res, list): return res
+        # Handle structured data from text content block
+        if res and "content" in res:
+            text = res["content"][0].get("text", "[]")
+            try:
+                return json.loads(text)
+            except:
+                return []
         return []
 
     def get_transport_state(self, daw: Optional[str] = None) -> Dict[str, Any]:

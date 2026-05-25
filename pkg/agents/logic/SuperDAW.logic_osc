@@ -1,7 +1,25 @@
-# SuperDAW Logic Pro OSC Mapping
-# Default OSC paths for SuperDAW integration
+# SuperDAW Logic Pro OSC Mapping (Enhanced)
+# ----------------------------------------
+# Port: 12100 (In) / 12101 (Out)
 
-/transport/play     f 1.0
-/transport/stop     f 1.0
-/mixer/volume       f $1
-/mixer/pan          f $1
+# Transport
+/transport/play     f 1.0  # Song Play
+/transport/stop     f 1.0  # Song Stop
+/transport/record   f 1.0  # Toggle Record
+
+# Mixer Bank (8 Tracks)
+/mixer/volume/1     f $1
+/mixer/volume/2     f $1
+/mixer/volume/3     f $1
+/mixer/volume/4     f $1
+/mixer/volume/5     f $1
+/mixer/volume/6     f $1
+/mixer/volume/7     f $1
+/mixer/volume/8     f $1
+
+/mixer/pan/1        f $1
+/mixer/mute/1       f $1
+/mixer/solo/1       f $1
+
+# Master
+/mixer/master/volume f $1

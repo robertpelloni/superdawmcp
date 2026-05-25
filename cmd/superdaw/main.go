@@ -11,6 +11,7 @@ import (
 
 	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 	"github.com/robertpelloni/superdaw-mcp/pkg/engine"
+	"github.com/hypebeast/go-osc/osc"
 	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
 	"github.com/robertpelloni/superdaw-mcp/pkg/ux/dashboard"
 	"sync"
@@ -23,23 +24,12 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
 
-	dash := dashboard.StartDashboard(8080)
+	dash := dashboard.StartDashboard(8081)
 	dashboard.RegisterMobileRemote()
 
 	router := daw.NewAudioRouter("127.0.0.1", 12000)
 	genImporter := engine.NewGenerativeImporter()
 	link := engine.NewLinkBridge()
-
-	// Cross-platform VST scanning paths
-	vstDirs := []string{}
-	if runtime.GOOS == "darwin" {
-		vstDirs = append(vstDirs, "/Library/Audio/Plug-Ins/VST3")
-	} else if runtime.GOOS == "windows" {
-		vstDirs = append(vstDirs, `C:\Program Files\Common Files\VST3`)
-	} else {
-		vstDirs = append(vstDirs, "/usr/lib/vst3", "/usr/local/lib/vst3")
-	}
-	scanner.ScanDirectories(vstDirs)
 
 	drivers := map[string]daw.DAWDriver{
 		"ableton":  daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
@@ -61,6 +51,38 @@ func main() {
 			writeResponseRaw(notif)
 		})
 	}
+
+	// Global OSC Input Gateway (Hardware -> SuperDAW)
+	go func() {
+		disp := osc.NewStandardDispatcher()
+		disp.AddMsgHandler("/superdaw/transport/play", func(m *osc.Message) {
+			if len(m.Arguments) > 0 {
+				p, _ := m.Arguments[0].(int32)
+				drivers["ableton"].SetTransportState(p == 1, 120.0)
+			}
+		})
+		disp.AddMsgHandler("/superdaw/mixer/volume", func(m *osc.Message) {
+			if len(m.Arguments) > 1 {
+				id, _ := m.Arguments[0].(string)
+				vol, _ := m.Arguments[1].(float32)
+				drivers["ableton"].SetTrackVolume(id, vol)
+			}
+		})
+		server := &osc.Server{Addr: "0.0.0.0:12001", Dispatcher: disp}
+		server.ListenAndServe()
+	}()
+
+	// Cross-platform VST scanning paths
+	vstDirs := []string{}
+	if runtime.GOOS == "darwin" {
+		vstDirs = append(vstDirs, "/Library/Audio/Plug-Ins/VST3")
+	} else if runtime.GOOS == "windows" {
+		vstDirs = append(vstDirs, `C:\Program Files\Common Files\VST3`)
+	} else {
+		vstDirs = append(vstDirs, "/usr/lib/vst3", "/usr/local/lib/vst3")
+	}
+	scanner.ScanDirectories(vstDirs)
+
 	activeDriver := drivers["ableton"]
 
 	// Initialize drivers that require permanent connections
@@ -140,10 +162,12 @@ func main() {
 				}
 			case "superdaw_write_midi":
 				id, _ := params.Arguments["track_id"].(string)
+				clipIdx := 0
+				if idx, ok := params.Arguments["clip_index"].(float64); ok { clipIdx = int(idx) }
 				notesJSON, _ := json.Marshal(params.Arguments["notes"])
 				var notes []daw.MIDINote
 				json.Unmarshal(notesJSON, &notes)
-				driver.WriteMIDIClip(id, 0, notes)
+				driver.WriteMIDIClip(id, clipIdx, notes)
 			case "superdaw_generate_euclidean":
 				id, _ := params.Arguments["track_id"].(string)
 				hits, _ := params.Arguments["hits"].(float64)
@@ -226,16 +250,26 @@ func main() {
 				}
 			}
 
+			var content []interface{}
+			if text, ok := result.(string); ok {
+				content = append(content, map[string]interface{}{
+					"type": "text",
+					"text": text,
+				})
+			} else {
+				// Structured result
+				jsonRes, _ := json.Marshal(result)
+				content = append(content, map[string]interface{}{
+					"type": "text",
+					"text": string(jsonRes),
+				})
+			}
+
 			res := mcp.JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
 				Result: map[string]interface{}{
-					"content": []interface{}{
-						map[string]interface{}{
-							"type": "text",
-							"text": fmt.Sprintf("%v", result),
-						},
-					},
+					"content": content,
 				},
 			}
 			writeResponse(res)

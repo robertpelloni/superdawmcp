@@ -1,0 +1,29 @@
+SuperDAW-MCP Pure Data (Pd) Integration Guide
+========================================
+
+Pd can communicate with SuperDAW via the global OSC gateway.
+
+SuperDAW Listener: 127.0.0.1:12001 (UDP)
+
+Pd [netsend] / [udpsend] mapping:
+---------------------------------
+
+1. Transport Play
+   [1( -> [send /superdaw/transport/play] -> [netsend -u -b]
+
+2. Track Volume
+   [0 0.8( -> [send /superdaw/mixer/volume] -> [netsend -u -b]
+
+Required Pd Objects:
+--------------------
+- mrpeach/osc or built-in [netsend] in Pd 0.52+
+
+Example Patch Logic:
+--------------------
+[bang]
+|
+[list /superdaw/mixer/volume 0 0.5]
+|
+[oscformat]
+|
+[netsend -u -b]

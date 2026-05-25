@@ -1,0 +1,32 @@
+SuperDAW-MCP Max/MSP OSC Integration Guide
+========================================
+
+The SuperDAW core daemon provides a global OSC gateway for integration with
+environments like Max/MSP, PureData, and hardware controllers.
+
+Listener: 0.0.0.0:12001 (UDP)
+
+Address Schema:
+---------------
+
+1. Transport Control
+   /superdaw/transport/play [int]
+   - 1 = Play
+   - 0 = Stop
+
+2. Mixer Control
+   /superdaw/mixer/volume [string: track_id] [float: volume 0.0-1.0]
+
+Max [udpsend] Setup:
+--------------------
+[loadbang]
+|
+[host 127.0.0.1, port 12001]
+|
+[udpsend]
+
+Example Message:
+----------------
+[pack /superdaw/mixer/volume 0 0.75]
+|
+[udpsend]
