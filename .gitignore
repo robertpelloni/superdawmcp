@@ -17,3 +17,19 @@ dist/
 .DS_Store
 Thumbs.db
 superdaw
+
+# Build & Dependency Artifacts
+**/node_modules/
+**/dist/
+**/build/
+**/target/
+**/out/
+**/.gradle/
+**/.idea/
+**/.vscode/
+**/.settings/
+**/.classpath/
+**/.project/
+**/vendor/
+**/bin/
+!/bin/

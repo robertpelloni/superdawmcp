@@ -34,14 +34,33 @@ type AudioPatch struct {
 	DestTrack   string `json:"dest_track"`
 }
 
-func StartDashboard(port int) *DashboardState {
+type InternalCommand struct {
+	Name      string                 `json:"name"`
+	Arguments map[string]interface{} `json:"arguments"`
+}
+
+var CommandBus = make(chan InternalCommand, 32)
+
+func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 	state := &DashboardState{
 		DAWs:    make(map[string]DAWState),
 		Patches: []AudioPatch{},
 		clients: make(map[*websocket.Conn]bool),
 	}
 
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/api/call", func(w http.ResponseWriter, r *http.Request) {
+		var req InternalCommand
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		CommandBus <- req
+		w.WriteHeader(http.StatusOK)
+	})
+
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil { return }
 		state.mu.Lock()
@@ -52,7 +71,7 @@ func StartDashboard(port int) *DashboardState {
 		state.broadcast()
 	})
 
-	http.HandleFunc("/obs", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/obs", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
@@ -83,7 +102,7 @@ func StartDashboard(port int) *DashboardState {
 		`)
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
@@ -261,8 +280,19 @@ func StartDashboard(port int) *DashboardState {
 		`)
 	})
 
-	go http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
-	return state
+	server := &http.Server{
+		Addr:    fmt.Sprintf("127.0.0.1:%d", port),
+		Handler: mux,
+	}
+	go server.ListenAndServe()
+	return state, mux
+}
+
+func GetMux() *http.ServeMux {
+	// This is a bit of a hack to allow remote.go to register on the same mux if needed,
+	// but for now we'll just use the global http.DefaultServeMux in remote.go if it's separate,
+	// or better, refactor to use a single mux.
+	return nil
 }
 
 func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {

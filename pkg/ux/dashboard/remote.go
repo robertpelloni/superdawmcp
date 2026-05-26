@@ -7,8 +7,8 @@ import (
 )
 
 // RegisterMobileRemote sets up a touch-friendly remote control interface on /remote
-func RegisterMobileRemote() {
-	http.HandleFunc("/remote", func(w http.ResponseWriter, r *http.Request) {
+func RegisterMobileRemote(mux *http.ServeMux) {
+	mux.HandleFunc("/remote", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
@@ -51,27 +51,4 @@ func RegisterMobileRemote() {
 		`)
 	})
 
-	// Tool execution proxy used by the remote and dashboard
-	http.HandleFunc("/api/call", func(w http.ResponseWriter, r *http.Request) {
-		var req struct {
-			Name      string                 `json:"name"`
-			Arguments map[string]interface{} `json:"arguments"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Map the request to a JSON-RPC 2.0 package and send to stdin
-		rpcReq := map[string]interface{}{
-			"jsonrpc": "2.0",
-			"method":  "tools/call",
-			"params":  req,
-			"id":      "remote_ui",
-		}
-		data, _ := json.Marshal(rpcReq)
-		fmt.Println(string(data))
-
-		w.WriteHeader(http.StatusOK)
-	})
 }

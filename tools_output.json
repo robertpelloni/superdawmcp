@@ -1,0 +1,23 @@
+# github.com/robertpelloni/superdaw-mcp/pkg/vst
+pkg/vst/scanner.go:81:6: syntax error: unexpected keyword else, expected }
+pkg/vst/scanner.go:82:6: syntax error: unexpected keyword else, expected }
+pkg/vst/scanner.go:83:6: syntax error: unexpected keyword else, expected }
+pkg/vst/scanner.go:84:6: syntax error: unexpected keyword else, expected }
+pkg/vst/scanner.go:85:6: syntax error: unexpected keyword else, expected }
+pkg/vst/scanner.go:109:71: method has multiple receivers
+pkg/vst/scanner.go:109:77: syntax error: unexpected {, expected (
+pkg/vst/scanner.go:110:8: syntax error: unexpected keyword if, expected )
+# github.com/robertpelloni/superdaw-mcp/pkg/ux/dashboard
+pkg/ux/dashboard/dashboard.go:189:21: syntax error: unexpected newline in argument list; possibly missing comma or )
+pkg/ux/dashboard/dashboard.go:191:25: invalid character U+0024 '$'
+pkg/ux/dashboard/dashboard.go:191:47: syntax error: unexpected /, expected expression
+pkg/ux/dashboard/dashboard.go:192:17: invalid character U+0024 '$'
+pkg/ux/dashboard/dashboard.go:192:32: invalid character U+003F '?'
+pkg/ux/dashboard/dashboard.go:192:34: more than one character in rune literal
+pkg/ux/dashboard/dashboard.go:192:69: syntax error: unexpected } in argument list; possibly missing comma or )
+pkg/ux/dashboard/dashboard.go:193:31: invalid character U+0024 '$'
+pkg/ux/dashboard/dashboard.go:204:17: invalid character U+0024 '$'
+pkg/ux/dashboard/dashboard.go:205:37: invalid character U+2794 '➔' in identifier
+pkg/ux/dashboard/dashboard.go:205:37: too many errors
+# github.com/robertpelloni/superdaw-mcp/pkg/daw
+pkg/daw/ableton.go:131:13: undefined: json

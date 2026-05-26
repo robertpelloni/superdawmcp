@@ -8,6 +8,6 @@
 - [x] High-level Multi-DAW Orchestrator
 - [x] Logic Pro and Cubase Driver Implementation
 - [x] Interactive SuperDAW Shell
-- [ ] Universal Audio Routing (Jack/ReRoute integration)
-- [ ] Generative AI Stem Import
+- [x] Universal Audio Routing (Jack/ReRoute integration)
+- [x] Generative AI Stem Import
 - [ ] Mobile Remote UX (React Native)

@@ -24,8 +24,8 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
 
-	dash := dashboard.StartDashboard(8081)
-	dashboard.RegisterMobileRemote()
+	dash, dashMux := dashboard.StartDashboard(8081)
+	dashboard.RegisterMobileRemote(dashMux)
 
 	router := daw.NewAudioRouter("127.0.0.1", 12000)
 	genImporter := engine.NewGenerativeImporter()
@@ -136,6 +136,23 @@ func main() {
 	}
 	scanner.ScanDirectories(vstDirs)
 
+	// Process dashboard commands internally to avoid stdout corruption
+	go func() {
+		for cmd := range dashboard.CommandBus {
+			params := mcp.JSONRPCRequest{
+				JSONRPC: "2.0",
+				Method:  "tools/call",
+				ID:      "dashboard_internal",
+			}
+			args, _ := json.Marshal(cmd)
+			params.Params = args
+
+			// Route to the same tool execution logic as stdin
+			// For simplicity, we just trigger the logic here or refactor into a function
+			handleToolCall(cmd.Name, cmd.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
+		}
+	}()
+
 	// Initialize drivers that require permanent connections
 	if drv, ok := drivers["bitwig"]; ok {
 		go func() {
@@ -195,130 +212,7 @@ func main() {
 				continue
 			}
 
-			dawName := "ableton"
-			if d, ok := params.Arguments["daw"].(string); ok { dawName = d }
-			driver := drivers[dawName]
-			if driver == nil { driver = activeDriver }
-
-			var result interface{}
-			result = "Success"
-
-			switch params.Name {
-			case "superdaw_set_mixer":
-				id, _ := params.Arguments["track_id"].(string)
-				vol, _ := params.Arguments["volume"].(float64)
-				driver.SetTrackVolume(id, float32(vol))
-				if p, ok := params.Arguments["pan"].(float64); ok {
-					driver.SetTrackPan(id, float32(p))
-				}
-			case "superdaw_write_midi":
-				id, _ := params.Arguments["track_id"].(string)
-				clipIdx := 0
-				if idx, ok := params.Arguments["clip_index"].(float64); ok { clipIdx = int(idx) }
-				notesJSON, _ := json.Marshal(params.Arguments["notes"])
-				var notes []daw.MIDINote
-				json.Unmarshal(notesJSON, &notes)
-				driver.WriteMIDIClip(id, clipIdx, notes)
-			case "superdaw_generate_euclidean":
-				id, _ := params.Arguments["track_id"].(string)
-				hits, _ := params.Arguments["hits"].(float64)
-				steps, _ := params.Arguments["steps"].(float64)
-				pitch, _ := params.Arguments["pitch"].(float64)
-				notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 4.0)
-				driver.WriteMIDIClip(id, 0, notes)
-			case "superdaw_create_track":
-				n, _ := params.Arguments["name"].(string)
-				t, _ := params.Arguments["type"].(string)
-				driver.CreateTrack(n, t)
-			case "superdaw_transport_control":
-				p, _ := params.Arguments["playing"].(bool)
-				b, ok := params.Arguments["bpm"].(float64)
-				if !ok { b = 120.0 }
-				driver.SetTransportState(p, b)
-				dash.UpdateDAW(dawName, p, b)
-				link.Sync(p, b)
-			case "superdaw_list_clips":
-				id, _ := params.Arguments["track_id"].(string)
-				result, _ = driver.ListClips(id)
-			case "superdaw_delete_clip":
-				id, _ := params.Arguments["track_id"].(string)
-				idx, _ := params.Arguments["clip_idx"].(float64)
-				driver.DeleteClip(id, int(idx))
-			case "superdaw_list_plugins":
-				result = scanner.ListPlugins()
-			case "superdaw_get_plugin_params":
-				name, _ := params.Arguments["plugin_name"].(string)
-				result, _ = scanner.GetPluginMetadata(name)
-			case "superdaw_separate_stems":
-				in, _ := params.Arguments["input_path"].(string)
-				out, _ := params.Arguments["output_dir"].(string)
-				stems, ok := params.Arguments["stems"].(float64)
-				if !ok { stems = 4 }
-				result, _ = engine.SeparateStems(in, out, int(stems))
-			case "superdaw_custom_command":
-				cmd, _ := params.Arguments["command"].(string)
-				args, _ := params.Arguments["args"].(map[string]interface{})
-				result, _ = driver.ExecuteCustomCommand(cmd, args)
-
-			// PHASE 4 TOOLS
-			case "superdaw_patch_audio":
-				srcDaw, _ := params.Arguments["source_daw"].(string)
-				srcTrack, _ := params.Arguments["source_track"].(string)
-				dstDaw, _ := params.Arguments["dest_daw"].(string)
-				dstTrack, _ := params.Arguments["dest_track"].(string)
-				router.Patch(srcDaw, srcTrack, dstDaw, dstTrack)
-				dash.AddPatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
-
-			case "superdaw_unpatch_audio":
-				srcDaw, _ := params.Arguments["source_daw"].(string)
-				srcTrack, _ := params.Arguments["source_track"].(string)
-				dstDaw, _ := params.Arguments["dest_daw"].(string)
-				dstTrack, _ := params.Arguments["dest_track"].(string)
-				router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack)
-				dash.RemovePatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
-
-			case "superdaw_import_generative":
-				prompt, _ := params.Arguments["prompt"].(string)
-				target, _ := params.Arguments["target_daw"].(string)
-				result, _ = genImporter.ImportStems(prompt, target)
-
-			case "superdaw_list_generative_jobs":
-				result = genImporter.GetJobs()
-
-			// PHASE 5 TOOLS
-			case "superdaw_get_tracks":
-				tracks, _ := driver.GetTracks()
-				result = tracks
-			case "superdaw_save_session":
-				fname, _ := params.Arguments["filename"].(string)
-				if fname == "" { fname = "studio_session.json" }
-				data, _ := json.Marshal(dash.GetState())
-				os.WriteFile(fname, data, 0644)
-				result = "Session saved."
-
-			case "superdaw_load_session":
-				fname, _ := params.Arguments["filename"].(string)
-				if fname == "" { fname = "studio_session.json" }
-				data, _ := os.ReadFile(fname)
-				var state dashboard.DashboardState
-				json.Unmarshal(data, &state)
-				dash.SetState(state)
-				result = "Session loaded."
-
-			case "superdaw_generate_music":
-				style, _ := params.Arguments["style"].(string)
-				bars, _ := params.Arguments["bars"].(float64)
-				trackID, _ := params.Arguments["track_id"].(string)
-				notes := engine.GenerateMusic(style, int(bars))
-				driver.WriteMIDIClip(trackID, 0, notes)
-				result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
-			case "superdaw_get_transport_state":
-				playing, bpm, _ := driver.GetTransportState()
-				result = map[string]interface{}{
-					"playing": playing,
-					"bpm":     bpm,
-				}
-			}
+			result := handleToolCall(params.Name, params.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
 
 			var content []interface{}
 			if text, ok := result.(string); ok {
@@ -368,4 +262,132 @@ func sendError(id interface{}, code int, message string) {
 		},
 	}
 	writeResponse(res)
+}
+
+func handleToolCall(name string, args map[string]interface{}, drivers map[string]daw.DAWDriver, activeDriver daw.DAWDriver, scanner *vst.Scanner, dash *dashboard.DashboardState, genImporter *engine.GenerativeImporter, link *engine.LinkBridge, router *daw.AudioRouter) interface{} {
+	dawName := "ableton"
+	if d, ok := args["daw"].(string); ok { dawName = d }
+	driver := drivers[dawName]
+	if driver == nil { driver = activeDriver }
+
+	var result interface{}
+	result = "Success"
+
+	switch name {
+	case "superdaw_set_mixer":
+		id, _ := args["track_id"].(string)
+		vol, _ := args["volume"].(float64)
+		driver.SetTrackVolume(id, float32(vol))
+		if p, ok := args["pan"].(float64); ok {
+			driver.SetTrackPan(id, float32(p))
+		}
+	case "superdaw_write_midi":
+		id, _ := args["track_id"].(string)
+		clipIdx := 0
+		if idx, ok := args["clip_index"].(float64); ok { clipIdx = int(idx) }
+		notesJSON, _ := json.Marshal(args["notes"])
+		var notes []daw.MIDINote
+		json.Unmarshal(notesJSON, &notes)
+		driver.WriteMIDIClip(id, clipIdx, notes)
+	case "superdaw_generate_euclidean":
+		id, _ := args["track_id"].(string)
+		hits, _ := args["hits"].(float64)
+		steps, _ := args["steps"].(float64)
+		pitch, _ := args["pitch"].(float64)
+		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 4.0)
+		driver.WriteMIDIClip(id, 0, notes)
+	case "superdaw_create_track":
+		n, _ := args["name"].(string)
+		t, _ := args["type"].(string)
+		driver.CreateTrack(n, t)
+	case "superdaw_transport_control":
+		p, _ := args["playing"].(bool)
+		b, ok := args["bpm"].(float64)
+		if !ok { b = 120.0 }
+		driver.SetTransportState(p, b)
+		dash.UpdateDAW(dawName, p, b)
+		link.Sync(p, b)
+	case "superdaw_list_clips":
+		id, _ := args["track_id"].(string)
+		result, _ = driver.ListClips(id)
+	case "superdaw_delete_clip":
+		id, _ := args["track_id"].(string)
+		idx, _ := args["clip_idx"].(float64)
+		driver.DeleteClip(id, int(idx))
+	case "superdaw_list_plugins":
+		result = scanner.ListPlugins()
+	case "superdaw_get_plugin_params":
+		name, _ := args["plugin_name"].(string)
+		result, _ = scanner.GetPluginMetadata(name)
+	case "superdaw_separate_stems":
+		in, _ := args["input_path"].(string)
+		out, _ := args["output_dir"].(string)
+		stems, ok := args["stems"].(float64)
+		if !ok { stems = 4 }
+		result, _ = engine.SeparateStems(in, out, int(stems))
+	case "superdaw_custom_command":
+		cmd, _ := args["command"].(string)
+		cargs, _ := args["args"].(map[string]interface{})
+		result, _ = driver.ExecuteCustomCommand(cmd, cargs)
+
+	// PHASE 4 TOOLS
+	case "superdaw_patch_audio":
+		srcDaw, _ := args["source_daw"].(string)
+		srcTrack, _ := args["source_track"].(string)
+		dstDaw, _ := args["dest_daw"].(string)
+		dstTrack, _ := args["dest_track"].(string)
+		router.Patch(srcDaw, srcTrack, dstDaw, dstTrack)
+		dash.AddPatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+
+	case "superdaw_unpatch_audio":
+		srcDaw, _ := args["source_daw"].(string)
+		srcTrack, _ := args["source_track"].(string)
+		dstDaw, _ := args["dest_daw"].(string)
+		dstTrack, _ := args["dest_track"].(string)
+		router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack)
+		dash.RemovePatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+
+	case "superdaw_import_generative":
+		prompt, _ := args["prompt"].(string)
+		target, _ := args["target_daw"].(string)
+		result, _ = genImporter.ImportStems(prompt, target)
+
+	case "superdaw_list_generative_jobs":
+		result = genImporter.GetJobs()
+
+	// PHASE 5 TOOLS
+	case "superdaw_get_tracks":
+		tracks, _ := driver.GetTracks()
+		result = tracks
+	case "superdaw_save_session":
+		fname, _ := args["filename"].(string)
+		if fname == "" { fname = "studio_session.json" }
+		data, _ := json.Marshal(dash.GetState())
+		os.WriteFile(fname, data, 0644)
+		result = "Session saved."
+
+	case "superdaw_load_session":
+		fname, _ := args["filename"].(string)
+		if fname == "" { fname = "studio_session.json" }
+		data, _ := os.ReadFile(fname)
+		var state dashboard.DashboardState
+		json.Unmarshal(data, &state)
+		dash.SetState(state)
+		result = "Session loaded."
+
+	case "superdaw_generate_music":
+		style, _ := args["style"].(string)
+		bars, _ := args["bars"].(float64)
+		trackID, _ := args["track_id"].(string)
+		notes := engine.GenerateMusic(style, int(bars))
+		driver.WriteMIDIClip(trackID, 0, notes)
+		result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
+	case "superdaw_get_transport_state":
+		playing, bpm, _ := driver.GetTransportState()
+		result = map[string]interface{}{
+			"playing": playing,
+			"bpm":     bpm,
+		}
+	}
+	return result
 }
