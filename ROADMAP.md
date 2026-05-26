@@ -11,6 +11,7 @@
 - [x] Interactive Shell & CLI Parity (v2.1)
 - [x] Logic Pro & Cubase Drivers (v2.2)
 - [x] Bidirectional Monitoring & Web Dashboard (v2.3)
+- [x] Pro Tools native driver & universal studio parity (v2.4)
 - [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
 - [ ] Mobile Control Application (React Native)
