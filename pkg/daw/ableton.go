@@ -1,6 +1,7 @@
 package daw
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"github.com/hypebeast/go-osc/osc"

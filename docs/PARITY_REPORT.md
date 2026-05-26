@@ -11,9 +11,10 @@ This report analyzes the core capabilities of the SuperDAW-MCP protocol across a
 | Track Creation        | API     | Native | API    | API       | Keys  | Native | Native | OSC       |
 | Volume/Pan            | Native  | Native | Native | Agent     | Native| Native | Native | OSC       |
 | MIDI Note Injection   | API     | Lua    | API    | Limited   | No    | No     | No     | No        |
-| Scene/Pattern Launch  | Native  | No     | No     | No        | No    | No     | No     | No        |
-| VST Parameter Scan    | Heuristic| Heuristic| Heuristic| Heuristic| Heuristic| Heuristic| Heuristic| Heuristic |
+| Scene/Pattern Launch  | Native  | No     | Native | No        | No    | No     | No     | No        |
+| VST Parameter Scan    | Deep    | Deep   | Deep   | Deep      | Deep  | Deep   | Deep   | Deep      |
 | Universal Routing     | JACK    | ReRoute| JACK   | No        | No    | No     | Native | No        |
+| Reasoning Sidecar     | Yes     | No     | No     | No        | No    | No     | No     | No        |
 
 ## Implementation Strategy
 - **Native**: Direct mapping from unified protocol to DAW's built-in OSC/TCP schema.

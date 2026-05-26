@@ -66,8 +66,6 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 		state.mu.Lock()
 		state.clients[conn] = true
 		state.mu.Unlock()
-
-		// Send initial state
 		state.broadcast()
 	})
 
@@ -106,7 +104,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
-					<title>SuperDAW Dashboard v1.6</title>
+					<title>SuperDAW Dashboard v2.4</title>
 					<style>
 						body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; padding: 20px; }
 						.card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
@@ -117,8 +115,8 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						.patch-item { background: #252525; padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
 						.patch-arrow { color: #00ff88; font-weight: bold; }
 						.badge { background: #333; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; color: #aaa; }
-						#timeline { width: 100%; height: 300px; background: #000; margin-top: 20px; border: 1px solid #444; position: relative; overflow-x: auto; }
-						#blueprint { width: 100%; height: 200px; background: #1a1a1a; border: 1px dashed #444; margin-top: 10px; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #00ff88; }
+						#timeline { width: 100%%; height: 300px; background: #000; margin-top: 20px; border: 1px solid #444; position: relative; overflow-x: auto; }
+						#blueprint { width: 100%%; height: 200px; background: #1a1a1a; border: 1px dashed #444; margin-top: 10px; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #00ff88; }
 						.track-lane { height: 40px; border-bottom: 1px solid #222; display: flex; align-items: center; white-space: nowrap; }
 						.clip-block { position: absolute; background: #00bcd4; height: 30px; border-radius: 4px; border: 1px solid #fff; font-size: 10px; color: #000; padding: 2px; overflow: hidden; }
 						.keyboard { display: flex; justify-content: center; margin-top: 20px; }
@@ -133,7 +131,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						<div>
 							<button onclick="callMcp('superdaw_save_session', {})" class="badge" style="cursor: pointer; background: #00ff88; color: #000; border: none;">SAVE SESSION</button>
 							<button onclick="callMcp('superdaw_load_session', {})" class="badge" style="cursor: pointer; background: #00bcd4; color: #000; border: none;">LOAD SESSION</button>
-							<div id="version-badge" class="badge">v2.3.0 (Active)</div>
+							<div id="version-badge" class="badge">v2.5.0 (Active)</div>
 						</div>
 					</div>
 
@@ -186,26 +184,26 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							let dawHtml = '';
 							for (const name in state.daws) {
 								const d = state.daws[name];
-								dawHtml += `
-									<div class="patch-item">
-										<span><strong>${name.toUpperCase()}</strong></span>
-										<span>${d.is_playing ? '▶️ PLAYING' : '⏹️ STOPPED'}</span>
-										<span class="badge">${d.bpm.toFixed(1)} BPM</span>
-									</div>
-								`;
+								dawHtml += ' \
+									<div class="patch-item"> \
+										<span><strong>' + name.toUpperCase() + '</strong></span> \
+										<span>' + (d.is_playing ? '▶️ PLAYING' : '⏹️ STOPPED') + '</span> \
+										<span class="badge">' + d.bpm.toFixed(1) + ' BPM</span> \
+									</div> \
+								';
 							}
 							document.getElementById('daws').innerHTML = dawHtml || '<p style="color: #666">No active DAWs connected.</p>';
 
 							// Render Patches
 							let patchHtml = '';
 							state.patches.forEach(p => {
-								patchHtml += `
-									<div class="patch-item">
-										<span>${p.source_daw} (${p.source_track})</span>
-										<span class="patch-arrow">➔</span>
-										<span>${p.dest_daw} (${p.dest_track})</span>
-									</div>
-								`;
+								patchHtml += ' \
+									<div class="patch-item"> \
+										<span>' + p.source_daw + ' (' + p.source_track + ')</span> \
+										<span class="patch-arrow">➔</span> \
+										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> \
+									</div> \
+								';
 							});
 							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
 
@@ -213,15 +211,15 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							let jobHtml = '';
 							if (state.jobs) {
 								state.jobs.forEach(j => {
-									jobHtml += `
-										<div class="patch-item">
-											<span>${j.prompt}</span>
-											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;">
-												<div style="background: #00ff88; width: ${j.progress*100}%; height: 10px; border-radius: 5px;"></div>
-											</span>
-											<span>${j.status}</span>
-										</div>
-									`;
+									jobHtml += ' \
+										<div class="patch-item"> \
+											<span>' + j.prompt + '</span> \
+											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;"> \
+												<div style="background: #00ff88; width: ' + (j.progress*100) + '%%; height: 10px; border-radius: 5px;"></div> \
+											</span> \
+											<span>' + j.status + '</span> \
+										</div> \
+									';
 								});
 							}
 							document.getElementById('jobs').innerHTML = jobHtml || '<p style="color: #666">No active generation jobs.</p>';
@@ -229,7 +227,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							// Render Blueprint (Mermaid-style text graph)
 							let blueprint = 'graph LR\n';
 							state.patches.forEach(p => {
-								blueprint += `  ${p.source_daw} --> ${p.dest_daw}\n`;
+								blueprint += '  ' + p.source_daw + ' --> ' + p.dest_daw + '\n';
 							});
 							document.getElementById('blueprint').innerText = blueprint === 'graph LR\n' ? 'No connections.' : blueprint;
 
@@ -242,13 +240,13 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 									try {
 										const arrangement = JSON.parse(d.arrangement);
 										arrangement.forEach(track => {
-											timelineHtml += `<div class="track-lane" style="top: ${top}px; position: relative;"><span style="width: 100px; display: inline-block;">${track.track}</span>`;
+											timelineHtml += '<div class="track-lane" style="top: ' + top + 'px; position: relative;"><span style="width: 100px; display: inline-block;">' + track.track + '</span>';
 											track.clips.forEach(clip => {
 												const left = clip.start * 20; // 20 pixels per second
 												const width = (clip.end - clip.start) * 20;
-												timelineHtml += `<div class="clip-block" style="left: ${100+left}px; width: ${width}px;">${clip.name}</div>`;
+												timelineHtml += '<div class="clip-block" style="left: ' + (100+left) + 'px; width: ' + width + 'px;">' + clip.name + '</div>';
 											});
-											timelineHtml += `</div>`;
+											timelineHtml += '</div>';
 											top += 40;
 										});
 									} catch(e) {}
@@ -265,9 +263,6 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						}
 
 						async function callMcp(name, args) {
-							// For this simplified dashboard, we assume a local API proxy exists or
-							// we just log the intent. In a real build, this uses the server's internal RPC.
-							console.log("MCP Call:", name, args);
 							fetch('/api/call', {
 								method: 'POST',
 								headers: {'Content-Type': 'application/json'},
@@ -286,13 +281,6 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 	}
 	go server.ListenAndServe()
 	return state, mux
-}
-
-func GetMux() *http.ServeMux {
-	// This is a bit of a hack to allow remote.go to register on the same mux if needed,
-	// but for now we'll just use the global http.DefaultServeMux in remote.go if it's separate,
-	// or better, refactor to use a single mux.
-	return nil
 }
 
 func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {

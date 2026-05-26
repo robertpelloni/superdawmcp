@@ -73,3 +73,24 @@
 [submodule "third_party/ableton-live-mcp-server"]
 	path = third_party/ableton-live-mcp-server
 	url = https://github.com/Simon-Kansara/ableton-live-mcp-server
+[submodule "third_party/ableton-dj-template"]
+	path = third_party/ableton-dj-template
+	url = https://github.com/willrjmarshall/AbletonDJTemplateUnsupported
+[submodule "third_party/code-reasoning"]
+	path = third_party/code-reasoning
+	url = https://github.com/mettamatt/code-reasoning
+[submodule "third_party/advanced-reason-mcp"]
+	path = third_party/advanced-reason-mcp
+	url = https://github.com/Kuon-dev/advanced-reason-mcp
+[submodule "third_party/ableton-mcp-jpoindexter"]
+	path = third_party/ableton-mcp-jpoindexter
+	url = https://github.com/jpoindexter/ableton-mcp
+[submodule "third_party/daw-mcp-ruud0"]
+	path = third_party/daw-mcp-ruud0
+	url = https://github.com/ruud0/daw-mcp
+[submodule "third_party/ableton-mcp-josefigueredo"]
+	path = third_party/ableton-mcp-josefigueredo
+	url = https://github.com/josefigueredo/ableton-mcp
+[submodule "third_party/ableton-rufoa"]
+	path = third_party/ableton-rufoa
+	url = https://github.com/rufoa/ableton

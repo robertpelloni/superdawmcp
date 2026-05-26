@@ -1,28 +1,25 @@
-# Session Handoff - SuperDAW-MCP v2.4.0
+# Session Handoff - SuperDAW-MCP v2.5.0
 
 ## Summary of Completed Merges & Modifications
-- **Repository Sanitization:** Fully synchronized all submodules (including Ableton Remote Scripts v9-v12) and updated `.gitignore` to maintain a clean source repository.
-- **MCP Protocol Integrity:** Hardened the Go daemon to prevent "stdout corruption." Refactored the Web Dashboard and Mobile Remote to use an internal `CommandBus` channel, ensuring JSON-RPC 2.0 stream purity.
-- **Security Hardening:** Secured the Dashboard and Remote interfaces by binding them strictly to `localhost` (127.0.0.1) and using a private `ServeMux`.
-- **Architectural Refactoring:** Centralized tool execution logic into a shared `handleToolCall` handler in `cmd/superdaw/main.go` for unified tool dispatch.
-- **Arrangement Discovery:** Implemented real-time track/clip layout broadcasting for Ableton and REAPER.
-- **JACK Audio Routing:** Integrated system-level audio patching via the `jack_connect` backend.
-- **Enhanced Visual UX:** Updated the Dashboard with a canvas-based Arrangement View, Virtual MIDI Keyboard, and Studio Blueprint visualization.
-- **Project Governance:** Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, and `TODO.md` to reflect the v2.4.0 milestones.
+- **Universal Feature Blueprint:** Integrated 30+ architectural reference repositories as submodules and established a comprehensive capability mapping in `FEATURES.md`.
+- **Core Stability & Protocol Integrity:** Addressed critical bugs identified in code review (stdout corruption, Go syntax, HTML format escaping). The system now uses an internal `CommandBus` for UI-driven commands, preserving JSON-RPC stream purity.
+- **Enhanced VST Ecosystem:** Upgraded the VST scanner with deep heuristic-based parameter discovery and automated metadata extraction from `.vstpreset` and `.fxp` files.
+- **Studio-Wide Orchestration:** Developed `scripts/universal_adapter.py`, a high-level CLI that enables simultaneous transport and status management across all connected DAWs.
+- **Pro Tools Integration:** Implemented a native OSC driver (`pkg/daw/protools.go`) and CLI adapter, ensuring parity across all major professional audio platforms.
+- **Project Governance:** Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, and `TODO.md` to reflect the successful v2.5.0 release.
 
 ## Notable Conflicts & Resolutions
-- **Stdout Corruption:** Fixed a critical issue where the dashboard's API proxy was printing JSON-RPC requests to `stdout`, which interfered with the MCP Host (client) communication.
-- **Binary Commit:** Identified and removed the `bin/superdaw-mcp` binary from Git tracking to follow industry standards.
-- **Submodule Tracking:** Resolved inconsistencies in `.gitmodules` to ensure all recursive layers are tracked correctly.
+- **Backtick Nesting:** Resolved a critical compiler error in `dashboard.go` where JavaScript template literals were incorrectly nested within Go raw string literals.
+- **Submodule Sanitization:** Corrected inconsistencies in `.gitmodules` to ensure all index-tracked submodules are properly recorded.
+- **Formatting Verbs:** Escaped CSS percentage values in HTML templates to prevent `fmt.Fprintf` runtime panics.
 
 ## System State
-- **Version:** v2.4.0 (Active)
-- **Dashboard:** Port 8081 (Localhost)
-- **OSC Gateway:** Port 12001 (Global)
-- **MCP Tools:** 20+ universal tools operational.
-- **SDKs:** Support for Python, Ruby, Rust, TS, C++, Sonic Pi, SuperCollider.
+- **Version:** v2.5.0 (Final)
+- **DAWs Supported:** 8 (Ableton, REAPER, Bitwig, FL Studio, Logic, Cubase, Ardour, Pro Tools).
+- **Tool Count:** 22+ operational universal tools.
+- **Security:** Bound to 127.0.0.1; protocol stream hardened.
 
 ## Next Steps for Successor
-1. **Phase 6 Implementation:** Transition the VST scanner to actual binary probing using `libvst3` via CGO.
-2. **Mobile Development:** Kick off the React Native mobile application in `pkg/ux/mobile`.
-3. **Studio Collaboration:** Implement multi-user session synchronization via decentralized state sharing.
+1. **Physical Controller Integration:** Extend the Global OSC Gateway to support specific MIDI control surfaces (e.g., Push 3, MPC).
+2. **AI Reasoning Expansion:** Implement the reasoning sidecar pattern discovered in the `code-reasoning` submodule for in-DAW project analysis.
+3. **Mobile Release:** Finalize the React Native assets in `pkg/ux/mobile` for iOS/Android distribution.

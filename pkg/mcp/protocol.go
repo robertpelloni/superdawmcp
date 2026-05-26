@@ -285,6 +285,33 @@ func GenerateManifest() ListToolsResult {
 					"required": []string{"style", "track_id"},
 				},
 			},
+			{
+				Name:        "superdaw_set_plugin_parameter",
+				Description: "Adjust a parameter of a VST plugin by name.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name":    map[string]interface{}{"type": "string"},
+						"parameter_name": map[string]interface{}{"type": "string"},
+						"value":          map[string]interface{}{"type": "number"},
+						"track_id":       map[string]interface{}{"type": "string"},
+						"daw":            map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"plugin_name", "parameter_name", "value", "track_id"},
+				},
+			},
+			{
+				Name:        "superdaw_fire_scene",
+				Description: "Trigger a session scene (Ableton/Bitwig).",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"scene_index": map[string]interface{}{"type": "integer"},
+						"daw":         map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"scene_index"},
+				},
+			},
 		},
 	}
 }

@@ -54,13 +54,14 @@ func main() {
 			}
 			writeResponseRaw(notif)
 
-			// Update dashboard on specific notifications
 			if method == "superdaw/arrangement_update" {
-				p := params.(map[string]interface{})
-				dash.UpdateArrangement(dawName, p["arrangement"].(string))
+				if p, ok := params.(map[string]interface{}); ok {
+					if arr, ok := p["arrangement"].(string); ok {
+						dash.UpdateArrangement(dawName, arr)
+					}
+				}
 			}
 
-			// Periodically update jobs in dashboard
 			jobs := genImporter.GetJobs()
 			jList := make([]interface{}, len(jobs))
 			for i, j := range jobs { jList[i] = j }
@@ -68,20 +69,15 @@ func main() {
 		})
 	}
 
-	// Global OSC Input Gateway (Hardware -> SuperDAW)
-	// Supports dynamic DAW targeting via address: /superdaw/{daw_name}/...
 	go func() {
 		disp := osc.NewStandardDispatcher()
-
 		handler := func(m *osc.Message) {
 			parts := strings.Split(m.Address, "/")
 			if len(parts) < 4 { return }
 			dawName := parts[2]
 			cmd := parts[3]
-
 			driver, ok := drivers[dawName]
 			if !ok { return }
-
 			switch cmd {
 			case "transport":
 				if len(m.Arguments) > 0 {
@@ -108,25 +104,20 @@ func main() {
 				}
 			}
 		}
-
 		disp.AddMsgHandler("/superdaw/*/transport", handler)
 		disp.AddMsgHandler("/superdaw/*/volume", handler)
 		disp.AddMsgHandler("/superdaw/*/pan", handler)
 		disp.AddMsgHandler("/superdaw/*/track_create", handler)
-
-		// Legacy support
 		disp.AddMsgHandler("/superdaw/transport/play", func(m *osc.Message) {
 			if len(m.Arguments) > 0 {
 				p, _ := m.Arguments[0].(int32)
 				activeDriver.SetTransportState(p == 1, 120.0)
 			}
 		})
-
 		server := &osc.Server{Addr: "0.0.0.0:12001", Dispatcher: disp}
 		server.ListenAndServe()
 	}()
 
-	// Cross-platform VST scanning paths
 	vstDirs := []string{}
 	if runtime.GOOS == "darwin" {
 		vstDirs = append(vstDirs, "/Library/Audio/Plug-Ins/VST3")
@@ -137,24 +128,12 @@ func main() {
 	}
 	scanner.ScanDirectories(vstDirs)
 
-	// Process dashboard commands internally to avoid stdout corruption
 	go func() {
 		for cmd := range dashboard.CommandBus {
-			params := mcp.JSONRPCRequest{
-				JSONRPC: "2.0",
-				Method:  "tools/call",
-				ID:      "dashboard_internal",
-			}
-			args, _ := json.Marshal(cmd)
-			params.Params = args
-
-			// Route to the same tool execution logic as stdin
-			// For simplicity, we just trigger the logic here or refactor into a function
 			handleToolCall(cmd.Name, cmd.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
 		}
 	}()
 
-	// Initialize drivers that require permanent connections
 	if drv, ok := drivers["bitwig"]; ok {
 		go func() {
 			if err := drv.Connect("127.0.0.1:8181"); err != nil {
@@ -163,8 +142,7 @@ func main() {
 		}()
 	}
 
-	// Read version from VERSION.md
-	version := "2.3.0"
+	version := "2.5.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -176,23 +154,16 @@ func main() {
 			if err == io.EOF { return }
 			continue
 		}
-
 		var req mcp.JSONRPCRequest
 		if err := json.Unmarshal([]byte(line), &req); err != nil { continue }
-
 		if req.Method == "initialize" {
 			res := mcp.JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
 				Result: map[string]interface{}{
 					"protocolVersion": "2024-11-05",
-					"capabilities": map[string]interface{}{
-						"tools": map[string]interface{}{"listChanged": true},
-					},
-					"serverInfo": map[string]interface{}{
-						"name":    "SuperDAW-MCP",
-						"version": version,
-					},
+					"capabilities": map[string]interface{}{"tools": map[string]interface{}{"listChanged": true}},
+					"serverInfo": map[string]interface{}{"name": "SuperDAW-MCP", "version": version},
 				},
 			}
 			writeResponse(res)
@@ -212,55 +183,36 @@ func main() {
 				sendError(req.ID, -32602, "Invalid params")
 				continue
 			}
-
 			result := handleToolCall(params.Name, params.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
-
 			var content []interface{}
 			if text, ok := result.(string); ok {
-				content = append(content, map[string]interface{}{
-					"type": "text",
-					"text": text,
-				})
+				content = append(content, map[string]interface{}{"type": "text", "text": text})
 			} else {
-				// Structured result
 				jsonRes, _ := json.Marshal(result)
-				content = append(content, map[string]interface{}{
-					"type": "text",
-					"text": string(jsonRes),
-				})
+				content = append(content, map[string]interface{}{"type": "text", "text": string(jsonRes)})
 			}
-
 			res := mcp.JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      req.ID,
-				Result: map[string]interface{}{
-					"content": content,
-				},
+				Result:  map[string]interface{}{"content": content},
 			}
 			writeResponse(res)
 		}
 	}
 }
 
-func writeResponse(res mcp.JSONRPCResponse) {
-	writeResponseRaw(res)
-}
-
+func writeResponse(res mcp.JSONRPCResponse) { writeResponseRaw(res) }
 func writeResponseRaw(res interface{}) {
 	stdoutMu.Lock()
 	defer stdoutMu.Unlock()
 	out, _ := json.Marshal(res)
 	os.Stdout.Write(append(out, '\n'))
 }
-
 func sendError(id interface{}, code int, message string) {
 	res := mcp.JSONRPCResponse{
 		JSONRPC: "2.0",
 		ID:      id,
-		Error: &mcp.RPCError{
-			Code:    code,
-			Message: message,
-		},
+		Error:   &mcp.RPCError{Code: code, Message: message},
 	}
 	writeResponse(res)
 }
@@ -270,125 +222,81 @@ func handleToolCall(name string, args map[string]interface{}, drivers map[string
 	if d, ok := args["daw"].(string); ok { dawName = d }
 	driver := drivers[dawName]
 	if driver == nil { driver = activeDriver }
-
 	var result interface{}
 	result = "Success"
-
 	switch name {
 	case "superdaw_set_mixer":
-		id, _ := args["track_id"].(string)
-		vol, _ := args["volume"].(float64)
+		id, _ := args["track_id"].(string); vol, _ := args["volume"].(float64)
 		driver.SetTrackVolume(id, float32(vol))
-		if p, ok := args["pan"].(float64); ok {
-			driver.SetTrackPan(id, float32(p))
-		}
+		if p, ok := args["pan"].(float64); ok { driver.SetTrackPan(id, float32(p)) }
 	case "superdaw_write_midi":
-		id, _ := args["track_id"].(string)
-		clipIdx := 0
+		id, _ := args["track_id"].(string); clipIdx := 0
 		if idx, ok := args["clip_index"].(float64); ok { clipIdx = int(idx) }
 		notesJSON, _ := json.Marshal(args["notes"])
 		var notes []daw.MIDINote
 		json.Unmarshal(notesJSON, &notes)
 		driver.WriteMIDIClip(id, clipIdx, notes)
 	case "superdaw_generate_euclidean":
-		id, _ := args["track_id"].(string)
-		hits, _ := args["hits"].(float64)
-		steps, _ := args["steps"].(float64)
-		pitch, _ := args["pitch"].(float64)
+		id, _ := args["track_id"].(string); hits, _ := args["hits"].(float64); steps, _ := args["steps"].(float64); pitch, _ := args["pitch"].(float64)
 		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 4.0)
 		driver.WriteMIDIClip(id, 0, notes)
 	case "superdaw_create_track":
-		n, _ := args["name"].(string)
-		t, _ := args["type"].(string)
+		n, _ := args["name"].(string); t, _ := args["type"].(string)
 		driver.CreateTrack(n, t)
 	case "superdaw_transport_control":
-		p, _ := args["playing"].(bool)
-		b, ok := args["bpm"].(float64)
+		p, _ := args["playing"].(bool); b, ok := args["bpm"].(float64)
 		if !ok { b = 120.0 }
-		driver.SetTransportState(p, b)
-		dash.UpdateDAW(dawName, p, b)
-		link.Sync(p, b)
+		driver.SetTransportState(p, b); dash.UpdateDAW(dawName, p, b); link.Sync(p, b)
+	case "superdaw_get_tracks":
+		tracks, _ := driver.GetTracks(); result = tracks
+	case "superdaw_get_transport_state":
+		p, b, _ := driver.GetTransportState(); result = map[string]interface{}{"playing": p, "bpm": b}
 	case "superdaw_list_clips":
-		id, _ := args["track_id"].(string)
-		result, _ = driver.ListClips(id)
+		id, _ := args["track_id"].(string); result, _ = driver.ListClips(id)
 	case "superdaw_delete_clip":
-		id, _ := args["track_id"].(string)
-		idx, _ := args["clip_idx"].(float64)
-		driver.DeleteClip(id, int(idx))
+		id, _ := args["track_id"].(string); idx, _ := args["clip_idx"].(float64); driver.DeleteClip(id, int(idx))
 	case "superdaw_list_plugins":
 		result = scanner.ListPlugins()
 	case "superdaw_get_plugin_params":
-		name, _ := args["plugin_name"].(string)
-		result, _ = scanner.GetPluginMetadata(name)
+		name, _ := args["plugin_name"].(string); result, _ = scanner.GetPluginMetadata(name)
+	case "superdaw_set_plugin_parameter":
+		pName, _ := args["plugin_name"].(string); paramName, _ := args["parameter_name"].(string); val, _ := args["value"].(float64); trackID, _ := args["track_id"].(string)
+		meta, ok := scanner.GetPluginMetadata(pName)
+		if !ok { result = "Plugin not found." } else {
+			idx := -1
+			for _, pm := range meta.Parameters {
+				if strings.EqualFold(pm.Name, paramName) { idx = pm.Index; break }
+			}
+			if idx == -1 { result = "Parameter not found." } else {
+				driver.SetPluginParameter(trackID, pName, idx, float32(val))
+				result = fmt.Sprintf("Set %s:%s to %f", pName, paramName, val)
+			}
+		}
+	case "superdaw_fire_scene":
+		result, _ = driver.ExecuteCustomCommand("fire_scene", args)
 	case "superdaw_separate_stems":
-		in, _ := args["input_path"].(string)
-		out, _ := args["output_dir"].(string)
-		stems, ok := args["stems"].(float64)
-		if !ok { stems = 4 }
-		result, _ = engine.SeparateStems(in, out, int(stems))
+		in, _ := args["input_path"].(string); out, _ := args["output_dir"].(string); stems, ok := args["stems"].(float64); if !ok { stems = 4 }; result, _ = engine.SeparateStems(in, out, int(stems))
 	case "superdaw_custom_command":
-		cmd, _ := args["command"].(string)
-		cargs, _ := args["args"].(map[string]interface{})
-		result, _ = driver.ExecuteCustomCommand(cmd, cargs)
-
-	// PHASE 4 TOOLS
+		cmd, _ := args["command"].(string); cargs, _ := args["args"].(map[string]interface{}); result, _ = driver.ExecuteCustomCommand(cmd, cargs)
 	case "superdaw_patch_audio":
-		srcDaw, _ := args["source_daw"].(string)
-		srcTrack, _ := args["source_track"].(string)
-		dstDaw, _ := args["dest_daw"].(string)
-		dstTrack, _ := args["dest_track"].(string)
-		router.Patch(srcDaw, srcTrack, dstDaw, dstTrack)
-		dash.AddPatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
-
+		srcDaw, _ := args["source_daw"].(string); srcTrack, _ := args["source_track"].(string); dstDaw, _ := args["dest_daw"].(string); dstTrack, _ := args["dest_track"].(string)
+		router.Patch(srcDaw, srcTrack, dstDaw, dstTrack); dash.AddPatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
 	case "superdaw_unpatch_audio":
-		srcDaw, _ := args["source_daw"].(string)
-		srcTrack, _ := args["source_track"].(string)
-		dstDaw, _ := args["dest_daw"].(string)
-		dstTrack, _ := args["dest_track"].(string)
-		router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack)
-		dash.RemovePatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
-
+		srcDaw, _ := args["source_daw"].(string); srcTrack, _ := args["source_track"].(string); dstDaw, _ := args["dest_daw"].(string); dstTrack, _ := args["dest_track"].(string)
+		router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack); dash.RemovePatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
 	case "superdaw_import_generative":
-		prompt, _ := args["prompt"].(string)
-		target, _ := args["target_daw"].(string)
-		result, _ = genImporter.ImportStems(prompt, target)
-
+		prompt, _ := args["prompt"].(string); target, _ := args["target_daw"].(string); result, _ = genImporter.ImportStems(prompt, target)
 	case "superdaw_list_generative_jobs":
 		result = genImporter.GetJobs()
-
-	// PHASE 5 TOOLS
-	case "superdaw_get_tracks":
-		tracks, _ := driver.GetTracks()
-		result = tracks
 	case "superdaw_save_session":
-		fname, _ := args["filename"].(string)
-		if fname == "" { fname = "studio_session.json" }
-		data, _ := json.Marshal(dash.GetState())
-		os.WriteFile(fname, data, 0644)
-		result = "Session saved."
-
+		fname, _ := args["filename"].(string); if fname == "" { fname = "studio_session.json" }
+		data, _ := json.Marshal(dash.GetState()); os.WriteFile(fname, data, 0644); result = "Session saved."
 	case "superdaw_load_session":
-		fname, _ := args["filename"].(string)
-		if fname == "" { fname = "studio_session.json" }
-		data, _ := os.ReadFile(fname)
-		var state dashboard.DashboardState
-		json.Unmarshal(data, &state)
-		dash.SetState(state)
-		result = "Session loaded."
-
+		fname, _ := args["filename"].(string); if fname == "" { fname = "studio_session.json" }
+		data, _ := os.ReadFile(fname); var state dashboard.DashboardState; json.Unmarshal(data, &state); dash.SetState(state); result = "Session loaded."
 	case "superdaw_generate_music":
-		style, _ := args["style"].(string)
-		bars, _ := args["bars"].(float64)
-		trackID, _ := args["track_id"].(string)
-		notes := engine.GenerateMusic(style, int(bars))
-		driver.WriteMIDIClip(trackID, 0, notes)
-		result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
-	case "superdaw_get_transport_state":
-		playing, bpm, _ := driver.GetTransportState()
-		result = map[string]interface{}{
-			"playing": playing,
-			"bpm":     bpm,
-		}
+		style, _ := args["style"].(string); bars, _ := args["bars"].(float64); trackID, _ := args["track_id"].(string)
+		notes := engine.GenerateMusic(style, int(bars)); driver.WriteMIDIClip(trackID, 0, notes); result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
 	}
 	return result
 }
