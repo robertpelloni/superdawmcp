@@ -1,0 +1,9 @@
+Pro Tools OSC Mapping (Conceptual for SuperDAW-MCP)
+--------------------------------------------------
+/protools/transport/play [int: 0/1]
+/protools/transport/stop [int: 1]
+/protools/track/volume [string: track_id, float: 0.0-1.0]
+/protools/track/pan [string: track_id, float: -1.0-1.0]
+/protools/track/create [string: name, string: type]
+
+Note: This mapping should be loaded into a Pro Tools compatible OSC bridge like 'OSC/PILOT' or 'DAW Remote'.

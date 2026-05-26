@@ -39,6 +39,7 @@ func main() {
 		"flstudio": daw.NewFLStudioDriver("127.0.0.1", 9000),
 		"logic":    daw.NewLogicProDriver("127.0.0.1", 7000),
 		"cubase":   daw.NewCubaseDriver("127.0.0.1", 7001),
+		"protools": daw.NewProToolsDriver("127.0.0.1", 7002),
 	}
 
 	activeDriver := drivers["ableton"]

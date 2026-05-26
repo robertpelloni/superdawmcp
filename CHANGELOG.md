@@ -12,6 +12,7 @@
 - **Session Persistence:** Save and load complete studio configurations to JSON.
 - **Generative AI Job System:** Asynchronous background job monitoring for stem separation and music generation.
 - **OBS Integration:** Transparent web overlay endpoint for live streaming.
+- **Pro Tools Support:** Added native OSC driver and CLI adapter for Pro Tools.
 
 ## [2.3.0] - 2024-11-20
 ### Added

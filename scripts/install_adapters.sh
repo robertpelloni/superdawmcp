@@ -27,6 +27,10 @@ mkdir -p "$LDIR" && cp pkg/agents/logic/SuperDAW.logic_osc "$LDIR/" 2>/dev/null
 CDIR="$HOME/Documents/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/SuperDAW"
 mkdir -p "$CDIR" && cp pkg/agents/cubase/SuperDAW_Cubase.js "$CDIR/" 2>/dev/null
 
+# Pro Tools OSC Mapping
+PDIR="$HOME/Documents/Pro Tools/OSC"
+mkdir -p "$PDIR" && cp pkg/agents/protools/protools_osc.txt "$PDIR/" 2>/dev/null
+
 # Make examples and tools executable
 chmod +x examples/midi_bridge/midi_to_mcp.py
 chmod +x examples/multi_daw_jam/sync_connector.py
