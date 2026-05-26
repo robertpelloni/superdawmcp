@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0] - 2024-11-21
+### Added
+- **TCP MCP Gateway:** Standalone network access on port 12002 for remote control without subprocess constraints.
+- **Remote Python SDK:** Support for TCP socket transport in 'SuperDAWClient'.
+- **Production Sequence Logic:** Automated multi-DAW orchestration example.
+- **MIDI CC Automation:** Universal support for sending MIDI Control Change messages across engines.
+
 ## [2.5.0] - 2024-11-21
 ### Added
 - **Universal Feature Analysis:** Integrated 30+ architectural reference repositories to establish a comprehensive feature blueprint (see FEATURES.md).

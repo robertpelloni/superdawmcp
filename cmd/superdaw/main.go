@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net"
 	"io"
 	"os"
 	"runtime"
@@ -127,6 +128,45 @@ func main() {
 		vstDirs = append(vstDirs, "/usr/lib/vst3", "/usr/local/lib/vst3")
 	}
 	scanner.ScanDirectories(vstDirs)
+
+	// TCP MCP Gateway (Remote SDK Access)
+	go func() {
+		ln, err := net.Listen("tcp", "127.0.0.1:12002")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "TCP Gateway failed: %v\n", err)
+			return
+		}
+		for {
+			conn, err := ln.Accept()
+			if err != nil { continue }
+			go func(c net.Conn) {
+				defer c.Close()
+				scanner := bufio.NewScanner(c)
+				for scanner.Scan() {
+					line := scanner.Text()
+					var req mcp.JSONRPCRequest
+					if err := json.Unmarshal([]byte(line), &req); err != nil { continue }
+
+					if req.Method == "tools/call" {
+						var params struct {
+							Name      string                 `json:"name"`
+							Arguments map[string]interface{} `json:"arguments"`
+						}
+						json.Unmarshal(req.Params, &params)
+						res := handleToolCall(params.Name, params.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
+
+						resp := mcp.JSONRPCResponse{
+							JSONRPC: "2.0",
+							ID:      req.ID,
+							Result:  map[string]interface{}{"content": []interface{}{map[string]interface{}{"type": "text", "text": fmt.Sprintf("%v", res)}}},
+						}
+						data, _ := json.Marshal(resp)
+						c.Write(append(data, '\n'))
+					}
+				}
+			}(conn)
+		}
+	}()
 
 	go func() {
 		for cmd := range dashboard.CommandBus {

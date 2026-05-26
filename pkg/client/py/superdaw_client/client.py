@@ -2,13 +2,16 @@ import json
 import subprocess
 import threading
 import sys
+import socket
 from typing import List, Dict, Any, Optional, Callable
 
 class SuperDAWClient:
-    def __init__(self, server_path: str, args: Optional[List[str]] = None):
+    def __init__(self, server_path: Optional[str] = None, args: Optional[List[str]] = None, remote_addr: Optional[str] = None):
         self.server_path = server_path
         self.args = args or []
+        self.remote_addr = remote_addr
         self.process = None
+        self.socket = None
         self.request_id = 1
         self._lock = threading.Lock()
         self._pending_requests = {}
@@ -17,14 +20,21 @@ class SuperDAWClient:
         self._reader_thread = None
 
     def connect(self):
-        self.process = subprocess.Popen(
-            [self.server_path] + self.args,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=sys.stderr,
-            text=True,
-            bufsize=1
-        )
+        if self.remote_addr:
+            host, port = self.remote_addr.split(":")
+            self.socket = socket.create_connection((host, int(port)))
+            self.stream = self.socket.makefile('rw', buffering=1)
+        else:
+            self.process = subprocess.Popen(
+                [self.server_path] + self.args,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=sys.stderr,
+                text=True,
+                bufsize=1
+            )
+            self.stream = self.process.stdin
+
         self._running = True
         self._reader_thread = threading.Thread(target=self._read_loop, daemon=True)
         self._reader_thread.start()
@@ -34,10 +44,13 @@ class SuperDAWClient:
         if self.process:
             self.process.stdin.close()
             self.process.wait()
+        if self.socket:
+            self.socket.close()
 
     def _read_loop(self):
+        source = self.process.stdout if self.process else self.stream
         while self._running:
-            line = self.process.stdout.readline()
+            line = source.readline()
             if not line:
                 break
             try:
@@ -73,8 +86,8 @@ class SuperDAWClient:
             self.request_id += 1
             self._pending_requests[req_id] = (event, None)
             req = {"jsonrpc": "2.0", "method": method, "params": params, "id": req_id}
-            self.process.stdin.write(json.dumps(req) + "\n")
-            self.process.stdin.flush()
+            self.stream.write(json.dumps(req) + "\n")
+            self.stream.flush()
 
         event.wait(timeout=5.0)
         with self._lock:
