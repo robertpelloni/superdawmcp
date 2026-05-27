@@ -1,25 +1,20 @@
-# Session Handoff - SuperDAW-MCP v2.5.0
+# Session Handoff - SuperDAW-MCP v2.8.0
 
 ## Summary of Completed Merges & Modifications
-- **Universal Feature Blueprint:** Integrated 30+ architectural reference repositories as submodules and established a comprehensive capability mapping in `FEATURES.md`.
-- **Core Stability & Protocol Integrity:** Addressed critical bugs identified in code review (stdout corruption, Go syntax, HTML format escaping). The system now uses an internal `CommandBus` for UI-driven commands, preserving JSON-RPC stream purity.
-- **Enhanced VST Ecosystem:** Upgraded the VST scanner with deep heuristic-based parameter discovery and automated metadata extraction from `.vstpreset` and `.fxp` files.
-- **Studio-Wide Orchestration:** Developed `scripts/universal_adapter.py`, a high-level CLI that enables simultaneous transport and status management across all connected DAWs.
-- **Pro Tools Integration:** Implemented a native OSC driver (`pkg/daw/protools.go`) and CLI adapter, ensuring parity across all major professional audio platforms.
-- **Project Governance:** Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, and `TODO.md` to reflect the successful v2.5.0 release.
+- **Logic Pro Feedback:** Implemented a feedback listener in 'pkg/daw/logic.go' (port 12101) to enable real-time transport state tracking for Logic Pro.
+- **SDK Specialization:** Refactored the Python SDK to include specialized DAW subclasses (AbletonLive, Reaper, LogicPro, etc.) in 'pkg/client/py/superdaw_client/daws.py', allowing for cleaner and more intuitive orchestration scripts.
+- **Installer Hardening:** Overhauled 'scripts/install_adapters.sh' with OS detection and platform-specific paths (macOS/Windows) for reliable native agent deployment.
+- **Protocol & Memory:** Consolidated architectural memories into the system and updated the Universal Feature Parity report.
 
 ## Notable Conflicts & Resolutions
-- **Backtick Nesting:** Resolved a critical compiler error in `dashboard.go` where JavaScript template literals were incorrectly nested within Go raw string literals.
-- **Submodule Sanitization:** Corrected inconsistencies in `.gitmodules` to ensure all index-tracked submodules are properly recorded.
-- **Formatting Verbs:** Escaped CSS percentage values in HTML templates to prevent `fmt.Fprintf` runtime panics.
+- **Logic Feedback Ports:** Logic Pro typically defaults feedback to one port higher than the listen port; this is now explicitly handled in the Go driver.
 
 ## System State
-- **Version:** v2.5.0 (Final)
-- **DAWs Supported:** 8 (Ableton, REAPER, Bitwig, FL Studio, Logic, Cubase, Ardour, Pro Tools).
-- **Tool Count:** 22+ operational universal tools.
-- **Security:** Bound to 127.0.0.1; protocol stream hardened.
+- **Version:** v2.8.0 (Active)
+- **SDKs:** Python (Enhanced), TS, Go, Rust, Ruby, C++, C#, Java.
+- **Installation:** Automated via './scripts/install_adapters.sh'.
 
 ## Next Steps for Successor
-1. **Physical Controller Integration:** Extend the Global OSC Gateway to support specific MIDI control surfaces (e.g., Push 3, MPC).
-2. **AI Reasoning Expansion:** Implement the reasoning sidecar pattern discovered in the `code-reasoning` submodule for in-DAW project analysis.
-3. **Mobile Release:** Finalize the React Native assets in `pkg/ux/mobile` for iOS/Android distribution.
+1. **Remote Orchestration UI:** Integrate the 'studio_remote_control.py' logic into a tab on the Web Dashboard.
+2. **Deep MIDI Analysis:** Port the 'DetectMIDIChordProgressions' logic from the REAPER bridge to a universal Go engine tool.
+3. **Release Build:** Perform a cross-platform compilation of the daemon for all major OS targets.

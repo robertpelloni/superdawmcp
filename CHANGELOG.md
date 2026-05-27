@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0] - 2024-11-21
+### Added
+- **Logic Pro OSC Feedback:** Real-time state tracking for playing and tempo via port 12101 listener.
+- **Python DAW Subclasses:** New specialized classes (AbletonLive, LogicPro, Reaper, etc.) for intuitive SDK usage.
+- **Robust Installer:** OS-aware native agent installation script with Windows/macOS path handling.
+- **Enhanced Memory & Documentation:** Synthesized architectural learnings and protocol parity reports.
+
 ## [2.7.0] - 2024-11-21
 ### Added
 - **TCP MCP Gateway:** Standalone network access on port 12002 for remote control without subprocess constraints.
