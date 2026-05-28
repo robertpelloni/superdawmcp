@@ -74,3 +74,11 @@ func (f *FLStudioDriver) ExecuteCustomCommand(cmd string, args map[string]interf
 	m := osc.NewMessage("/flstudio/custom/" + cmd)
 	return "Sent to FL Studio", f.OSCClient.Send(m)
 }
+
+func (f *FLStudioDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return nil
+}
+
+func (f *FLStudioDriver) SendCC(trackID string, controller int, value int) error {
+	return nil
+}

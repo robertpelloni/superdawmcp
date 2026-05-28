@@ -192,3 +192,16 @@ func (r *ReaperDriver) ExecuteCustomCommand(cmd string, args map[string]interfac
 	}
 	return nil, fmt.Errorf("unknown command: %s", cmd)
 }
+
+func (r *ReaperDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	_, err := r.callBridge("TrackFX_SetParam", []interface{}{trackID, pluginID, paramIndex, value})
+	return err
+}
+
+func (r *ReaperDriver) SendCC(trackID string, controller int, value int) error {
+	m := osc.NewMessage("/superdaw/midi/cc")
+	m.Append(trackID)
+	m.Append(int32(controller))
+	m.Append(int32(value))
+	return r.OSCClient.Send(m)
+}

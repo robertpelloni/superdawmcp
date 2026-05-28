@@ -68,3 +68,31 @@ export class AbletonLive extends DAWAdapter {
     // Custom command implementation
   }
 }
+
+export class Reaper extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "reaper"); }
+}
+
+export class LogicPro extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "logic"); }
+}
+
+export class Bitwig extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "bitwig"); }
+}
+
+export class FLStudio extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "flstudio"); }
+}
+
+export class Cubase extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "cubase"); }
+}
+
+export class Ardour extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "ardour"); }
+}
+
+export class ProTools extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "protools"); }
+}

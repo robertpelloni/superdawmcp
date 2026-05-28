@@ -50,3 +50,23 @@ class Reaper(DAWAdapter):
 class LogicPro(DAWAdapter):
     def __init__(self, client: SuperDAWClient):
         super().__init__(client, "logic")
+
+class Bitwig(DAWAdapter):
+    def __init__(self, client: SuperDAWClient):
+        super().__init__(client, "bitwig")
+
+class FLStudio(DAWAdapter):
+    def __init__(self, client: SuperDAWClient):
+        super().__init__(client, "flstudio")
+
+class Cubase(DAWAdapter):
+    def __init__(self, client: SuperDAWClient):
+        super().__init__(client, "cubase")
+
+class Ardour(DAWAdapter):
+    def __init__(self, client: SuperDAWClient):
+        super().__init__(client, "ardour")
+
+class ProTools(DAWAdapter):
+    def __init__(self, client: SuperDAWClient):
+        super().__init__(client, "protools")

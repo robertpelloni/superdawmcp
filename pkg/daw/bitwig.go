@@ -73,3 +73,11 @@ func (b *BitwigDriver) ExecuteCustomCommand(cmd string, args map[string]interfac
 	err := b.send("custom."+cmd, args)
 	return "Sent custom command to Bitwig", err
 }
+
+func (b *BitwigDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return b.send("plugin.set_parameter", map[string]interface{}{"track_id": trackID, "plugin_id": pluginID, "index": paramIndex, "value": value})
+}
+
+func (b *BitwigDriver) SendCC(trackID string, controller int, value int) error {
+	return b.send("midi.send_cc", map[string]interface{}{"track_id": trackID, "controller": controller, "value": value})
+}

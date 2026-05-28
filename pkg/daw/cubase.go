@@ -58,3 +58,11 @@ func (c *CubaseDriver) ExecuteCustomCommand(cmd string, args map[string]interfac
 	m := osc.NewMessage("/cubase/custom/" + cmd)
 	return "Sent to Cubase", c.OSCClient.Send(m)
 }
+
+func (c *CubaseDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return nil
+}
+
+func (c *CubaseDriver) SendCC(trackID string, controller int, value int) error {
+	return nil
+}

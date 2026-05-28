@@ -160,3 +160,20 @@ func (a *AbletonLiveDriver) ExecuteCustomCommand(cmd string, args map[string]int
 	}
 	return nil, fmt.Errorf("unknown command: %s", cmd)
 }
+
+func (a *AbletonLiveDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	m := osc.NewMessage("/superdaw/plugin/param")
+	m.Append(trackID)
+	m.Append(pluginID)
+	m.Append(int32(paramIndex))
+	m.Append(value)
+	return a.OSCClient.Send(m)
+}
+
+func (a *AbletonLiveDriver) SendCC(trackID string, controller int, value int) error {
+	m := osc.NewMessage("/superdaw/midi/cc")
+	m.Append(trackID)
+	m.Append(int32(controller))
+	m.Append(int32(value))
+	return a.OSCClient.Send(m)
+}

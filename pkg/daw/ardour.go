@@ -32,3 +32,11 @@ func (a *ArdourDriver) SetNotifyHandler(handler func(method string, params inter
 func (a *ArdourDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("custom commands not implemented for Ardour")
 }
+
+func (a *ArdourDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return nil
+}
+
+func (a *ArdourDriver) SendCC(trackID string, controller int, value int) error {
+	return nil
+}

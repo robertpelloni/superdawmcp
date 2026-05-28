@@ -23,6 +23,40 @@ SuperDAW-MCP is a unified Model Context Protocol (MCP) server that standardizes 
 ## Quick Start
 See [DEPLOY.md](DEPLOY.md) for installation and environment setup instructions.
 
+## Developer SDKs
+
+### Python SDK
+The Python SDK provides specialized adapters and a high-level orchestrator for studio management.
+
+```python
+from superdaw_client.client import SuperDAWClient
+from superdaw_client.orchestrator import SuperDAWOrchestrator
+
+client = SuperDAWClient("./superdaw")
+client.connect()
+
+studio = SuperDAWOrchestrator(client)
+studio.sync_tempo(128.0)
+studio.play_all()
+
+# Specialized control
+studio.ableton.fire_scene(1)
+studio.reaper.run_action("_S&M_MUTE_ALL_TRACKS")
+```
+
+### TypeScript SDK
+Ideal for web-based studio dashboards and Node.js automation.
+
+```typescript
+import { SuperDAWClient, AbletonLive, Reaper } from "superdaw-mcp";
+
+const client = new SuperDAWClient("./superdaw");
+await client.connect();
+
+const ableton = new AbletonLive(client);
+await ableton.play();
+```
+
 ## Architecture
 SuperDAW-MCP uses a high-performance Go core daemon to route standardized JSON-RPC commands to lightweight native "Agents" running inside each DAW. This ensures low-latency execution and deep access to proprietary DAW APIs.
 

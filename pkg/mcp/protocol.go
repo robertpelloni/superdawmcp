@@ -49,6 +49,21 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_generate_euclidean",
+				Description: "Generate a Euclidean rhythm pattern on a target track.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"track_id": map[string]interface{}{"type": "string"},
+						"hits":     map[string]interface{}{"type": "integer"},
+						"steps":    map[string]interface{}{"type": "integer"},
+						"pitch":    map[string]interface{}{"type": "integer"},
+						"daw":      map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"track_id", "hits", "steps"},
+				},
+			},
+			{
 				Name:        "superdaw_write_midi",
 				Description: "Inject MIDI notes into a clip.",
 				InputSchema: map[string]interface{}{

@@ -1,40 +1,59 @@
-#!/usr/bin/env python3
 import sys
 import os
 import time
 
-# Add pkg/client/py to sys.path
+# Add local SDK to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'pkg', 'client', 'py')))
 
 from superdaw_client.client import SuperDAWClient
+from superdaw_client.orchestrator import SuperDAWOrchestrator
 
-def main():
-    # Connect to a remote SuperDAW server over the network
-    # Assumes server is running with: go run cmd/superdaw/main.go
-    remote_server = "127.0.0.1:12002"
-    client = SuperDAWClient(remote_addr=remote_server)
+def production_routine():
+    server_path = "./superdaw"
+    if not os.path.exists(server_path):
+        server_path = "../../bin/superdaw-mcp"
 
-    print(f"Connecting to remote SuperDAW at {remote_server}...")
+    print(f"Connecting to SuperDAW Studio via {server_path}...")
+    client = SuperDAWClient(server_path)
+    client.connect()
+
+    orchestrator = SuperDAWOrchestrator(client)
+
     try:
-        client.connect()
-        print("Connected! Executing production sequence...")
+        print("\n--- Phase 1: Studio Setup ---")
+        orchestrator.sync_tempo(128.0)
 
-        # 1. Sync all DAWs to production tempo
-        client.transport_control(playing=True, bpm=124.0, daw="ableton")
-        client.transport_control(playing=True, bpm=124.0, daw="reaper")
+        print("Creating arrangement structure...")
+        orchestrator.ableton.create_track("Drums", "audio")
+        orchestrator.reaper.create_track("Bass", "midi")
+        orchestrator.logic.create_track("Strings", "audio")
 
-        # 2. Automated Mixer fade-in
-        for i in range(10):
-            vol = i / 10.0
-            client.set_mixer(track_id="0", volume=vol, daw="ableton")
-            time.sleep(0.5)
+        print("\n--- Phase 2: Mixing and Routing ---")
+        orchestrator.ableton.set_volume("0", 0.7)
+        orchestrator.reaper.set_volume("0", 0.9)
 
-        print("Production sequence complete.")
+        # Patching Ableton Drums to REAPER Sidechain
+        client.patch_audio("ableton", "out1", "reaper", "in3")
 
-    except Exception as e:
-        print(f"Error: {e}")
+        print("\n--- Phase 3: Synchronized Performance ---")
+        print("Starting all engines...")
+        orchestrator.play_all()
+
+        time.sleep(5)
+
+        print("Dropping into bridge section...")
+        orchestrator.ableton.set_volume("0", 0.3) # Fade drums
+
+        time.sleep(5)
+
+        print("\n--- Phase 4: Session Finalization ---")
+        orchestrator.stop_all()
+
+        print("\nFinal Studio Report:")
+        print(orchestrator.get_studio_status())
+
     finally:
         client.disconnect()
 
 if __name__ == "__main__":
-    main()
+    production_routine()
