@@ -33,3 +33,13 @@ Add the following to your MCP client configuration (e.g., Claude Desktop config)
   }
 }
 ```
+
+## Remote Studio Access (v2.7.0)
+SuperDAW now supports remote network control via a TCP Gateway on port 12002.
+To connect from a remote machine:
+1. Ensure port 12002 is open on the server.
+2. Use the 'remote_addr' parameter in the Python SDK:
+   ```python
+   client = SuperDAWClient(remote_addr="server_ip:12002")
+   client.connect()
+   ```

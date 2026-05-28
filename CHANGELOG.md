@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.9.0] - 2024-11-21
+### Synchronized
+- **Executive Protocol:** Performed full upstream sync and recursive submodule sanitization.
+- **Branch Reconciliation:** Merged all upstream progress into main and aligned feature tracking.
+- **Documentation Sync:** Updated Roadmap and TODO based on the latest architectural audit.
+
 ## [2.8.0] - 2024-11-21
 ### Added
 - **Logic Pro OSC Feedback:** Real-time state tracking for playing and tempo via port 12101 listener.
