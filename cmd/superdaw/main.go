@@ -32,21 +32,22 @@ func main() {
 	genImporter := engine.NewGenerativeImporter()
 	link := engine.NewLinkBridge()
 
-	drivers := map[string]daw.DAWDriver{
-		"ableton":  daw.NewAbletonDriver("127.0.0.1", 11000, 11001),
-		"reaper":   daw.NewReaperDriver("127.0.0.1", 8000, 8080),
-		"ardour":   daw.NewArdourDriver("127.0.0.1", 3819),
-		"bitwig":   daw.NewBitwigDriver("127.0.0.1", 8181),
-		"flstudio": daw.NewFLStudioDriver("127.0.0.1", 9000),
-		"logic":    daw.NewLogicProDriver("127.0.0.1", 7000),
-		"cubase":   daw.NewCubaseDriver("127.0.0.1", 7001),
-		"protools": daw.NewProToolsDriver("127.0.0.1", 7002),
-	}
+	manager := daw.NewConnectionManager()
 
-	activeDriver := drivers["ableton"]
+	// Register default instances
+	manager.Register("ableton", daw.NewAbletonDriver("127.0.0.1", 11000, 11001))
+	manager.Register("reaper", daw.NewReaperDriver("127.0.0.1", 8000, 8080))
+	manager.Register("ardour", daw.NewArdourDriver("127.0.0.1", 3819))
+	manager.Register("bitwig", daw.NewBitwigDriver("127.0.0.1", 8181))
+	manager.Register("flstudio", daw.NewFLStudioDriver("127.0.0.1", 9000))
+	manager.Register("logic", daw.NewLogicProDriver("127.0.0.1", 12100, 12101))
+	manager.Register("cubase", daw.NewCubaseDriver("127.0.0.1", 7001))
+	manager.Register("protools", daw.NewProToolsDriver("127.0.0.1", 7002))
 
-	for name, drv := range drivers {
-		dawName := name
+	manager.SetDefault("ableton")
+
+	for id, drv := range manager.GetAll() {
+		instanceID := id
 		drv.SetNotifyHandler(func(method string, params interface{}) {
 			notif := map[string]interface{}{
 				"jsonrpc": "2.0",
@@ -58,7 +59,7 @@ func main() {
 			if method == "superdaw/arrangement_update" {
 				if p, ok := params.(map[string]interface{}); ok {
 					if arr, ok := p["arrangement"].(string); ok {
-						dash.UpdateArrangement(dawName, arr)
+						dash.UpdateArrangement(instanceID, arr)
 					}
 				}
 			}
@@ -75,10 +76,10 @@ func main() {
 		handler := func(m *osc.Message) {
 			parts := strings.Split(m.Address, "/")
 			if len(parts) < 4 { return }
-			dawName := parts[2]
+			instanceID := parts[2]
 			cmd := parts[3]
-			driver, ok := drivers[dawName]
-			if !ok { return }
+			driver, err := manager.Get(instanceID)
+			if err != nil { return }
 			switch cmd {
 			case "transport":
 				if len(m.Arguments) > 0 {
@@ -112,7 +113,9 @@ func main() {
 		disp.AddMsgHandler("/superdaw/transport/play", func(m *osc.Message) {
 			if len(m.Arguments) > 0 {
 				p, _ := m.Arguments[0].(int32)
-				activeDriver.SetTransportState(p == 1, 120.0)
+				if drv, err := manager.Get(""); err == nil {
+					drv.SetTransportState(p == 1, 120.0)
+				}
 			}
 		})
 		server := &osc.Server{Addr: "0.0.0.0:12001", Dispatcher: disp}
@@ -141,9 +144,9 @@ func main() {
 			if err != nil { continue }
 			go func(c net.Conn) {
 				defer c.Close()
-				scanner := bufio.NewScanner(c)
-				for scanner.Scan() {
-					line := scanner.Text()
+				tcpScanner := bufio.NewScanner(c)
+				for tcpScanner.Scan() {
+					line := tcpScanner.Text()
 					var req mcp.JSONRPCRequest
 					if err := json.Unmarshal([]byte(line), &req); err != nil { continue }
 
@@ -153,7 +156,7 @@ func main() {
 							Arguments map[string]interface{} `json:"arguments"`
 						}
 						json.Unmarshal(req.Params, &params)
-						res := handleToolCall(params.Name, params.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
+						res := handleToolCall(params.Name, params.Arguments, manager, scanner, dash, genImporter, link, router)
 
 						resp := mcp.JSONRPCResponse{
 							JSONRPC: "2.0",
@@ -170,11 +173,11 @@ func main() {
 
 	go func() {
 		for cmd := range dashboard.CommandBus {
-			handleToolCall(cmd.Name, cmd.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
+			handleToolCall(cmd.Name, cmd.Arguments, manager, scanner, dash, genImporter, link, router)
 		}
 	}()
 
-	if drv, ok := drivers["bitwig"]; ok {
+	if drv, err := manager.Get("bitwig"); err == nil {
 		go func() {
 			if err := drv.Connect("127.0.0.1:8181"); err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to connect to Bitwig: %v\n", err)
@@ -182,7 +185,7 @@ func main() {
 		}()
 	}
 
-	version := "2.5.0"
+	version := "3.0.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -223,7 +226,7 @@ func main() {
 				sendError(req.ID, -32602, "Invalid params")
 				continue
 			}
-			result := handleToolCall(params.Name, params.Arguments, drivers, activeDriver, scanner, dash, genImporter, link, router)
+			result := handleToolCall(params.Name, params.Arguments, manager, scanner, dash, genImporter, link, router)
 			var content []interface{}
 			if text, ok := result.(string); ok {
 				content = append(content, map[string]interface{}{"type": "text", "text": text})
@@ -257,11 +260,12 @@ func sendError(id interface{}, code int, message string) {
 	writeResponse(res)
 }
 
-func handleToolCall(name string, args map[string]interface{}, drivers map[string]daw.DAWDriver, activeDriver daw.DAWDriver, scanner *vst.Scanner, dash *dashboard.DashboardState, genImporter *engine.GenerativeImporter, link *engine.LinkBridge, router *daw.AudioRouter) interface{} {
-	dawName := "ableton"
-	if d, ok := args["daw"].(string); ok { dawName = d }
-	driver := drivers[dawName]
-	if driver == nil { driver = activeDriver }
+func handleToolCall(name string, args map[string]interface{}, manager *daw.ConnectionManager, scanner *vst.Scanner, dash *dashboard.DashboardState, genImporter *engine.GenerativeImporter, link *engine.LinkBridge, router *daw.AudioRouter) interface{} {
+	instanceID := ""
+	if id, ok := args["daw"].(string); ok { instanceID = id }
+	driver, err := manager.Get(instanceID)
+	if err != nil { return err.Error() }
+
 	var result interface{}
 	result = "Success"
 	switch name {
@@ -276,17 +280,13 @@ func handleToolCall(name string, args map[string]interface{}, drivers map[string
 		var notes []daw.MIDINote
 		json.Unmarshal(notesJSON, &notes)
 		driver.WriteMIDIClip(id, clipIdx, notes)
-	case "superdaw_generate_euclidean":
-		id, _ := args["track_id"].(string); hits, _ := args["hits"].(float64); steps, _ := args["steps"].(float64); pitch, _ := args["pitch"].(float64)
-		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 4.0)
-		driver.WriteMIDIClip(id, 0, notes)
 	case "superdaw_create_track":
 		n, _ := args["name"].(string); t, _ := args["type"].(string)
 		driver.CreateTrack(n, t)
 	case "superdaw_transport_control":
 		p, _ := args["playing"].(bool); b, ok := args["bpm"].(float64)
 		if !ok { b = 120.0 }
-		driver.SetTransportState(p, b); dash.UpdateDAW(dawName, p, b); link.Sync(p, b)
+		driver.SetTransportState(p, b); dash.UpdateDAW(instanceID, p, b); link.Sync(p, b)
 	case "superdaw_get_tracks":
 		tracks, _ := driver.GetTracks(); result = tracks
 	case "superdaw_get_transport_state":
@@ -312,6 +312,10 @@ func handleToolCall(name string, args map[string]interface{}, drivers map[string
 				result = fmt.Sprintf("Set %s:%s to %f", pName, paramName, val)
 			}
 		}
+	case "superdaw_send_cc":
+		id, _ := args["track_id"].(string); ctrl, _ := args["controller"].(float64); val, _ := args["value"].(float64)
+		driver.SendCC(id, int(ctrl), int(val))
+		result = fmt.Sprintf("Sent CC %d:%d to track %s", int(ctrl), int(val), id)
 	case "superdaw_fire_scene":
 		result, _ = driver.ExecuteCustomCommand("fire_scene", args)
 	case "superdaw_separate_stems":

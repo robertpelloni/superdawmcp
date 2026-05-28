@@ -14,6 +14,7 @@ func NewBitwigDriver(host string, port int) *BitwigDriver {
 	return &BitwigDriver{}
 }
 
+func (b *BitwigDriver) GetType() string { return "bitwig" }
 func (b *BitwigDriver) Connect(endpoint string) error {
 	conn, err := net.Dial("tcp", endpoint)
 	if err != nil { return err }

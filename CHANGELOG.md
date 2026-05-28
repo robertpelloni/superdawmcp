@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.0] - 2024-11-21
+### Added
+- **Multi-Instance Connection Manager:** Core engine now supports concurrent connections to multiple instances of the same DAW (e.g., `reaper-1`, `reaper-2`).
+- **Heterogeneous DAW Registry:** Dynamic registration and routing for all 8 supported engines.
+- **Enhanced Bidirectional Telemetry:** Standardized state feedback (`/superdaw/state/*`) across REAPER, Logic Pro, and FL Studio agents.
+- **Specialized SDK Adapters:** High-level Python and TypeScript classes for idiomatic DAW control (`AbletonLive`, `Reaper`, etc.).
+- **V3.0.0 Refactor:** Major internal reorganization to decouple driver state from global orchestration.
+
 ## [2.9.0] - 2024-11-21
 ### Synchronized
 - **Executive Protocol:** Performed full upstream sync and recursive submodule sanitization.

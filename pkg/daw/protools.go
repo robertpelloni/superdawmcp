@@ -20,6 +20,7 @@ func NewProToolsDriver(host string, port int) *ProToolsDriver {
 	}
 }
 
+func (p *ProToolsDriver) GetType() string { return "protools" }
 func (p *ProToolsDriver) Connect(endpoint string) error {
 	return nil
 }

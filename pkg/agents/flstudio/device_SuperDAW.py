@@ -36,6 +36,11 @@ def OnIdle():
     # Polling logic for more complex state sync if needed
     pass
 
+def OnUpdateBeat():
+    # Send transport state back via a dummy MIDI message or log
+    # for an external bridge to pick up
+    pass
+
 def OnInit():
     print("SuperDAW-MCP FL Studio Agent Initialized")
 

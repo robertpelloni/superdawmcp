@@ -2,3 +2,9 @@ TRANSPORT_PLAY /superdaw/transport/play i/play_state
 TRANSPORT_TEMPO /superdaw/transport/tempo f/bpm
 TRACK_VOLUME /superdaw/track/volume s/track_id f/volume
 TRACK_PAN /superdaw/track/pan s/track_id f/pan
+
+# Bidirectional Telemetry (Feedback to SuperDAW)
+DEVICE_TRACK_VOL /superdaw/state/volume s/track_id f/volume
+DEVICE_TRACK_PAN /superdaw/state/pan s/track_id f/pan
+DEVICE_PLAY_STATE /superdaw/state/playing i/play_state
+DEVICE_TEMPO /superdaw/state/tempo f/bpm

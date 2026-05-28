@@ -13,6 +13,7 @@ func NewFLStudioDriver(host string, port int) *FLStudioDriver {
 	return &FLStudioDriver{OSCClient: osc.NewClient(host, port)}
 }
 
+func (f *FLStudioDriver) GetType() string               { return "flstudio" }
 func (f *FLStudioDriver) Connect(endpoint string) error { return nil }
 func (f *FLStudioDriver) Disconnect() error { return nil }
 

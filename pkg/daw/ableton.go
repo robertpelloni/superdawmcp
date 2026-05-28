@@ -75,10 +75,11 @@ func (a *AbletonLiveDriver) listen(port int) {
 		a.state.mu.Unlock()
 	})
 
-	server := &osc.Server{Addr: fmt.Sprintf("127.0.0.1:%d", port), Dispatcher: dispatcher}
+	server := &osc.Server{Addr: fmt.Sprintf("0.0.0.0:%d", port), Dispatcher: dispatcher}
 	server.ListenAndServe()
 }
 
+func (a *AbletonLiveDriver) GetType() string               { return "ableton" }
 func (a *AbletonLiveDriver) Connect(endpoint string) error { return nil }
 func (a *AbletonLiveDriver) Disconnect() error { return nil }
 

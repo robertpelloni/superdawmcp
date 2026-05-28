@@ -55,3 +55,16 @@ export class SuperDAWClient {
     return await this.client.callTool({ name: "superdaw_get_plugin_params", arguments: { plugin_name: pluginName } });
   }
 }
+
+export class DAWAdapter {
+  constructor(protected client: SuperDAWClient, protected dawName: string) {}
+  async play() { return this.client.transportControl(true, undefined, this.dawName); }
+  async stop() { return this.client.transportControl(false, undefined, this.dawName); }
+}
+
+export class AbletonLive extends DAWAdapter {
+  constructor(client: SuperDAWClient) { super(client, "ableton"); }
+  async fireScene(index: number) {
+    // Custom command implementation
+  }
+}

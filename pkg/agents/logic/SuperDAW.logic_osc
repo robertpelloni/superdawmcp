@@ -23,3 +23,8 @@
 
 # Master
 /mixer/master/volume f $1
+
+# Feedback (Telemetry)
+/telemetry/playing  /superdaw/state/playing i
+/telemetry/tempo    /superdaw/state/tempo f
+/telemetry/volume/* /superdaw/state/volume s f

@@ -5,6 +5,7 @@ type ArdourDriver struct {
 }
 
 func NewArdourDriver(h string, p int) *ArdourDriver { return &ArdourDriver{OSCClient: osc.NewClient(h, p)} }
+func (a *ArdourDriver) GetType() string        { return "ardour" }
 func (a *ArdourDriver) Connect(e string) error { return nil }
 func (a *ArdourDriver) Disconnect() error { return nil }
 func (a *ArdourDriver) SetTransportState(p bool, b float64) error {

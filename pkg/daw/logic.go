@@ -6,13 +6,38 @@ import (
 
 // LogicProDriver maps unified commands to Logic Pro's standard OSC schema.
 type LogicProDriver struct {
-	OSCClient *osc.Client
+	OSCClient     *osc.Client
+	notifyHandler func(method string, params interface{})
 }
 
-func NewLogicProDriver(host string, port int) *LogicProDriver {
-	return &LogicProDriver{OSCClient: osc.NewClient(host, port)}
+func NewLogicProDriver(host string, port int, localPort int) *LogicProDriver {
+	d := &LogicProDriver{OSCClient: osc.NewClient(host, port)}
+	if localPort > 0 {
+		go d.listen(localPort)
+	}
+	return d
 }
 
+func (l *LogicProDriver) listen(port int) {
+	dispatcher := osc.NewStandardDispatcher()
+	handler := func(msg *osc.Message) {
+		if l.notifyHandler == nil {
+			return
+		}
+		if msg.Address == "/superdaw/state/playing" {
+			if len(msg.Arguments) > 0 {
+				if b, ok := msg.Arguments[0].(int32); ok {
+					l.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "logic", "playing": b == 1})
+				}
+			}
+		}
+	}
+	dispatcher.AddMsgHandler("/superdaw/state/playing", handler)
+	server := &osc.Server{Addr: fmt.Sprintf("0.0.0.0:%d", port), Dispatcher: dispatcher}
+	server.ListenAndServe()
+}
+
+func (l *LogicProDriver) GetType() string               { return "logic" }
 func (l *LogicProDriver) Connect(endpoint string) error { return nil }
 func (l *LogicProDriver) Disconnect() error { return nil }
 
@@ -52,6 +77,7 @@ func (l *LogicProDriver) ListClips(id string) ([]ClipInfo, error) { return []Cli
 func (l *LogicProDriver) DeleteClip(id string, idx int) error { return nil }
 
 func (l *LogicProDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+	l.notifyHandler = handler
 }
 
 func (l *LogicProDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {

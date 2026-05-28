@@ -21,6 +21,7 @@ type ClipInfo struct {
 
 // DAWDriver defines the capability interface for all integrated audio engines.
 type DAWDriver interface {
+	GetType() string
 	Connect(endpoint string) error
 	Disconnect() error
 
@@ -38,6 +39,12 @@ type DAWDriver interface {
 	WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error
 	ListClips(trackID string) ([]ClipInfo, error)
 	DeleteClip(trackID string, clipIndex int) error
+
+	// Plugins
+	SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error
+
+	// MIDI
+	SendCC(trackID string, controller int, value int) error
 
 	// Custom DAW-specific extensions
 	ExecuteCustomCommand(command string, args map[string]interface{}) (interface{}, error)

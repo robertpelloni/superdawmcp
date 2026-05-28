@@ -13,6 +13,7 @@ func NewCubaseDriver(host string, port int) *CubaseDriver {
 	return &CubaseDriver{OSCClient: osc.NewClient(host, port)}
 }
 
+func (c *CubaseDriver) GetType() string               { return "cubase" }
 func (c *CubaseDriver) Connect(endpoint string) error { return nil }
 func (c *CubaseDriver) Disconnect() error { return nil }
 

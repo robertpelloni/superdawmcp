@@ -37,15 +37,19 @@ func NewReaperDriver(host string, port, webPort int) *ReaperDriver {
 		bridgeDir = filepath.Join(os.Getenv("APPDATA"), "REAPER/Scripts/mcp_bridge_data")
 	}
 
-	return &ReaperDriver{
+	d := &ReaperDriver{
 		OSCClient: osc.NewClient(host, port),
 		bridgeDir: bridgeDir,
 		requestID: 1,
 		webHost:   host,
 		webPort:   webPort,
 	}
+
+	// Logic for state listening would go here if REAPER sends to a dedicated port
+	return d
 }
 
+func (r *ReaperDriver) GetType() string { return "reaper" }
 func (r *ReaperDriver) Connect(endpoint string) error {
 	os.MkdirAll(r.bridgeDir, 0755)
 	return nil
