@@ -104,7 +104,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
-					<title>SuperDAW Dashboard v2.4</title>
+					<title>SuperDAW Dashboard v3.1</title>
 					<style>
 						body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; padding: 20px; }
 						.card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
@@ -131,7 +131,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						<div>
 							<button onclick="callMcp('superdaw_save_session', {})" class="badge" style="cursor: pointer; background: #00ff88; color: #000; border: none;">SAVE SESSION</button>
 							<button onclick="callMcp('superdaw_load_session', {})" class="badge" style="cursor: pointer; background: #00bcd4; color: #000; border: none;">LOAD SESSION</button>
-							<div id="version-badge" class="badge">v2.5.0 (Active)</div>
+							<div id="version-badge" class="badge">v3.1.0 (Active)</div>
 						</div>
 					</div>
 
@@ -148,6 +148,15 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						<div class="card">
 							<h2>Generative AI Activity</h2>
 							<div id="jobs"></div>
+						</div>
+						<div class="card">
+							<h2>Plugin Inspector</h2>
+							<div id="plugin-selector">
+								<select id="plugin-list" onchange="loadPluginParams(this.value)" style="width: 100%%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;">
+									<option>Select a plugin...</option>
+								</select>
+							</div>
+							<div id="plugin-params" style="margin-top: 15px;"></div>
 						</div>
 					</div>
 
@@ -263,11 +272,17 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						}
 
 						async function callMcp(name, args) {
-							fetch('/api/call', {
+							return fetch('/api/call', {
 								method: 'POST',
 								headers: {'Content-Type': 'application/json'},
 								body: JSON.stringify({name, arguments: args})
 							});
+						}
+
+						async function loadPluginParams(pluginName) {
+							if (pluginName === "Select a plugin...") return;
+							// This is a simplified implementation for the inspector.
+							callMcp('superdaw_get_plugin_params', {plugin_name: pluginName});
 						}
 					</script>
 				</body>

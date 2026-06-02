@@ -67,8 +67,8 @@ func (p *ProToolsDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MI
 	return fmt.Errorf("MIDI clip injection not natively supported in Pro Tools via OSC bridge")
 }
 
-func (p *ProToolsDriver) ListClips(trackID string) (interface{}, error) {
-	return nil, nil
+func (p *ProToolsDriver) ListClips(trackID string) ([]ClipInfo, error) {
+	return []ClipInfo{}, nil
 }
 
 func (p *ProToolsDriver) DeleteClip(trackID string, clipIndex int) error {
@@ -84,6 +84,10 @@ func (p *ProToolsDriver) InstantiatePlugin(trackID string, pluginName string) (s
 }
 
 func (p *ProToolsDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return nil
+}
+
+func (p *ProToolsDriver) SendCC(trackID string, controller int, value int) error {
 	return nil
 }
 

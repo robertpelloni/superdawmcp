@@ -1,8 +1,6 @@
 package integration
 
 import (
-	"fmt"
-	"net"
 	"testing"
 	"time"
 

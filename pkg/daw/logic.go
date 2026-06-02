@@ -1,6 +1,7 @@
 package daw
 
 import (
+	"fmt"
 	"github.com/hypebeast/go-osc/osc"
 )
 
@@ -75,6 +76,14 @@ func (l *LogicProDriver) SetTrackPan(id string, pan float32) error {
 func (l *LogicProDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
 func (l *LogicProDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (l *LogicProDriver) DeleteClip(id string, idx int) error { return nil }
+
+func (l *LogicProDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return nil
+}
+
+func (l *LogicProDriver) SendCC(trackID string, controller int, value int) error {
+	return nil
+}
 
 func (l *LogicProDriver) SetNotifyHandler(handler func(method string, params interface{})) {
 	l.notifyHandler = handler

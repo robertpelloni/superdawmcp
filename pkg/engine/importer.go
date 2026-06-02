@@ -3,7 +3,6 @@ package engine
 import (
 	"fmt"
 	"os"
-	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
 )
 
 // UniversalImporter handles importing project templates and assets across DAWs.
