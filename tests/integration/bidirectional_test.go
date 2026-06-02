@@ -30,6 +30,8 @@ func TestIntegration_BidirectionalSync(t *testing.T) {
 	cmd.Start()
 	defer cmd.Process.Kill()
 
+	time.Sleep(200 * time.Millisecond) // Wait for server to start
+
 	err := mockDAW.SendMessage("127.0.0.1", 11001, "/superdaw/state/tempo", float32(145.0))
 	if err != nil {
 		t.Fatalf("Failed to send mock state update: %v", err)
