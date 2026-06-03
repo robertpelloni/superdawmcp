@@ -286,7 +286,7 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 	case "superdaw_generate_euclidean":
 		id, _ := args["track_id"].(string); hits, _ := args["hits"].(float64); steps, _ := args["steps"].(float64); pitch, _ := args["pitch"].(float64)
 		if pitch == 0 { pitch = 60 }
-		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch))
+		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 1.0)
 		driver.WriteMIDIClip(id, 0, notes)
 		result = fmt.Sprintf("Generated %d/%d Euclidean rhythm on track %s", int(hits), int(steps), id)
 	case "superdaw_transport_control":

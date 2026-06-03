@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "projectRoot": "C:/Users/hyper/workspace/superdawmcp",
+  "generatedAt": "2026-06-02T21:58:58.081Z",
+  "seq": 10,
+  "files": {},
+  "symbols": {},
+  "reverseDeps": {},
+  "cachedExports": [],
+  "projectRulesScan": {
+    "rules": [],
+    "hasCustomRules": false
+  },
+  "startupScan": {
+    "cwd": "C:\\Users\\hyper\\workspace\\superdawmcp",
+    "scanRoot": "C:\\Users\\hyper\\workspace\\superdawmcp",
+    "projectRoot": "C:\\Users\\hyper\\workspace\\superdawmcp",
+    "canWarmCaches": true,
+    "sourceFileCount": 69
+  },
+  "languageProfile": {
+    "present": {
+      "jsts": true,
+      "python": true,
+      "go": true,
+      "rust": true,
+      "cxx": true,
+      "cmake": false,
+      "fish": false,
+      "shell": false,
+      "json": false,
+      "markdown": false,
+      "css": false,
+      "yaml": false,
+      "sql": false,
+      "ruby": true,
+      "html": false,
+      "docker": false,
+      "php": false,
+      "powershell": false,
+      "prisma": false,
+      "csharp": false,
+      "fsharp": false,
+      "java": false,
+      "kotlin": false,
+      "swift": false,
+      "dart": false,
+      "lua": false,
+      "zig": false,
+      "haskell": false,
+      "elixir": false,
+      "gleam": false,
+      "ocaml": false,
+      "clojure": false,
+      "terraform": false,
+      "nix": false,
+      "toml": false
+    },
+    "configured": {
+      "go": true,
+      "cxx": true
+    },
+    "counts": {
+      "python": 31,
+      "ruby": 2,
+      "jsts": 3,
+      "go": 32,
+      "rust": 1
+    },
+    "detectedKinds": [
+      "jsts",
+      "python",
+      "go",
+      "rust",
+      "cxx",
+      "ruby"
+    ]
+  }
+}

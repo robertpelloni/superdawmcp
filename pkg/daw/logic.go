@@ -2,6 +2,7 @@ package daw
 
 import (
 	"github.com/hypebeast/go-osc/osc"
+    "fmt"
 )
 
 // LogicProDriver maps unified commands to Logic Pro's standard OSC schema.
@@ -83,4 +84,16 @@ func (l *LogicProDriver) SetNotifyHandler(handler func(method string, params int
 func (l *LogicProDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {
 	m := osc.NewMessage("/logic/custom/" + cmd)
 	return "Sent to Logic Pro", l.OSCClient.Send(m)
+}
+
+
+
+// SendCC stub – Logic Pro does not support CC via OSC currently.
+func (l *LogicProDriver) SendCC(trackID string, controller int, value int) error {
+	return nil
+}
+
+// SetPluginParameter stub – not implemented for Logic Pro over OSC.
+func (l *LogicProDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
+	return nil
 }

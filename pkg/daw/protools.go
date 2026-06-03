@@ -67,8 +67,8 @@ func (p *ProToolsDriver) WriteMIDIClip(trackID string, clipIndex int, notes []MI
 	return fmt.Errorf("MIDI clip injection not natively supported in Pro Tools via OSC bridge")
 }
 
-func (p *ProToolsDriver) ListClips(trackID string) (interface{}, error) {
-	return nil, nil
+func (p *ProToolsDriver) ListClips(trackID string) ([]ClipInfo, error) {
+	return []ClipInfo{}, nil
 }
 
 func (p *ProToolsDriver) DeleteClip(trackID string, clipIndex int) error {
@@ -94,3 +94,7 @@ func (p *ProToolsDriver) ExecuteCustomCommand(command string, args map[string]in
 func (p *ProToolsDriver) SetNotifyHandler(h func(method string, params interface{})) {
 	p.Notify = h
 }
+
+// SendCC stub – Pro Tools does not support CC via OSC.
+func (p *ProToolsDriver) SendCC(trackID string, controller int, value int) error { return nil }
+

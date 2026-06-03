@@ -1,0 +1,6 @@
+{
+  "signature": "pkg/daw/logic.go::Unresolved from this turn — pkg/daw/logic.go:\n🔴 STOP — 2 issue(s) must be fixed:\n  L97: method LogicProDriver.SendCC already declared at C:\\Users\\hyper\\workspace\\superdawmcp\\pkg\\daw\\logic.go:90:26\n  L102: method LogicProDriver.SetPluginParameter already declared at C:\\Users\\hyper\\workspace\\superdawmcp\\pkg\\daw\\logic.go:93:26",
+  "sessionId": "lens-mpviq3fy-602dbc89",
+  "projectSeqStart": 7,
+  "projectSeqEnd": 8
+}
