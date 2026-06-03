@@ -1,6 +1,6 @@
 {
-  "signature": "pkg/daw/logic.go::Unresolved from this turn — pkg/daw/logic.go:\n🔴 STOP — 2 issue(s) must be fixed:\n  L97: method LogicProDriver.SendCC already declared at C:\\Users\\hyper\\workspace\\superdawmcp\\pkg\\daw\\logic.go:90:26\n  L102: method LogicProDriver.SetPluginParameter already declared at C:\\Users\\hyper\\workspace\\superdawmcp\\pkg\\daw\\logic.go:93:26",
-  "sessionId": "lens-mpviq3fy-602dbc89",
-  "projectSeqStart": 7,
-  "projectSeqEnd": 8
+  "signature": "pkg/daw/manager.go::📐 Cascade errors in 3 neighbor file(s) — fix before finishing turn:\n<diagnostics file=\"tests/integration/bidirectional_test.go\" reason=\"fallback\">\n  line 33, col 17 rule=cascade:MissingFieldOrMethod: mockDAW.SendMessage undefined (type *MockDAW has no field or method SendMessage)\n  line 37, col 16 rule=cascade:MissingFieldOrMethod: mockDAW.SendMessage undefined (type *MockDAW has no field or method SendMessage)\n</diagnostics>\n<diagnostics file=\"tests/integration/sync_test.go\" reason=\"fallback\">\n  line 4, col 2 rule=cascade:UnusedImport: \"fmt\" imported and not used\n  line 5, col 2 rule=cascade:UnusedImport: \"net\" imported and not used\n</diagnostics>\n<diagnostics file=\"pkg/client/go/orchestrator.go\" reason=\"fallback\">\n  line 4, col 2 rule=cascade:UnusedImport: \"fmt\" imported and not used\n</diagnostics>",
+  "sessionId": "lens-mpxz186q-31253592",
+  "projectSeqStart": 10,
+  "projectSeqEnd": 11
 }

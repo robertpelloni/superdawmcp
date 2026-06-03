@@ -1,11 +1,565 @@
 {
   "version": 1,
   "projectRoot": "C:/Users/hyper/workspace/superdawmcp",
-  "generatedAt": "2026-06-02T21:58:58.081Z",
+  "generatedAt": "2026-06-03T11:25:24.421Z",
   "seq": 10,
-  "files": {},
+  "files": {
+    "C:/Users/hyper/workspace/superdawmcp/examples/automation_script/lfo_automation.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/automation_script/lfo_automation.py",
+      "mtimeMs": 1779800055590.713,
+      "size": 1511,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/automation_script/studio_automation.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/automation_script/studio_automation.py",
+      "mtimeMs": 1779731982824.5718,
+      "size": 1470,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/midi_bridge/midi_to_mcp.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/midi_bridge/midi_to_mcp.py",
+      "mtimeMs": 1779731982826.6138,
+      "size": 2631,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/multi_daw_jam/orchestration.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/multi_daw_jam/orchestration.py",
+      "mtimeMs": 1779731982827.1646,
+      "size": 1875,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/multi_daw_jam/sync_connector.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/multi_daw_jam/sync_connector.py",
+      "mtimeMs": 1779731982828.7104,
+      "size": 1969,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/parity_check/orchestration.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/parity_check/orchestration.py",
+      "mtimeMs": 1779490906415.1096,
+      "size": 719,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/production/studio_remote_control.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/production/studio_remote_control.py",
+      "mtimeMs": 1780079397555.9429,
+      "size": 1828,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/examples/sonic_pi/superdaw_orch.rb": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/examples/sonic_pi/superdaw_orch.rb",
+      "mtimeMs": 1779731982831.7961,
+      "size": 702,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/agents/cubase/SuperDAW_Cubase.js": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/agents/cubase/SuperDAW_Cubase.js",
+      "mtimeMs": 1779800055596.978,
+      "size": 1790,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/agents/flstudio/device_SuperDAW.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/agents/flstudio/device_SuperDAW.py",
+      "mtimeMs": 1780079397557.9495,
+      "size": 1371,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/connector/connector.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/connector/connector.go",
+      "mtimeMs": 1779539805086.5017,
+      "size": 1714,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/go/client.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/go/client.go",
+      "mtimeMs": 1779539805089.6492,
+      "size": 4884,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/go/orchestrator.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/go/orchestrator.go",
+      "mtimeMs": 1779918213730.414,
+      "size": 1075,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/__init__.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/__init__.py",
+      "mtimeMs": 1779731982845.4285,
+      "size": 84,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/adapters/__init__.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/adapters/__init__.py",
+      "mtimeMs": 1780079397566.0608,
+      "size": 2599,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/client.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/client.py",
+      "mtimeMs": 1779842082695.0312,
+      "size": 8172,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/orchestrator.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/orchestrator.py",
+      "mtimeMs": 1780079397567.9507,
+      "size": 2746,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_orchestrator.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_orchestrator.py",
+      "mtimeMs": 1779731982850.6611,
+      "size": 2365,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/rb/superdaw_client.rb": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/rb/superdaw_client.rb",
+      "mtimeMs": 1779539805094.7046,
+      "size": 1134,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/rust/lib.rs": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/rust/lib.rs",
+      "mtimeMs": 1779539805096.2876,
+      "size": 2476,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/ts/src/index.ts": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/ts/src/index.ts",
+      "mtimeMs": 1780079397569.9768,
+      "size": 4267,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/ts/src/orchestrator.ts": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/client/ts/src/orchestrator.ts",
+      "mtimeMs": 1779918213732.1917,
+      "size": 1095,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/ableton.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/ableton.go",
+      "mtimeMs": 1780079397571.5435,
+      "size": 5136,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/ardour.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/ardour.go",
+      "mtimeMs": 1780079397572.565,
+      "size": 2094,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/bitwig.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/bitwig.go",
+      "mtimeMs": 1780079397573.5818,
+      "size": 2957,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/cubase.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/cubase.go",
+      "mtimeMs": 1780079397576.145,
+      "size": 2316,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/driver.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/driver.go",
+      "mtimeMs": 1780079397577.1277,
+      "size": 1542,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/flstudio.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/flstudio.go",
+      "mtimeMs": 1780079397579.756,
+      "size": 2682,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/jack_router.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/jack_router.go",
+      "mtimeMs": 1779800055607.37,
+      "size": 778,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/logic.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/logic.go",
+      "mtimeMs": 1780360976345.0005,
+      "size": 3295,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/manager.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/manager.go",
+      "mtimeMs": 1780485901658.6108,
+      "size": 2861,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/protools.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/protools.go",
+      "mtimeMs": 1780350084711.2996,
+      "size": 2750,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/reaper.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/reaper.go",
+      "mtimeMs": 1780079397585.7869,
+      "size": 5710,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/routing.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/daw/routing.go",
+      "mtimeMs": 1779800055612.9995,
+      "size": 1638,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/euclidean.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/engine/euclidean.go",
+      "mtimeMs": 1779507654012.3752,
+      "size": 453,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/generative.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/engine/generative.go",
+      "mtimeMs": 1779800055614.631,
+      "size": 1707,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/importer.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/engine/importer.go",
+      "mtimeMs": 1780346168729.099,
+      "size": 1080,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/link.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/engine/link.go",
+      "mtimeMs": 1779731982869.191,
+      "size": 953,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/music.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/engine/music.go",
+      "mtimeMs": 1779731982870.2002,
+      "size": 1163,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/stems.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/engine/stems.go",
+      "mtimeMs": 1779731982871.775,
+      "size": 1021,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/mcp/protocol.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/mcp/protocol.go",
+      "mtimeMs": 1780079397587.746,
+      "size": 11886,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/ux/dashboard/dashboard.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/ux/dashboard/dashboard.go",
+      "mtimeMs": 1779800055618.3596,
+      "size": 12807,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/ux/dashboard/remote.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/ux/dashboard/remote.go",
+      "mtimeMs": 1780342246635.3708,
+      "size": 2274,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/pkg/vst/scanner.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/pkg/vst/scanner.go",
+      "mtimeMs": 1779800055622.4468,
+      "size": 4805,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/ableton_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/ableton_adapter.py",
+      "mtimeMs": 1779539805109.011,
+      "size": 2866,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/ardour_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/ardour_adapter.py",
+      "mtimeMs": 1779731982880.8457,
+      "size": 2249,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/bidirectional_test.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/bidirectional_test.py",
+      "mtimeMs": 1780079397587.746,
+      "size": 1762,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/bitwig_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/bitwig_adapter.py",
+      "mtimeMs": 1779539805109.011,
+      "size": 2163,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/cubase_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/cubase_adapter.py",
+      "mtimeMs": 1779731982881.8994,
+      "size": 2249,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/flstudio_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/flstudio_adapter.py",
+      "mtimeMs": 1779539805110.638,
+      "size": 2181,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/global_sync.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/global_sync.py",
+      "mtimeMs": 1779731982882.4287,
+      "size": 1846,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/launchpad_mcp.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/launchpad_mcp.py",
+      "mtimeMs": 1779731982886.0098,
+      "size": 2876,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/logic_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/logic_adapter.py",
+      "mtimeMs": 1779731982887.5354,
+      "size": 2258,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/logic_controller_bridge.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/logic_controller_bridge.py",
+      "mtimeMs": 1779918213735.6106,
+      "size": 1422,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/protools_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/protools_adapter.py",
+      "mtimeMs": 1779800055625.6897,
+      "size": 2279,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/reaper_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/reaper_adapter.py",
+      "mtimeMs": 1779539805112.2156,
+      "size": 3370,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/studio_health.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/studio_health.py",
+      "mtimeMs": 1779731982888.5542,
+      "size": 1280,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/superdaw_remote.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/superdaw_remote.py",
+      "mtimeMs": 1779731982889.0679,
+      "size": 6494,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/superdaw_shell.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/superdaw_shell.py",
+      "mtimeMs": 1779731982890.5972,
+      "size": 2759,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/scripts/universal_adapter.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/scripts/universal_adapter.py",
+      "mtimeMs": 1779800055625.6897,
+      "size": 3051,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/compatibility/compatibility_test.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/compatibility/compatibility_test.go",
+      "mtimeMs": 1779800055628.819,
+      "size": 1317,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/e2e/test_universal_compatibility.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/e2e/test_universal_compatibility.py",
+      "mtimeMs": 1779731982894.677,
+      "size": 1981,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/bidirectional_test.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/bidirectional_test.go",
+      "mtimeMs": 1779731982894.677,
+      "size": 1931,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/integration_test.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/integration_test.go",
+      "mtimeMs": 1779731982896.41,
+      "size": 2567,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/mock_daw.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/mock_daw.go",
+      "mtimeMs": 1779507654030.1172,
+      "size": 1103,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/mock_tcp_daw.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/mock_tcp_daw.go",
+      "mtimeMs": 1779539805115.3152,
+      "size": 1004,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/python_integration_test.py": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/python_integration_test.py",
+      "mtimeMs": 1779539805116.8684,
+      "size": 1150,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/stress_test.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/stress_test.go",
+      "mtimeMs": 1779731982899.462,
+      "size": 1205,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/sync_test.go": {
+      "path": "C:/Users/hyper/workspace/superdawmcp/tests/integration/sync_test.go",
+      "mtimeMs": 1779731982899.462,
+      "size": 1169,
+      "imports": [],
+      "lastSeq": 0
+    }
+  },
   "symbols": {},
-  "reverseDeps": {},
+  "reverseDeps": {
+    "C:/Users/hyper/workspace/superdawmcp/examples/automation_script/lfo_automation.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/automation_script/studio_automation.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/midi_bridge/midi_to_mcp.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/multi_daw_jam/orchestration.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/multi_daw_jam/sync_connector.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/parity_check/orchestration.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/production/studio_remote_control.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/examples/sonic_pi/superdaw_orch.rb": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/agents/cubase/SuperDAW_Cubase.js": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/agents/flstudio/device_SuperDAW.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/connector/connector.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/go/client.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/go/orchestrator.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/__init__.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/adapters/__init__.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/client.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_client/orchestrator.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/py/superdaw_orchestrator.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/rb/superdaw_client.rb": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/rust/lib.rs": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/ts/src/index.ts": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/client/ts/src/orchestrator.ts": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/ableton.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/ardour.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/bitwig.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/cubase.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/driver.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/flstudio.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/jack_router.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/logic.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/manager.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/protools.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/reaper.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/daw/routing.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/euclidean.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/generative.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/importer.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/link.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/music.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/engine/stems.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/mcp/protocol.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/ux/dashboard/dashboard.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/ux/dashboard/remote.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/pkg/vst/scanner.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/ableton_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/ardour_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/bidirectional_test.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/bitwig_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/cubase_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/flstudio_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/global_sync.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/launchpad_mcp.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/logic_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/logic_controller_bridge.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/protools_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/reaper_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/studio_health.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/superdaw_remote.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/superdaw_shell.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/scripts/universal_adapter.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/compatibility/compatibility_test.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/e2e/test_universal_compatibility.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/bidirectional_test.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/integration_test.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/mock_daw.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/mock_tcp_daw.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/python_integration_test.py": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/stress_test.go": [],
+    "C:/Users/hyper/workspace/superdawmcp/tests/integration/sync_test.go": []
+  },
   "cachedExports": [],
   "projectRulesScan": {
     "rules": [],
