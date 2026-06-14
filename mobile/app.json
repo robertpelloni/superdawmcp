@@ -1,0 +1,9 @@
+{
+  "name": "SuperDAWMobile",
+  "displayName": "SuperDAW Mobile",
+  "version": "1.0.0",
+  "description": "React Native mobile remote for SuperDAW-MCP",
+  "main": "index.js",
+  "author": "",
+  "license": "MIT"
+}
