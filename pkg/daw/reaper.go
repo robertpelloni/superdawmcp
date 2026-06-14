@@ -160,6 +160,13 @@ func (r *ReaperDriver) SetTrackPan(id string, pan float32) error {
 	return r.OSCClient.Send(m)
 }
 
+func (r *ReaperDriver) SetTrackInstrument(id string, instrument string) error {
+	m := osc.NewMessage("/superdaw/track/instrument")
+	m.Append(id)
+	m.Append(instrument)
+	return r.OSCClient.Send(m)
+}
+
 func (r *ReaperDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
 	r.callBridge("CreateMIDIItem", []interface{}{0, 0, 4.0})
 	for _, n := range notes {

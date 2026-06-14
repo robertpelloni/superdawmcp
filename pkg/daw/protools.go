@@ -55,6 +55,10 @@ func (p *ProToolsDriver) SetTrackPan(trackID string, pan float32) error {
 	return p.OSCClient.Send(msg)
 }
 
+func (p *ProToolsDriver) SetTrackInstrument(trackID string, instrument string) error {
+	return nil // Not implemented for Pro Tools
+}
+
 func (p *ProToolsDriver) CreateTrack(name string, trackType string) (string, error) {
 	msg := osc.NewMessage("/protools/track/create")
 	msg.Append(name)

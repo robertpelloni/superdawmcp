@@ -33,4 +33,12 @@ superdaw
 **/vendor/
 **/bin/
 !/bin/
-nul
+
+# Agent Cache Artifacts
+.pi-lens/
+.tormentnexus/
+.hypercode/
+.borg/
+tormentnexus.db
+data/lancedb/
+

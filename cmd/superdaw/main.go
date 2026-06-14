@@ -281,8 +281,13 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 		json.Unmarshal(notesJSON, &notes)
 		driver.WriteMIDIClip(id, clipIdx, notes)
 	case "superdaw_create_track":
-		n, _ := args["name"].(string); t, _ := args["type"].(string)
-		driver.CreateTrack(n, t)
+	n, _ := args["name"].(string); t, _ := args["type"].(string)
+	driver.CreateTrack(n, t)
+	result = fmt.Sprintf("Created track: %s (%s)", n, t)
+	case "superdaw_track_instrument":
+		id, _ := args["track_id"].(string); instr, _ := args["instrument"].(string)
+		driver.SetTrackInstrument(id, instr)
+		result = fmt.Sprintf("Loaded %s on track %s", instr, id)
 	case "superdaw_generate_euclidean":
 		id, _ := args["track_id"].(string); hits, _ := args["hits"].(float64); steps, _ := args["steps"].(float64); pitch, _ := args["pitch"].(float64)
 		if pitch == 0 { pitch = 60 }
