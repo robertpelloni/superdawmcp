@@ -33,6 +33,6 @@ In this session, we advanced the SuperDAW-MCP ecosystem by implementing real-tim
 - Integration tests like `bidirectional_test.go` require a decoding loop to handle interleaved JSON-RPC notifications and match specific response IDs.
 
 ## Next Steps
-1. **Multi-DAW Parameter Sync:** Implement similar parameter feedback listeners for REAPER, Logic Pro, and Bitwig agents.
-2. **Mobile Remote Persistence:** Store the last selected track index in the remote UI to prevent reset on page refresh.
-3. **VST3 Parameter Deep-Scanning:** Integrate libvst3 for more granular parameter metadata beyond heuristics.
+1. **VST3 Parameter Deep-Scanning:** Integrate libvst3 for more granular parameter metadata beyond heuristics.
+2. **Multi-user Collaboration:** Implement WebSocket room logic for shared studio sessions.
+3. **Mobile App (React Native):** Begin porting the web-based /remote interface to a native mobile application.

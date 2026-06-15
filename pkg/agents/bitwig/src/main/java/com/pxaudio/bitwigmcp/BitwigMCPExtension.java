@@ -3,7 +3,7 @@ package com.pxaudio.bitwigmcp;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.*;
 
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.pxaudio.bitwigmcp.config.ConfigReader;
 import com.pxaudio.bitwigmcp.server.MCPServer;
 import com.pxaudio.bitwigmcp.handlers.*;
@@ -18,6 +18,7 @@ public class BitwigMCPExtension extends ControllerExtension {
     private TrackBank trackBank;
     private SceneBank sceneBank;
     private CursorTrack cursorTrack;
+    private CursorDevice cursorDevice;
     private Clip cursorClip;
 
     // Cached cursor position (updated via observers)
@@ -60,6 +61,33 @@ public class BitwigMCPExtension extends ControllerExtension {
         });
 
         cursorTrack = host.createCursorTrack("MCP_CURSOR", "MCP Cursor Track", config.getSends(), config.getScenes(), true);
+        cursorDevice = cursorTrack.createCursorDevice("MCP_DEVICE", "MCP Cursor Device", 0, CursorDeviceFollowMode.FOLLOW_SELECTION);
+
+        // Add device parameter observers
+        CursorRemoteControlsPage remoteControls = cursorDevice.createCursorRemoteControlsPage(8);
+        for (int i = 0; i < remoteControls.getParameterCount(); i++) {
+            RemoteControl parameter = remoteControls.getParameter(i);
+            parameter.name().markInterested();
+            parameter.value().markInterested();
+
+            final int paramIdx = i;
+            parameter.value().addValueObserver(value -> {
+                if (server != null) {
+                    JsonArray params = new JsonArray();
+                    JsonObject p = new JsonObject();
+                    p.addProperty("n", parameter.name().get());
+                    p.addProperty("v", value);
+                    params.add(p);
+
+                    JsonObject msg = new JsonObject();
+                    msg.addProperty("daw", "bitwig");
+                    msg.addProperty("track_index", selectedTrackIndex);
+                    msg.addProperty("plugin_name", cursorDevice.name().get());
+                    msg.addProperty("parameters", params.toString());
+                    server.broadcast("superdaw/plugin_params_update", msg);
+                }
+            });
+        }
 
         // Mark cursor track position to get track index
         cursorTrack.position().markInterested();
