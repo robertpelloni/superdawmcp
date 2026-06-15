@@ -30,11 +30,13 @@ func TestIntegration_BidirectionalSync(t *testing.T) {
 	cmd.Start()
 	defer cmd.Process.Kill()
 
+	time.Sleep(200 * time.Millisecond) // Wait for server to start
+
 	err := mockDAW.SendMessage("127.0.0.1", 11001, "/superdaw/state/tempo", float32(145.0))
 	if err != nil {
 		t.Fatalf("Failed to send mock state update: %v", err)
 	}
-	err = mockDAW.SendMessage("127.0.0.1", 11001, "/superdaw/state/playing", true)
+	err = mockDAW.SendMessage("127.0.0.1", 11001, "/superdaw/state/playing", int32(1))
 	if err != nil {
 		t.Fatalf("Failed to send mock state update: %v", err)
 	}
@@ -45,7 +47,7 @@ func TestIntegration_BidirectionalSync(t *testing.T) {
 		JSONRPC: "2.0",
 		Method:  "tools/call",
 		Params: json.RawMessage(`{"name": "superdaw_get_transport_state", "arguments": {"daw": "ableton"}}`),
-		ID:      1,
+		ID:      "1",
 	}
 	reqBytes, _ := json.Marshal(req)
 	fmt.Fprintf(stdin, "%s\n", string(reqBytes))

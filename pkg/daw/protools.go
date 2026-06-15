@@ -91,6 +91,10 @@ func (p *ProToolsDriver) SetPluginParameter(trackID string, pluginID string, par
 	return nil
 }
 
+func (p *ProToolsDriver) SendCC(trackID string, controller int, value int) error {
+	return nil
+}
+
 func (p *ProToolsDriver) ExecuteCustomCommand(command string, args map[string]interface{}) (interface{}, error) {
 	return nil, nil
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.1.0] - 2024-11-21
+### Added
+- **Plugin Inspector:** Integrated a new UI component in the Web Dashboard for real-time VST3 parameter control.
+- **Enhanced VST3 Heuristics:** Expanded automated parameter discovery in `pkg/vst/scanner.go` for LFO, Filters, and effects.
+- **Improved Versioning:** Centralized versioning synchronized across VERSION.md and Dashboard.
+
 ## [3.0.0] - 2024-11-21
 ### Added
 - **Multi-Instance Connection Manager:** Core engine now supports concurrent connections to multiple instances of the same DAW (e.g., `reaper-1`, `reaper-2`).
