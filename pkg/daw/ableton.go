@@ -87,6 +87,21 @@ func (a *AbletonLiveDriver) listen(port int) {
 			}
 		}
 	})
+	dispatcher.AddMsgHandler("/superdaw/state/plugin/params", func(msg *osc.Message) {
+		if len(msg.Arguments) >= 3 {
+			trackIdx, _ := msg.Arguments[0].(int32)
+			deviceName, _ := msg.Arguments[1].(string)
+			paramsJSON, _ := msg.Arguments[2].(string)
+			if a.notifyHandler != nil {
+				a.notifyHandler("superdaw/plugin_params_update", map[string]interface{}{
+					"daw":         "ableton",
+					"track_index": trackIdx,
+					"plugin_name": deviceName,
+					"parameters":  paramsJSON,
+				})
+			}
+		}
+	})
 
 	server := &osc.Server{Addr: fmt.Sprintf("0.0.0.0:%d", port), Dispatcher: dispatcher}
 	server.ListenAndServe()

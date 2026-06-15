@@ -157,6 +157,16 @@ class SuperDAWClient:
         if daw: args["daw"] = daw
         return self._call("tools/call", {"name": "superdaw_generate_music", "arguments": args})
 
+    def set_plugin_parameter(self, plugin_name: str, parameter_name: str, value: float, track_id: str = "0", daw: Optional[str] = None):
+        args = {"plugin_name": plugin_name, "parameter_name": parameter_name, "value": value, "track_id": track_id}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_set_plugin_parameter", "arguments": args})
+
+    def send_cc(self, track_id: str, controller: int, value: int, daw: Optional[str] = None):
+        args = {"track_id": track_id, "controller": controller, "value": value}
+        if daw: args["daw"] = daw
+        return self._call("tools/call", {"name": "superdaw_send_cc", "arguments": args})
+
     def get_tracks(self, daw: Optional[str] = None) -> List[Dict[str, Any]]:
         args = {}
         if daw: args["daw"] = daw

@@ -5,6 +5,7 @@ from .pythonosc.osc_server import BlockingOSCUDPServer
 from .pythonosc.dispatcher import Dispatcher
 from .pythonosc.udp_client import SimpleUDPClient
 import threading
+import json
 try:
     import Queue as queue
 except ImportError:
@@ -37,6 +38,8 @@ class SuperDAW(ControlSurface):
         self._server_thread.daemon = True
         self._server_thread.start()
 
+        self._active_listeners = []
+
         # Track listeners for volume/pan updates
         self._setup_listeners()
 
@@ -48,6 +51,46 @@ class SuperDAW(ControlSurface):
         self.song().add_is_playing_listener(self._on_playing_changed)
         self.song().add_tempo_listener(self._on_tempo_changed)
         self.song().add_tracks_listener(self._on_arrangement_changed)
+
+        # Monitor selected device for parameter changes
+        self.song().view.add_selected_track_listener(self._on_selected_track_changed)
+        self._on_selected_track_changed()
+
+    def _on_selected_track_changed(self):
+        self.song().view.selected_track.view.add_selected_device_listener(self._on_selected_device_changed)
+        self._on_selected_device_changed()
+
+    def _on_selected_device_changed(self):
+        # Clear existing parameter listeners
+        for param in self._active_listeners:
+            if param.value_has_listener(self._on_param_value_changed):
+                param.remove_value_listener(self._on_param_value_changed)
+        self._active_listeners = []
+
+        device = self.song().view.selected_track.view.selected_device
+        if device:
+            for param in device.parameters:
+                param.add_value_listener(self._on_param_value_changed)
+                self._active_listeners.append(param)
+
+    def _on_param_value_changed(self):
+        # Broadcast all parameter values for the selected device
+        # Address schema: /superdaw/state/plugin/param {track_idx} {device_name} {param_name} {value}
+        track = self.song().view.selected_track
+        track_idx = list(self.song().tracks).index(track)
+        device = track.view.selected_device
+        if device:
+            for param in device.parameters:
+                # We only send the one that actually changed if we had a reference,
+                # but for simplicity we can send all or try to find the match.
+                # Here we just broadcast the changed value if we can identify it.
+                pass
+            # More efficient: find which param changed. But Ableton doesn't pass the param to the callback.
+            # So we broadcast current state of selected device.
+            params_state = []
+            for p in device.parameters:
+                params_state.append({"n": p.name, "v": p.value})
+            self._client.send_message("/superdaw/state/plugin/params", [track_idx, device.name, json.dumps(params_state)])
 
     def _on_arrangement_changed(self):
         self._send_arrangement_state()
@@ -67,7 +110,6 @@ class SuperDAW(ControlSurface):
                 "track": track.name,
                 "clips": clips
             })
-        import json
         self._client.send_message("/superdaw/state/arrangement", json.dumps(arrangement))
 
     def _on_playing_changed(self):
@@ -108,6 +150,21 @@ class SuperDAW(ControlSurface):
             idx = int(args[0]); pan = float(args[1])
             if idx < len(self.song().tracks):
                 self.song().tracks[idx].mixer_device.panning.value = pan
+        elif addr == "/superdaw/plugin/param":
+            track_idx = int(args[0]); device_name = str(args[1]); param_idx = int(args[2]); val = float(args[3])
+            if track_idx < len(self.song().tracks):
+                track = self.song().tracks[track_idx]
+                for device in track.devices:
+                    if device.name == device_name:
+                        if param_idx < len(device.parameters):
+                            device.parameters[param_idx].value = val
+                        break
+        elif addr == "/superdaw/midi/cc":
+            track_idx = int(args[0]); ctrl = int(args[1]); val = int(args[2])
+            # Ableton MIDI Remote Script doesn't have a direct "send_cc_to_track"
+            # but we can use the track's MIDI input if it was possible or control parameters.
+            # Usually SendCC is used for external hardware or automation.
+            pass
         elif addr == "/superdaw/clip/write":
             track_idx = int(args[0])
             clip_idx = int(args[1])
@@ -118,10 +175,7 @@ class SuperDAW(ControlSurface):
                     if not slot.has_clip:
                         slot.create_clip(4.0) # 1 bar default
                     clip = slot.clip
-                    # Process notes passed as alternating pitch, velocity, start, duration
-                    # or potentially a JSON string in args[2]
                     try:
-                        import json
                         notes_data = json.loads(args[2])
                         notes = []
                         for n in notes_data:

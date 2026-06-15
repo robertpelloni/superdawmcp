@@ -327,6 +327,20 @@ func GenerateManifest() ListToolsResult {
 					"required": []string{"scene_index"},
 				},
 			},
+			{
+				Name:        "superdaw_send_cc",
+				Description: "Send a MIDI Control Change message to a track.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"track_id":   map[string]interface{}{"type": "string"},
+						"controller": map[string]interface{}{"type": "integer"},
+						"value":      map[string]interface{}{"type": "integer"},
+						"daw":        map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"track_id", "controller", "value"},
+				},
+			},
 		},
 	}
 }

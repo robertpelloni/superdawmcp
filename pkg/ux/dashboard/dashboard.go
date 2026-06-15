@@ -186,33 +186,33 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 
 					<script>
 						const ws = new WebSocket('ws://' + window.location.host + '/ws');
+						ws.onopen = () => {
+							loadPlugins();
+						};
 						ws.onmessage = (event) => {
-							const state = JSON.parse(event.data);
+							const msg = JSON.parse(event.data);
+							if (msg.method === 'superdaw/plugin_params_update') {
+								const params = JSON.parse(msg.params.parameters);
+								params.forEach(p => {
+									const slider = document.getElementById('param-' + p.n);
+									if (slider) slider.value = p.v;
+								});
+								return;
+							}
+							const state = msg;
 
 							// Render DAWs
 							let dawHtml = '';
 							for (const name in state.daws) {
 								const d = state.daws[name];
-								dawHtml += ' \
-									<div class="patch-item"> \
-										<span><strong>' + name.toUpperCase() + '</strong></span> \
-										<span>' + (d.is_playing ? '▶️ PLAYING' : '⏹️ STOPPED') + '</span> \
-										<span class="badge">' + d.bpm.toFixed(1) + ' BPM</span> \
-									</div> \
-								';
+								dawHtml += ' 									<div class="patch-item"> 										<span><strong>' + name.toUpperCase() + '</strong></span> 										<span>' + (d.is_playing ? '▶️ PLAYING' : '⏹️ STOPPED') + '</span> 										<span class="badge">' + d.bpm.toFixed(1) + ' BPM</span> 									</div> 								';
 							}
 							document.getElementById('daws').innerHTML = dawHtml || '<p style="color: #666">No active DAWs connected.</p>';
 
 							// Render Patches
 							let patchHtml = '';
 							state.patches.forEach(p => {
-								patchHtml += ' \
-									<div class="patch-item"> \
-										<span>' + p.source_daw + ' (' + p.source_track + ')</span> \
-										<span class="patch-arrow">➔</span> \
-										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> \
-									</div> \
-								';
+								patchHtml += ' 									<div class="patch-item"> 										<span>' + p.source_daw + ' (' + p.source_track + ')</span> 										<span class="patch-arrow">➔</span> 										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> 									</div> 								';
 							});
 							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
 
@@ -220,15 +220,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							let jobHtml = '';
 							if (state.jobs) {
 								state.jobs.forEach(j => {
-									jobHtml += ' \
-										<div class="patch-item"> \
-											<span>' + j.prompt + '</span> \
-											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;"> \
-												<div style="background: #00ff88; width: ' + (j.progress*100) + '%%; height: 10px; border-radius: 5px;"></div> \
-											</span> \
-											<span>' + j.status + '</span> \
-										</div> \
-									';
+									jobHtml += ' 										<div class="patch-item"> 											<span>' + j.prompt + '</span> 											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;"> 												<div style="background: #00ff88; width: ' + (j.progress*100) + '%%; height: 10px; border-radius: 5px;"></div> 											</span> 											<span>' + j.status + '</span> 										</div> 									';
 								});
 							}
 							document.getElementById('jobs').innerHTML = jobHtml || '<p style="color: #666">No active generation jobs.</p>';
@@ -279,10 +271,39 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							});
 						}
 
+						async function loadPlugins() {
+							const res = await callMcp('superdaw_list_plugins', {});
+							const data = await res.json();
+							const plugins = JSON.parse(data.content[0].text);
+							let html = '<option>Select a plugin...</option>';
+							plugins.forEach(p => {
+								html += '<option value="' + p + '">' + p + '</option>';
+							});
+							document.getElementById('plugin-list').innerHTML = html;
+						}
+
 						async function loadPluginParams(pluginName) {
 							if (pluginName === "Select a plugin...") return;
-							// This is a simplified implementation for the inspector.
-							callMcp('superdaw_get_plugin_params', {plugin_name: pluginName});
+							const res = await callMcp('superdaw_get_plugin_params', {plugin_name: pluginName});
+							const data = await res.json();
+							const meta = JSON.parse(data.content[0].text);
+							let html = '<h3>' + pluginName + ' Parameters</h3>';
+							meta.parameters.forEach(p => {
+								html += '<div style="margin: 5px 0; display: flex; justify-content: space-between; align-items: center;">' +
+									'<span>' + p.name + '</span>' +
+									'<input type="range" id="param-' + p.name + '" min="0" max="1" step="0.01" style="width: 200px;" onchange="setParam(\'' + pluginName + '\', \'' + p.name + '\', this.value)">' +
+								'</div>';
+							});
+							document.getElementById('plugin-params').innerHTML = html;
+						}
+
+						function setParam(plugin, param, val) {
+							callMcp('superdaw_set_plugin_parameter', {
+								plugin_name: plugin,
+								parameter_name: param,
+								value: parseFloat(val),
+								track_id: '0'
+							});
 						}
 					</script>
 				</body>
