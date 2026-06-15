@@ -53,6 +53,13 @@ func (f *FLStudioDriver) SetTrackPan(id string, pan float32) error {
 	return f.OSCClient.Send(m)
 }
 
+func (f *FLStudioDriver) SetTrackInstrument(id string, instrument string) error {
+	m := osc.NewMessage("/flstudio/track/instrument")
+	m.Append(id)
+	m.Append(instrument)
+	return f.OSCClient.Send(m)
+}
+
 func (f *FLStudioDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
 	m := osc.NewMessage("/flstudio/clip/write")
 	m.Append(id)

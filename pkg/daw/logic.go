@@ -73,6 +73,13 @@ func (l *LogicProDriver) SetTrackPan(id string, pan float32) error {
 	return l.OSCClient.Send(m)
 }
 
+func (l *LogicProDriver) SetTrackInstrument(id string, instrument string) error {
+	m := osc.NewMessage("/logic/track/instrument")
+	m.Append(id)
+	m.Append(instrument)
+	return l.OSCClient.Send(m)
+}
+
 func (l *LogicProDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
 func (l *LogicProDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (l *LogicProDriver) DeleteClip(id string, idx int) error { return nil }

@@ -160,6 +160,11 @@ func (r *ReaperDriver) SetTrackPan(id string, pan float32) error {
 	return r.OSCClient.Send(m)
 }
 
+func (r *ReaperDriver) SetTrackInstrument(id string, instrument string) error {
+	_, err := r.callBridge("TrackFX_AddByName", []interface{}{id, instrument, false, -1})
+	return err
+}
+
 func (r *ReaperDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {
 	r.callBridge("CreateMIDIItem", []interface{}{0, 0, 4.0})
 	for _, n := range notes {

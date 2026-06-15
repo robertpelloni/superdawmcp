@@ -143,6 +143,17 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						<div class="card">
 							<h2>Virtual Audio Patching</h2>
 							<div id="routing"></div>
+							<div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+								<h3>New Patch</h3>
+								<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+									<input id="src-daw" placeholder="Source DAW" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
+									<input id="src-track" placeholder="Source Track" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
+									<div class="patch-arrow" style="align-self: center;">➔</div>
+									<input id="dst-daw" placeholder="Dest DAW" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
+									<input id="dst-track" placeholder="Dest Track" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
+									<button onclick="addPatch()" class="badge" style="cursor: pointer; background: #00ff88; color: #000; border: none; padding: 5px 15px;">ADD</button>
+								</div>
+							</div>
 							<div id="blueprint"></div>
 						</div>
 						<div class="card">
@@ -211,8 +222,8 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 
 							// Render Patches
 							let patchHtml = '';
-							state.patches.forEach(p => {
-								patchHtml += ' 									<div class="patch-item"> 										<span>' + p.source_daw + ' (' + p.source_track + ')</span> 										<span class="patch-arrow">➔</span> 										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> 									</div> 								';
+							state.patches.forEach((p, idx) => {
+								patchHtml += ' 									<div class="patch-item"> 										<span>' + p.source_daw + ' (' + p.source_track + ')</span> 										<span class="patch-arrow">➔</span> 										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> 										<button onclick="removePatch(\'' + p.source_daw + '\', \'' + p.source_track + '\', \'' + p.dest_daw + '\', \'' + p.dest_track + '\')" style="background: none; border: none; color: #ff4444; cursor: pointer;">[X]</button> 									</div> 								';
 							});
 							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
 
@@ -303,6 +314,30 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 								parameter_name: param,
 								value: parseFloat(val),
 								track_id: '0'
+							});
+						}
+
+						function addPatch() {
+							const srcDaw = document.getElementById('src-daw').value;
+							const srcTrack = document.getElementById('src-track').value;
+							const dstDaw = document.getElementById('dst-daw').value;
+							const dstTrack = document.getElementById('dst-track').value;
+							if (srcDaw && srcTrack && dstDaw && dstTrack) {
+								callMcp('superdaw_patch_audio', {
+									source_daw: srcDaw,
+									source_track: srcTrack,
+									dest_daw: dstDaw,
+									dest_track: dstTrack
+								});
+							}
+						}
+
+						function removePatch(srcDaw, srcTrack, dstDaw, dstTrack) {
+							callMcp('superdaw_unpatch_audio', {
+								source_daw: srcDaw,
+								source_track: srcTrack,
+								dest_daw: dstDaw,
+								dest_track: dstTrack
 							});
 						}
 					</script>

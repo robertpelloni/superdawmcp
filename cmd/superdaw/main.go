@@ -273,6 +273,10 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 		id, _ := args["track_id"].(string); vol, _ := args["volume"].(float64)
 		driver.SetTrackVolume(id, float32(vol))
 		if p, ok := args["pan"].(float64); ok { driver.SetTrackPan(id, float32(p)) }
+	case "superdaw_set_instrument":
+		id, _ := args["track_id"].(string); inst, _ := args["instrument"].(string)
+		driver.SetTrackInstrument(id, inst)
+		result = fmt.Sprintf("Loaded %s on track %s", inst, id)
 	case "superdaw_write_midi":
 		id, _ := args["track_id"].(string); clipIdx := 0
 		if idx, ok := args["clip_index"].(float64); ok { clipIdx = int(idx) }
