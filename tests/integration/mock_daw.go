@@ -16,3 +16,9 @@ func (m *MockDAW) GetMessages() []osc.Message {
 	for _, p := range m.messages { switch packet := p.(type) { case *osc.Message: res = append(res, *packet); case *osc.Bundle: for _, item := range packet.Messages { res = append(res, *item) } } }
 	return res
 }
+func (m *MockDAW) SendMessage(host string, port int, addr string, args ...interface{}) error {
+	client := osc.NewClient(host, port)
+	msg := osc.NewMessage(addr)
+	for _, a := range args { msg.Append(a) }
+	return client.Send(msg)
+}

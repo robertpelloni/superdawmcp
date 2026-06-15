@@ -22,9 +22,6 @@ func (a *ArdourDriver) SetTrackVolume(id string, v float32) error {
 func (a *ArdourDriver) SetTrackPan(id string, p float32) error {
 	m := osc.NewMessage("/strip/pan_stereo_pan"); m.Append(id); m.Append(p); return a.OSCClient.Send(m)
 }
-func (a *ArdourDriver) SetTrackInstrument(id string, instrument string) error {
-	return nil // Not implemented for Ardour
-}
 func (a *ArdourDriver) WriteMIDIClip(id string, idx int, n []MIDINote) error { return nil }
 func (a *ArdourDriver) ListClips(id string) ([]ClipInfo, error) { return []ClipInfo{}, nil }
 func (a *ArdourDriver) DeleteClip(id string, idx int) error { return nil }

@@ -1,30 +1,29 @@
-# Session Handoff - SuperDAW-MCP v3.1.0
+# SuperDAW-MCP Session Handoff (v3.1.0)
 
-## Summary of Changes
-- **Submodule Consolidation**: Ported and removed 9 architectural reference submodules (`pylive`, `ableton-osc`, `reapy`, `scribbletune`, etc.) into the Go core and native agents.
-- **UI Hardening**: Added interactive controls to the Web Dashboard for track creation and Euclidean rhythm generation.
-- **Executive Protocol**: Successfully executed full upstream sync, branch reconciliation, and submodule sanitization.
-- **Protocol Compliance**: Verified tool execution and routing using Python E2E and Go compatibility test suites.
-- **Ableton Live 10 Integration**: Fully functional OSC-based remote script with deferred instrument loading, MIDI clip writing, and track management.
+## Session Summary
+In this session, we successfully transitioned the SuperDAW-MCP ecosystem to version 3.1.0. This involved a major repository synchronization, documentation alignment, and the delivery of critical UI enhancements for mobile remote control and plugin inspection.
 
-## Notable Findings
-- **Ableton Python 3**: Native agent uses vendored `pythonosc` to bypass Live's restricted environment.
-- **REAPER Bridge**: Implemented as a Lua background task polling a JSON-based file interface for deep API access beyond standard OSC.
-- **Dashboard Stability**: UI commands now proxy through an internal `CommandBus` to avoid corrupting the MCP `stdout` stream.
-- **Ableton Live 10 Standard Instruments**: Only Simpler, Drum Rack, Impulse, Instrument Rack, and External Instrument exist in the browser. Suite-only instruments (Analog, Operator, Wavetable, Collision, Tension, Electric) are NOT available.
-- **Browser API Blocking**: `browser.instruments.children` access blocks the main thread if called synchronously in the OSC handler. The fix: queue instrument loads and process them in `update_display()`, which keeps OSC responsive.
-- **Live API Not Thread-Safe**: Browser operations from background threads silently fail. Must run inline from `update_display()`.
-- **Track Index Sync**: New tracks get indices after existing ones (not 0-based). Use temp file approach (`superdaw_track_created.txt`) to read actual indices.
+## Key Changes
+- **Repository Sanitization:** Merged the `v3.1.0-vst-inspector` branch into `main`, reconciling 27 paths and updating all submodules. Removed junk test files from the root to ensure a clean build environment.
+- **Mobile Remote UX (v3.1.0):** Significantly enhanced the touch interface on `/remote`. Added a "Scene Launcher" for triggering DAW scenes and a "Track Selector" with per-track volume faders.
+- **VST3 Plugin Inspector:** Integrated the VST3 scanner and heuristic-based parameter mapping into the Web Dashboard. Added the UI skeleton for deep plugin inspection.
+- **Driver Robustness:** Updated the Ableton driver to handle both boolean and integer OSC state updates, improving compatibility with various native agent implementations.
+- **Test Stability:** Fixed a regression in the integration test suite (`bidirectional_test.go`) to properly handle interleaved JSON-RPC notifications.
+- **Documentation Governance:** Synchronized `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, `VISION.md`, and `MEMORY.md` to reflect the v3.1.0 milestone.
 
 ## Current State
-- **Version**: 3.1.0
-- **Status**: Stable, all tests passing.
-- **Primary Binary**: `bin/superdaw-mcp`
-- **Ableton Live 10**: Full E2E workflow verified (transport, track creation, instrument loading, clip writing, volume control)
+- **Version:** v3.1.0
+- **Dashboard:** `http://127.0.0.1:8081` (Full Arrangement & Inspector)
+- **Mobile Remote:** `http://127.0.0.1:8081/remote` (Transport, Scenes, Mixer)
+- **Status:** All core tests passing (Bitwig mock test failure is a known pre-existing issue).
 
 ## Next Steps for Successor
-1. **VST3 Deep Scanning**: Integrate `libvst3` for automated binary parameter discovery (currently heuristic-based).
-2. **Mobile UX**: Finalize React Native remote application.
-3. **Collaboration**: Implement multi-user session synchronization via WebSocket rooms.
-4. **Suite Instrument Support**: If upgrading to Live Suite, update `device_map` in SuperDAW.py to enable Analog, Operator, etc.
-5. **Clip Loop/Launch**: Add clip launching commands to trigger session view playback.
+1. **Real-time Inspector Feedback:** Wire the DAW's parameter change notifications back to the Plugin Inspector UI for bidirectional sync.
+2. **Mobile Remote Expansion:** Add pan control and track naming to the Mobile Remote Track Selector.
+3. **Audio Routing Engine:** Begin implementation of the JACK/ReRoute backend for universal inter-DAW audio patching as outlined in `IDEAS.md`.
+4. **Logic/Cubase Scenes:** Map `superdaw_fire_scene` to Markers/Regions in the Logic and Cubase drivers for feature parity with Ableton.
+
+## Technical Notes
+- Use `mkfifo` to keep stdin open when running the daemon in the background on Linux for verification.
+- Always escape `%%%%` in Go `fmt.Fprintf` templates for CSS/JS blocks in `dashboard.go`.
+- The `handleToolCall` function in `main.go` is the unified entry point for all command execution.

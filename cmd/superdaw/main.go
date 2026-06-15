@@ -281,33 +281,25 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 		json.Unmarshal(notesJSON, &notes)
 		driver.WriteMIDIClip(id, clipIdx, notes)
 	case "superdaw_create_track":
-	n, _ := args["name"].(string); t, _ := args["type"].(string)
-	driver.CreateTrack(n, t)
-	result = fmt.Sprintf("Created track: %s (%s)", n, t)
-	case "superdaw_track_instrument":
-		id, _ := args["track_id"].(string); instr, _ := args["instrument"].(string)
-		driver.SetTrackInstrument(id, instr)
-		result = fmt.Sprintf("Loaded %s on track %s", instr, id)
+		n, _ := args["name"].(string); t, _ := args["type"].(string)
+		driver.CreateTrack(n, t)
 	case "superdaw_generate_euclidean":
 		id, _ := args["track_id"].(string); hits, _ := args["hits"].(float64); steps, _ := args["steps"].(float64); pitch, _ := args["pitch"].(float64)
 		if pitch == 0 { pitch = 60 }
-		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), 100, 0, 1.0)
+		velocity := 100; if v, ok := args["velocity"].(float64); ok { velocity = int(v) }
+		rotation := 0; if r, ok := args["rotation"].(float64); ok { rotation = int(r) }
+		length := float32(4.0); if l, ok := args["length"].(float64); ok { length = float32(l) }
+		notes := engine.GenerateEuclidean(int(hits), int(steps), int(pitch), velocity, rotation, length)
 		driver.WriteMIDIClip(id, 0, notes)
 		result = fmt.Sprintf("Generated %d/%d Euclidean rhythm on track %s", int(hits), int(steps), id)
 	case "superdaw_transport_control":
 		p, _ := args["playing"].(bool); b, ok := args["bpm"].(float64)
 		if !ok { b = 120.0 }
 		driver.SetTransportState(p, b); dash.UpdateDAW(instanceID, p, b); link.Sync(p, b)
-		manager.CacheTransportState(manager.ResolveID(instanceID), p, b)
 	case "superdaw_get_tracks":
 		tracks, _ := driver.GetTracks(); result = tracks
 	case "superdaw_get_transport_state":
-		if s, ok := manager.GetCachedTransportState(manager.ResolveID(instanceID)); ok {
-			result = map[string]interface{}{"playing": s.Playing, "bpm": s.BPM}
-		} else {
-			p, b, _ := driver.GetTransportState()
-			result = map[string]interface{}{"playing": p, "bpm": b}
-		}
+		p, b, _ := driver.GetTransportState(); result = map[string]interface{}{"playing": p, "bpm": b}
 	case "superdaw_list_clips":
 		id, _ := args["track_id"].(string); result, _ = driver.ListClips(id)
 	case "superdaw_delete_clip":
@@ -336,12 +328,7 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 	case "superdaw_fire_scene":
 		result, _ = driver.ExecuteCustomCommand("fire_scene", args)
 	case "superdaw_separate_stems":
-		in, _ := args["input_path"].(string); out, _ := args["output_dir"].(string); stems, ok := args["stems"].(float64); if !ok { stems = 4 }
-		if r, err := engine.SeparateStems(in, out, int(stems)); err != nil {
-			result = err.Error()
-		} else {
-			result = r
-		}
+		in, _ := args["input_path"].(string); out, _ := args["output_dir"].(string); stems, ok := args["stems"].(float64); if !ok { stems = 4 }; result, _ = engine.SeparateStems(in, out, int(stems))
 	case "superdaw_custom_command":
 		cmd, _ := args["command"].(string); cargs, _ := args["args"].(map[string]interface{}); result, _ = driver.ExecuteCustomCommand(cmd, cargs)
 	case "superdaw_patch_audio":

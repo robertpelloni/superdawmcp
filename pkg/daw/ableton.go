@@ -14,7 +14,6 @@ type AbletonLiveDriver struct {
 		playing     bool
 		tempo       float32
 		arrangement string
-		trackCount   int
 		mu          sync.RWMutex
 	}
 }
@@ -32,21 +31,28 @@ func (a *AbletonLiveDriver) listen(port int) {
 	dispatcher := osc.NewStandardDispatcher()
 	dispatcher.AddMsgHandler("/superdaw/state/playing", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
-			if b, ok := msg.Arguments[0].(bool); ok {
-				a.state.playing = b
-				if a.notifyHandler != nil {
-					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
-						"daw":     "ableton",
-						"playing": b,
-					})
-				}
+			var b bool
+			if val, ok := msg.Arguments[0].(bool); ok {
+				b = val
+			} else if val, ok := msg.Arguments[0].(int32); ok {
+				b = val == 1
+			} else {
+				return
+			}
+			a.state.playing = b
+			if a.notifyHandler != nil {
+				a.notifyHandler("superdaw/transport_update", map[string]interface{}{
+					"daw":     "ableton",
+					"playing": b,
+				})
 			}
 		}
-		a.state.mu.Unlock()
 	})
 	dispatcher.AddMsgHandler("/superdaw/state/arrangement", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if s, ok := msg.Arguments[0].(string); ok {
 				a.state.arrangement = s
@@ -58,10 +64,10 @@ func (a *AbletonLiveDriver) listen(port int) {
 				}
 			}
 		}
-		a.state.mu.Unlock()
 	})
 	dispatcher.AddMsgHandler("/superdaw/state/tempo", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if f, ok := msg.Arguments[0].(float32); ok {
 				a.state.tempo = f
@@ -73,28 +79,8 @@ func (a *AbletonLiveDriver) listen(port int) {
 				}
 			}
 		}
-		a.state.mu.Unlock()
 	})
 
-dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {
-		a.state.mu.Lock()
-		if len(msg.Arguments) > 0 {
-			if i, ok := msg.Arguments[0].(int32); ok {
-				a.state.trackCount = int(i)
-			}
-		}
-		a.state.mu.Unlock()
-	})
-
-	dispatcher.AddMsgHandler("/superdaw/state/track_created", func(msg *osc.Message) {
-		a.state.mu.Lock()
-		if len(msg.Arguments) > 0 {
-			if i, ok := msg.Arguments[0].(int32); ok {
-				a.state.trackCount = int(i) + 1
-			}
-		}
-		a.state.mu.Unlock()
-	})
 	server := &osc.Server{Addr: fmt.Sprintf("0.0.0.0:%d", port), Dispatcher: dispatcher}
 	server.ListenAndServe()
 }
@@ -120,14 +106,7 @@ func (a *AbletonLiveDriver) GetTransportState() (bool, float64, error) {
 }
 
 func (a *AbletonLiveDriver) GetTracks() ([]TrackConfig, error) {
-	a.state.mu.RLock()
-	count := a.state.trackCount
-	a.state.mu.RUnlock()
-	tracks := make([]TrackConfig, count)
-	for i := 0; i < count; i++ {
-		tracks[i] = TrackConfig{ID: fmt.Sprintf("%d", i), Name: fmt.Sprintf("Track %d", i)}
-	}
-	return tracks, nil
+	return []TrackConfig{}, nil
 }
 
 func (a *AbletonLiveDriver) CreateTrack(name, trackType string) (string, error) {
@@ -148,13 +127,6 @@ func (a *AbletonLiveDriver) SetTrackPan(id string, pan float32) error {
 	m := osc.NewMessage("/superdaw/track/pan")
 	m.Append(id)
 	m.Append(pan)
-	return a.OSCClient.Send(m)
-}
-
-func (a *AbletonLiveDriver) SetTrackInstrument(id string, instrument string) error {
-	m := osc.NewMessage("/superdaw/track/instrument")
-	m.Append(id)
-	m.Append(instrument)
 	return a.OSCClient.Send(m)
 }
 

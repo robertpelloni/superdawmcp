@@ -6,5 +6,6 @@ To provide a unified, DAW-agnostic semantic interface for Digital Audio Workstat
 ## Core Concepts
 1. **Universal Abstraction**: Define a common language for transport, mixer, and MIDI operations that works across all DAWs.
 2. **Hybrid Architecture**: Use a high-performance Go daemon to handle MCP and routing, communicating with in-DAW agents via OSC, TCP/JSON, or MIDI.
-3. **Low Latency**: Optimize for real-time interaction with network roundtrips under 2ms.
-4. **Extensibility**: Easily add new DAWs by implementing the `DAWDriver` interface.
+3. **Multi-Instance Orchestration**: Support concurrent connections to multiple DAW engines (e.g., controlling Ableton and REAPER simultaneously).
+4. **Bidirectional State Sync**: Real-time telemetry from DAW agents back to the core daemon and dashboard.
+5. **Universal Plugin Control**: Deep scanning and control of VST3 plugins across all supported engines.

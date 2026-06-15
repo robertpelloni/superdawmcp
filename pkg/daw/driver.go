@@ -34,7 +34,6 @@ type DAWDriver interface {
 	CreateTrack(name, trackType string) (string, error)
 	SetTrackVolume(trackID string, volume float32) error
 	SetTrackPan(trackID string, pan float32) error
-	SetTrackInstrument(trackID string, instrument string) error
 
 	// Clip & MIDI
 	WriteMIDIClip(trackID string, clipIndex int, notes []MIDINote) error
