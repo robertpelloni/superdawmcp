@@ -1,13 +1,15 @@
 package daw
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net"
 )
 
 type BitwigDriver struct {
-	conn net.Conn
+	conn          net.Conn
+	notifyHandler func(method string, params interface{})
 }
 
 func NewBitwigDriver(host string, port int) *BitwigDriver {
@@ -15,10 +17,33 @@ func NewBitwigDriver(host string, port int) *BitwigDriver {
 }
 
 func (b *BitwigDriver) GetType() string { return "bitwig" }
+
+func (b *BitwigDriver) listen() {
+	if b.conn == nil { return }
+	scanner := bufio.NewScanner(b.conn)
+	for scanner.Scan() {
+		line := scanner.Text()
+		var msg struct {
+			Method string      `json:"method"`
+			Params interface{} `json:"params"`
+			ID     interface{} `json:"id"`
+		}
+		if err := json.Unmarshal([]byte(line), &msg); err == nil {
+			if msg.Method != "" && msg.ID == nil {
+				// It's a notification
+				if b.notifyHandler != nil {
+					b.notifyHandler(msg.Method, msg.Params)
+				}
+			}
+		}
+	}
+}
+
 func (b *BitwigDriver) Connect(endpoint string) error {
 	conn, err := net.Dial("tcp", endpoint)
 	if err != nil { return err }
 	b.conn = conn
+	go b.listen()
 	return nil
 }
 
@@ -71,6 +96,7 @@ func (b *BitwigDriver) DeleteClip(id string, idx int) error {
 }
 
 func (b *BitwigDriver) SetNotifyHandler(handler func(method string, params interface{})) {
+	b.notifyHandler = handler
 }
 
 func (b *BitwigDriver) ExecuteCustomCommand(cmd string, args map[string]interface{}) (interface{}, error) {

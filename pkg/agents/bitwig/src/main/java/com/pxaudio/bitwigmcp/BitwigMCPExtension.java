@@ -3,6 +3,7 @@ package com.pxaudio.bitwigmcp;
 import com.bitwig.extension.controller.ControllerExtension;
 import com.bitwig.extension.controller.api.*;
 
+import com.google.gson.JsonObject;
 import com.pxaudio.bitwigmcp.config.ConfigReader;
 import com.pxaudio.bitwigmcp.server.MCPServer;
 import com.pxaudio.bitwigmcp.handlers.*;
@@ -92,6 +93,25 @@ public class BitwigMCPExtension extends ControllerExtension {
         transport.isPlaying().markInterested();
         transport.isArrangerRecordEnabled().markInterested();
         transport.timeSignature().markInterested();
+
+        // Add transport observers
+        transport.isPlaying().addValueObserver(playing -> {
+            if (server != null) {
+                JsonObject params = new JsonObject();
+                params.addProperty("daw", "bitwig");
+                params.addProperty("playing", playing);
+                server.broadcast("superdaw/transport_update", params);
+            }
+        });
+
+        transport.tempo().value().addValueObserver(tempo -> {
+            if (server != null) {
+                JsonObject params = new JsonObject();
+                params.addProperty("daw", "bitwig");
+                params.addProperty("tempo", tempo);
+                server.broadcast("superdaw/transport_update", params);
+            }
+        });
 
         // Mark track bank values as interested
         for (int i = 0; i < trackBank.getSizeOfBank(); i++) {

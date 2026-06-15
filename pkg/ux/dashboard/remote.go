@@ -72,13 +72,25 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 						const ws = new WebSocket('ws://' + window.location.host + '/ws');
 						let currentDAW = '';
 
+						// Restore saved track selection
+						window.onload = () => {
+							const savedTrack = localStorage.getItem('superdaw_last_track');
+							if (savedTrack) {
+								document.getElementById('track-id').value = savedTrack;
+								updateFaderLabel();
+							}
+						};
+
 						ws.onmessage = (event) => {
 							const state = JSON.parse(event.data);
 							console.log("State updated:", state);
 
 							// Update track list from arrangement
 							const trackSelector = document.getElementById('track-id');
-							const currentVal = trackSelector.value;
+							let currentVal = trackSelector.value;
+							const savedTrack = localStorage.getItem('superdaw_last_track');
+							if (!currentVal && savedTrack) currentVal = savedTrack;
+
 							let options = '<option value="0">Master</option>';
 
 							for (const name in state.daws) {
@@ -102,6 +114,7 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 							const v = document.getElementById('vol-fader').value;
 							const p = document.getElementById('pan-fader').value;
 							const trackSelector = document.getElementById('track-id');
+							localStorage.setItem('superdaw_last_track', trackSelector.value);
 							const name = trackSelector.options[trackSelector.selectedIndex]?.text || 'Master';
 							document.getElementById('vol-label').innerText = name + ' Volume: ' + parseFloat(v).toFixed(2);
 							document.getElementById('pan-label').innerText = name + ' Pan: ' + parseFloat(p).toFixed(2);

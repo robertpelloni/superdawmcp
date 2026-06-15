@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.google.gson.*;
@@ -25,6 +26,7 @@ public class MCPServer {
     private ServerSocket serverSocket;
     private ExecutorService executor;
     private AtomicBoolean running = new AtomicBoolean(false);
+    private final CopyOnWriteArrayList<PrintWriter> clients = new CopyOnWriteArrayList<>();
 
     public MCPServer(int port, BitwigMCPExtension extension, ControllerHost host) {
         this.port = port;
@@ -74,6 +76,7 @@ public class MCPServer {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)
         ) {
+            clients.add(out);
             String line;
             StringBuilder messageBuilder = new StringBuilder();
 
@@ -98,8 +101,20 @@ public class MCPServer {
                     // Or it's malformed - in production we'd want better handling
                 }
             }
+            clients.remove(out);
         } catch (IOException e) {
             host.println("Client disconnected: " + e.getMessage());
+        }
+    }
+
+    public void broadcast(String method, JsonElement params) {
+        JsonObject notification = new JsonObject();
+        notification.addProperty("jsonrpc", "2.0");
+        notification.addProperty("method", method);
+        notification.add("params", params);
+        String json = gson.toJson(notification);
+        for (PrintWriter out : clients) {
+            out.println(json);
         }
     }
 

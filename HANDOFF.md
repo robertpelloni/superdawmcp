@@ -8,20 +8,23 @@ In this session, we advanced the SuperDAW-MCP ecosystem by implementing real-tim
   - Updated the Ableton Live agent (`SuperDAW.py`) to monitor the currently selected device and broadcast parameter changes via a new OSC schema (`/superdaw/state/plugin/params`).
   - Enhanced the Ableton Go driver to listen for these OSC updates and broadcast them as JSON-RPC notifications (`superdaw/plugin_params_update`).
   - Updated the Web Dashboard (`dashboard.go`) to handle these notifications and update Plugin Inspector sliders in real-time.
-- **Enhanced Mobile Remote UX:**
+- **Enhanced Mobile Remote & Dashboard UX:**
   - Implemented WebSocket state synchronization in `remote.go` to receive real-time updates.
   - Added a dynamic track selector that populates from the DAW's arrangement state.
   - Added a 'Pan' control slider to the Mixer section.
+  - Added interactive 'Virtual Audio Patching' controls to the main Dashboard, allowing users to create and remove patches between DAWs.
   - Refined the UI layout for better touch interaction and visual feedback.
-- **Architectural Cleanup:**
+- **Protocol & Capability Restoration:**
+  - Restored and exposed `superdaw_set_instrument` across all 8 DAW drivers.
   - Synchronized the `DAWDriver` interface with v3.1.0 capabilities.
   - Restored critical track listing and error handling logic in the Ableton driver and main dispatcher.
   - Sanitized the repository root by removing legacy test files.
 
 ## Current State
 - **Version:** v3.1.0 (with alpha enhancements)
-- **Plugin Inspector:** Supports real-time feedback from Ableton Live (for the selected device).
+- **Plugin Inspector:** Supports real-time feedback and control for Ableton Live.
 - **Mobile Remote:** Fully dynamic track selection, volume, pan, transport, and scene control.
+- **Audio Routing:** Interactive UI for virtual patching using the JACK backend.
 - **Stability:** All core compatibility and integration tests passing.
 
 ## Technical Learnings
@@ -32,4 +35,4 @@ In this session, we advanced the SuperDAW-MCP ecosystem by implementing real-tim
 ## Next Steps
 1. **Multi-DAW Parameter Sync:** Implement similar parameter feedback listeners for REAPER, Logic Pro, and Bitwig agents.
 2. **Mobile Remote Persistence:** Store the last selected track index in the remote UI to prevent reset on page refresh.
-3. **Audio Routing Engine:** Begin implementation of the inter-DAW audio patching backend using JACK or ReRoute.
+3. **VST3 Parameter Deep-Scanning:** Integrate libvst3 for more granular parameter metadata beyond heuristics.
