@@ -32,21 +32,28 @@ func (a *AbletonLiveDriver) listen(port int) {
 	dispatcher := osc.NewStandardDispatcher()
 	dispatcher.AddMsgHandler("/superdaw/state/playing", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
-			if b, ok := msg.Arguments[0].(bool); ok {
-				a.state.playing = b
-				if a.notifyHandler != nil {
-					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
-						"daw":     "ableton",
-						"playing": b,
-					})
-				}
+			var b bool
+			if val, ok := msg.Arguments[0].(bool); ok {
+				b = val
+			} else if val, ok := msg.Arguments[0].(int32); ok {
+				b = val == 1
+			} else {
+				return
+			}
+			a.state.playing = b
+			if a.notifyHandler != nil {
+				a.notifyHandler("superdaw/transport_update", map[string]interface{}{
+					"daw":     "ableton",
+					"playing": b,
+				})
 			}
 		}
-		a.state.mu.Unlock()
 	})
 	dispatcher.AddMsgHandler("/superdaw/state/arrangement", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if s, ok := msg.Arguments[0].(string); ok {
 				a.state.arrangement = s
@@ -58,10 +65,10 @@ func (a *AbletonLiveDriver) listen(port int) {
 				}
 			}
 		}
-		a.state.mu.Unlock()
 	})
 	dispatcher.AddMsgHandler("/superdaw/state/tempo", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if f, ok := msg.Arguments[0].(float32); ok {
 				a.state.tempo = f
@@ -73,7 +80,6 @@ func (a *AbletonLiveDriver) listen(port int) {
 				}
 			}
 		}
-		a.state.mu.Unlock()
 	})
 
 dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {

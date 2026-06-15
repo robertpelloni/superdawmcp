@@ -18,3 +18,6 @@
 
 5. **Universal Preset Translator**:
    - A tool to translate Serum presets to Vital or Ableton Wavetable using AI parameter mapping.
+
+6. **GPU-Accelerated VST Inspector**:
+   - Move the Plugin Inspector to a dedicated WebGL-based visualization for real-time waveform and spectrum analysis of the plugin's output.

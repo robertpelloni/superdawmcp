@@ -136,6 +136,14 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 						{Name: "Dry/Wet", Index: 6},
 						{Name: "Threshold", Index: 7},
 						{Name: "Ratio", Index: 8},
+						{Name: "LFO Rate", Index: 9},
+						{Name: "LFO Depth", Index: 10},
+						{Name: "Filter Type", Index: 11},
+						{Name: "Drive", Index: 12},
+						{Name: "Distortion", Index: 13},
+						{Name: "Chorus", Index: 14},
+						{Name: "Reverb", Index: 15},
+						{Name: "Delay", Index: 16},
 					}
 
 					s.cache[name] = PluginMetadata{
