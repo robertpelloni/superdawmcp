@@ -5,21 +5,25 @@ import (
 	"sync"
 )
 
-// ConnectionManager handles multiple concurrent DAW instances.
-type ConnectionManager struct {
-	instances map[string]DAWDriver
-	defaultID string
-	mu        sync.RWMutex
+type TransportState struct {
+	Playing bool
+	BPM     float64
 }
 
-// NewConnectionManager creates a new instance manager.
+type ConnectionManager struct {
+	instances       map[string]DAWDriver
+	defaultID       string
+	transportStates map[string]TransportState
+	mu              sync.RWMutex
+}
+
 func NewConnectionManager() *ConnectionManager {
 	return &ConnectionManager{
-		instances: make(map[string]DAWDriver),
+		instances:       make(map[string]DAWDriver),
+		transportStates: make(map[string]TransportState),
 	}
 }
 
-// Register adds a new DAW driver instance to the manager.
 func (m *ConnectionManager) Register(id string, driver DAWDriver) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -29,7 +33,6 @@ func (m *ConnectionManager) Register(id string, driver DAWDriver) {
 	}
 }
 
-// Unregister removes a DAW instance.
 func (m *ConnectionManager) Unregister(id string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -43,7 +46,6 @@ func (m *ConnectionManager) Unregister(id string) {
 	}
 }
 
-// SetDefault sets the default DAW instance to use when none is specified.
 func (m *ConnectionManager) SetDefault(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -54,7 +56,6 @@ func (m *ConnectionManager) SetDefault(id string) error {
 	return nil
 }
 
-// Get retrieves a DAW driver by its unique ID.
 func (m *ConnectionManager) Get(id string) (DAWDriver, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -68,7 +69,28 @@ func (m *ConnectionManager) Get(id string) (DAWDriver, error) {
 	return driver, nil
 }
 
-// GetAll returns a map of all registered DAW instances.
+func (m *ConnectionManager) ResolveID(id string) string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if id == "" {
+		return m.defaultID
+	}
+	return id
+}
+
+func (m *ConnectionManager) CacheTransportState(id string, playing bool, bpm float64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.transportStates[id] = TransportState{Playing: playing, BPM: bpm}
+}
+
+func (m *ConnectionManager) GetCachedTransportState(id string) (TransportState, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	s, ok := m.transportStates[id]
+	return s, ok
+}
+
 func (m *ConnectionManager) GetAll() map[string]DAWDriver {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

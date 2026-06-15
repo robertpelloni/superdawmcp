@@ -40,10 +40,10 @@ type DAWDriver interface {
 	ListClips(trackID string) ([]ClipInfo, error)
 	DeleteClip(trackID string, clipIndex int) error
 
-	// Plugins
+	// Plugins (v3.1.0)
 	SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error
 
-	// MIDI
+	// MIDI CC (v2.7.0)
 	SendCC(trackID string, controller int, value int) error
 
 	// Custom DAW-specific extensions

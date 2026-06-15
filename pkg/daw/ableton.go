@@ -14,16 +14,14 @@ type AbletonLiveDriver struct {
 		playing     bool
 		tempo       float32
 		arrangement string
+		trackCount  int
 		mu          sync.RWMutex
 	}
 }
 
 func NewAbletonDriver(host string, port int, localPort int) *AbletonLiveDriver {
 	d := &AbletonLiveDriver{OSCClient: osc.NewClient(host, port)}
-
-	// Start OSC listener for state updates
 	go d.listen(localPort)
-
 	return d
 }
 
@@ -43,10 +41,7 @@ func (a *AbletonLiveDriver) listen(port int) {
 			}
 			a.state.playing = b
 			if a.notifyHandler != nil {
-				a.notifyHandler("superdaw/transport_update", map[string]interface{}{
-					"daw":     "ableton",
-					"playing": b,
-				})
+				a.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "ableton", "playing": b})
 			}
 		}
 	})
@@ -57,10 +52,7 @@ func (a *AbletonLiveDriver) listen(port int) {
 			if s, ok := msg.Arguments[0].(string); ok {
 				a.state.arrangement = s
 				if a.notifyHandler != nil {
-					a.notifyHandler("superdaw/arrangement_update", map[string]interface{}{
-						"daw":         "ableton",
-						"arrangement": s,
-					})
+					a.notifyHandler("superdaw/arrangement_update", map[string]interface{}{"daw": "ableton", "arrangement": s})
 				}
 			}
 		}
@@ -72,11 +64,26 @@ func (a *AbletonLiveDriver) listen(port int) {
 			if f, ok := msg.Arguments[0].(float32); ok {
 				a.state.tempo = f
 				if a.notifyHandler != nil {
-					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
-						"daw":   "ableton",
-						"tempo": f,
-					})
+					a.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "ableton", "tempo": f})
 				}
+			}
+		}
+	})
+	dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {
+		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
+		if len(msg.Arguments) > 0 {
+			if i, ok := msg.Arguments[0].(int32); ok {
+				a.state.trackCount = int(i)
+			}
+		}
+	})
+	dispatcher.AddMsgHandler("/superdaw/state/track_created", func(msg *osc.Message) {
+		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
+		if len(msg.Arguments) > 0 {
+			if i, ok := msg.Arguments[0].(int32); ok {
+				a.state.trackCount = int(i) + 1
 			}
 		}
 	})
@@ -106,7 +113,14 @@ func (a *AbletonLiveDriver) GetTransportState() (bool, float64, error) {
 }
 
 func (a *AbletonLiveDriver) GetTracks() ([]TrackConfig, error) {
-	return []TrackConfig{}, nil
+	a.state.mu.RLock()
+	count := a.state.trackCount
+	a.state.mu.RUnlock()
+	tracks := make([]TrackConfig, count)
+	for i := 0; i < count; i++ {
+		tracks[i] = TrackConfig{ID: fmt.Sprintf("%d", i), Name: fmt.Sprintf("Track %d", i)}
+	}
+	return tracks, nil
 }
 
 func (a *AbletonLiveDriver) CreateTrack(name, trackType string) (string, error) {
@@ -134,11 +148,8 @@ func (a *AbletonLiveDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) 
 	m := osc.NewMessage("/superdaw/clip/write")
 	m.Append(id)
 	m.Append(int32(idx))
-
-	// Agent expects JSON string
 	data, _ := json.Marshal(notes)
 	m.Append(string(data))
-
 	return a.OSCClient.Send(m)
 }
 

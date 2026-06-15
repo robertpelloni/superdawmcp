@@ -3,7 +3,7 @@
 - [x] DAW Drivers (Ableton, REAPER, Ardour, Bitwig, FL Studio, Logic, Cubase)
 - [x] Multi-language Client SDKs (8 languages)
 - [x] Comprehensive End-to-End Integration Testing
-- [x] Multi-DAW Orchestrator Layer (v1.3)
+- [x] Multi-DAW Orchestration Layer (v1.3)
 - [x] Universal Audio Routing (v1.4)
 - [x] Generative AI Stem Import (v1.4)
 - [x] Bidirectional State Sync (v1.9)
@@ -13,7 +13,7 @@
 - [x] Bidirectional Monitoring & Web Dashboard (v2.3)
 - [x] Pro Tools native driver & universal studio parity (v2.4)
 - [x] Multi-Instance Connection Manager & Bidirectional Telemetry (v3.0.0)
-- [x] VST3 Parameters Deep-Scanning & Inspector (v3.1.0)
-- [ ] Universal Audio Routing Engine (Jack/ReRoute) - Next Major
-- [ ] Mobile Control Application (Enhanced UX)
+- [x] Enhanced VST3 Parameter Discovery & Plugin Inspector (v3.1.0)
+- [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
+- [ ] Mobile Control Application (React Native)

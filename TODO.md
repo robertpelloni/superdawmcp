@@ -11,8 +11,7 @@
 - [x] Universal Audio Routing (Jack/ReRoute integration)
 - [x] Generative AI Stem Import
 - [x] VST3 Plugin Inspector UI (v3.1.0)
-- [ ] Mobile Remote UX Enhancements (Scene Launcher, Track Selector)
+- [ ] Mobile Remote UX (React Native)
 - [x] TCP MCP Gateway (v2.7.0)
 - [x] Remote Python SDK socket transport (v2.7.0)
 - [x] Universal MIDI CC Support (v2.7.0)
-- [ ] Real-time parameter feedback from DAW to Inspector

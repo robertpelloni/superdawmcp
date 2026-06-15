@@ -1,24 +1,45 @@
-# SuperDAW-MCP Deployment Guide
+# Deployment Guide
 
-## Prerequisites
-- Go 1.21+
-- Python 3.10+ (for agents and SDKs)
-- Node.js 18+ (for TS SDK)
-- JACK Audio Connection Kit (optional, for audio routing)
+## System Requirements
+- Go 1.23+
+- Python 3.9+ (for Ableton, REAPER, and FL Studio drivers)
+- Java 11+ (for Bitwig driver)
+- Ableton Live 11/12, REAPER 6+, Bitwig Studio 5+, Ardour 8+, or FL Studio 21+
 
-## Installation
-1. Clone the repository and submodules:
-   `git clone --recursive https://github.com/robertpelloni/superdawmcp`
-2. Build the core daemon:
-   `make build`
+## Quick Start
+1. Clone the repository with submodules:
+   ```bash
+   git clone --recursive https://github.com/robertpelloni/superdaw-mcp.git
+   ```
+2. Build the server:
+   ```bash
+   make build
+   ```
 3. Install DAW agents:
-   `./scripts/install_adapters.sh`
+   - **Ableton Live:** Copy `pkg/agents/ableton/SuperDAW` to your MIDI Remote Scripts folder.
+   - **REAPER:** Copy `pkg/agents/reaper/.ReaperOSC` to your REAPER resource path.
+   - **Bitwig Studio:** Copy `pkg/agents/bitwig/SuperDAW.bwextension` to your Extensions folder.
+   - **FL Studio:** Copy `pkg/agents/flstudio/device_SuperDAW.py` to your FL Studio MIDI Scripts folder.
 
-## Running
-Start the core daemon:
-`./bin/superdaw-mcp`
+## MCP Configuration
+Add the following to your MCP client configuration (e.g., Claude Desktop config):
+```json
+{
+  "mcpServers": {
+    "superdaw": {
+      "command": "/path/to/superdaw-mcp",
+      "args": []
+    }
+  }
+}
+```
 
-The MCP server will listen on `stdin/stdout`.
-The Web Dashboard will be available at `http://127.0.0.1:8081`.
-The Mobile Remote will be available at `http://127.0.0.1:8081/remote`.
-The TCP Gateway (for Remote SDKs) will listen on port `12002`.
+## Remote Studio Access (v2.7.0)
+SuperDAW now supports remote network control via a TCP Gateway on port 12002.
+To connect from a remote machine:
+1. Ensure port 12002 is open on the server.
+2. Use the 'remote_addr' parameter in the Python SDK:
+   ```python
+   client = SuperDAWClient(remote_addr="server_ip:12002")
+   client.connect()
+   ```
