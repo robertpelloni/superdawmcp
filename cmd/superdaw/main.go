@@ -35,14 +35,14 @@ func main() {
 	manager := daw.NewConnectionManager()
 
 	// Register default instances
-	manager.Register("ableton", daw.NewAbletonDriver("127.0.0.1", 11000, 11001))
-	manager.Register("reaper", daw.NewReaperDriver("127.0.0.1", 8000, 8080))
-	manager.Register("ardour", daw.NewArdourDriver("127.0.0.1", 3819))
-	manager.Register("bitwig", daw.NewBitwigDriver("127.0.0.1", 8181))
-	manager.Register("flstudio", daw.NewFLStudioDriver("127.0.0.1", 9000))
-	manager.Register("logic", daw.NewLogicProDriver("127.0.0.1", 12100, 12101))
-	manager.Register("cubase", daw.NewCubaseDriver("127.0.0.1", 7001))
-	manager.Register("protools", daw.NewProToolsDriver("127.0.0.1", 7002))
+	manager.RegisterWithRoom("ableton", daw.NewAbletonDriver("127.0.0.1", 11000, 11001), "default")
+	manager.RegisterWithRoom("reaper", daw.NewReaperDriver("127.0.0.1", 8000, 8080), "default")
+	manager.RegisterWithRoom("ardour", daw.NewArdourDriver("127.0.0.1", 3819), "default")
+	manager.RegisterWithRoom("bitwig", daw.NewBitwigDriver("127.0.0.1", 8181), "default")
+	manager.RegisterWithRoom("flstudio", daw.NewFLStudioDriver("127.0.0.1", 9000), "default")
+	manager.RegisterWithRoom("logic", daw.NewLogicProDriver("127.0.0.1", 12100, 12101), "default")
+	manager.RegisterWithRoom("cubase", daw.NewCubaseDriver("127.0.0.1", 7001), "default")
+	manager.RegisterWithRoom("protools", daw.NewProToolsDriver("127.0.0.1", 7002), "default")
 
 	manager.SetDefault("ableton")
 
@@ -56,9 +56,9 @@ func main() {
 			}
 			writeResponseRaw(notif)
 
-			// Collaborative updates default to "default" room for now
-			// In production, drivers would be assigned to specific rooms
-			roomID := "default"
+			// Collaborative updates use the room assigned to the driver
+			info, _ := manager.GetInfo(instanceID)
+			roomID := info.RoomID
 
 			if method == "superdaw/arrangement_update" {
 				if p, ok := params.(map[string]interface{}); ok {
@@ -272,6 +272,10 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 func handleToolCallWithRoom(roomID string, name string, args map[string]interface{}, manager *daw.ConnectionManager, scanner *vst.Scanner, dash *dashboard.DashboardState, genImporter *engine.GenerativeImporter, link *engine.LinkBridge, router *daw.AudioRouter) interface{} {
 	instanceID := ""
 	if id, ok := args["daw"].(string); ok { instanceID = id }
+
+	// If roomID is explicitly provided in arguments, prioritize it
+	if r, ok := args["room_id"].(string); ok { roomID = r }
+
 	driver, err := manager.Get(instanceID)
 	if err != nil { return err.Error() }
 
