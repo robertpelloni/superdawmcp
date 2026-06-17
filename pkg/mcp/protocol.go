@@ -174,6 +174,17 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_vst_deep_scan",
+				Description: "Perform a deep binary scan of a VST3 plugin to extract granular metadata.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"plugin_name"},
+				},
+			},
+			{
 				Name:        "superdaw_separate_stems",
 				Description: "Separate audio into stems using AI (Spleeter).",
 				InputSchema: map[string]interface{}{

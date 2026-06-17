@@ -7,20 +7,44 @@ import (
 	"sync"
 	"github.com/gorilla/websocket"
 	"html"
+	"time"
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
+type ChatMessage struct {
+	Sender    string `json:"sender"`
+	Text      string `json:"text"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+type RoomEvent struct {
+	Text      string `json:"text"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+type ClientPresence struct {
+	ID          string `json:"id"`
+	ActiveTrack string `json:"active_track"`
+}
+
+// RoomData holds only the serializable state of a room
+type RoomData struct {
+	ID       string              `json:"id"`
+	DAWs     map[string]DAWState `json:"daws"`
+	Patches  []AudioPatch        `json:"patches"`
+	Jobs     []interface{}       `json:"jobs"`
+	Messages []ChatMessage       `json:"messages"`
+	Events   []RoomEvent         `json:"events"`
+}
+
 // RoomState holds the state and connected clients for a specific collaborative session
 type RoomState struct {
-	ID      string              `json:"id"`
-	DAWs    map[string]DAWState `json:"daws"`
-	Patches []AudioPatch        `json:"patches"`
-	Jobs    []interface{}       `json:"jobs"`
-	clients map[*websocket.Conn]bool
-	mu      sync.RWMutex
+	RoomData
+	Presences map[*websocket.Conn]*ClientPresence `json:"-"`
+	mu       sync.RWMutex
 }
 
 type DashboardState struct {
@@ -78,24 +102,46 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 		if err != nil { return }
 
 		room := orchestrator.getOrCreateRoom(roomID)
+		presence := &ClientPresence{ID: fmt.Sprintf("User-%d", time.Now().UnixNano()%10000)}
+
 		room.mu.Lock()
-		room.clients[conn] = true
+		room.Presences[conn] = presence
 		room.mu.Unlock()
+
+		room.AddEvent(fmt.Sprintf("%s joined the session.", presence.ID))
+		room.broadcast()
 
 		// Clean up on disconnect
 		defer func() {
 			room.mu.Lock()
-			delete(room.clients, conn)
+			delete(room.Presences, conn)
 			room.mu.Unlock()
 			conn.Close()
+			room.AddEvent(fmt.Sprintf("%s left.", presence.ID))
+			room.broadcast()
 		}()
 
-		room.broadcast()
-
-		// Keep connection alive and read messages (though we mostly push state)
+		// Keep connection alive and read messages
 		for {
-			if _, _, err := conn.ReadMessage(); err != nil {
-				break
+			_, msgData, err := conn.ReadMessage()
+			if err != nil { break }
+
+			var incoming struct {
+				Type  string `json:"type"`
+				Text  string `json:"text"`
+				Track string `json:"track"`
+			}
+			if err := json.Unmarshal(msgData, &incoming); err == nil {
+				switch incoming.Type {
+				case "chat":
+					room.AddMessage(presence.ID, incoming.Text)
+					room.broadcast()
+				case "selection":
+					room.mu.Lock()
+					presence.ActiveTrack = incoming.Track
+					room.mu.Unlock()
+					room.broadcast()
+				}
 			}
 		}
 	})
@@ -103,7 +149,6 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 	mux.HandleFunc("/obs", func(w http.ResponseWriter, r *http.Request) {
 		roomID := r.URL.Query().Get("room")
 		if roomID == "" { roomID = "default" }
-		// Escape the roomID to prevent XSS
 		safeRoomID := html.EscapeString(roomID)
 		fmt.Fprintf(w, `
 			<html>
@@ -154,7 +199,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						.badge { background: #333; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; color: #aaa; }
 						#timeline { width: 100%%; height: 300px; background: #000; margin-top: 20px; border: 1px solid #444; position: relative; overflow-x: auto; }
 						#blueprint { width: 100%%; height: 200px; background: #1a1a1a; border: 1px dashed #444; margin-top: 10px; display: flex; align-items: center; justify-content: center; font-family: monospace; color: #00ff88; }
-						.track-lane { height: 40px; border-bottom: 1px solid #222; display: flex; align-items: center; white-space: nowrap; }
+						.track-lane { height: 40px; border-bottom: 1px solid #222; display: flex; align-items: center; white-space: nowrap; position: relative; }
 						.clip-block { position: absolute; background: #00bcd4; height: 30px; border-radius: 4px; border: 1px solid #fff; font-size: 10px; color: #000; padding: 2px; overflow: hidden; }
 						.keyboard { display: flex; justify-content: center; margin-top: 20px; }
 						.key { width: 40px; height: 120px; border: 1px solid #000; background: white; cursor: pointer; }
@@ -164,6 +209,15 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						button.action { cursor: pointer; background: #00ff88; color: #000; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; }
 						.room-info { background: #333; padding: 5px 15px; border-radius: 20px; font-size: 14px; color: #00ff88; display: flex; align-items: center; gap: 10px; }
 						.presence-indicator { width: 10px; height: 10px; background: #00ff88; border-radius: 50%%; display: inline-block; }
+
+						/* Collaboration UI */
+						#chat-box { height: 200px; overflow-y: auto; background: #000; border: 1px solid #333; padding: 10px; font-size: 13px; display: flex; flex-direction: column; gap: 5px; }
+						.chat-msg { border-bottom: 1px solid #111; padding-bottom: 2px; }
+						.chat-sender { color: #00ff88; font-weight: bold; margin-right: 5px; }
+						#event-log { height: 200px; overflow-y: auto; background: #000; border: 1px solid #333; padding: 10px; font-size: 12px; color: #888; font-family: monospace; }
+						.event-item { margin-bottom: 3px; }
+						.event-time { color: #444; margin-right: 5px; }
+						.user-marker { position: absolute; right: 10px; background: #00ff88; color: #000; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
 					</style>
 				</head>
 				<body>
@@ -185,6 +239,16 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						<div class="card">
 							<h2>DAW Engine Status</h2>
 							<div id="daws"></div>
+						</div>
+						<div class="card">
+							<h2>Studio Chat & Activity</h2>
+							<div id="chat-box"></div>
+							<div style="display: flex; gap: 5px; margin-top: 10px;">
+								<input id="chat-input" placeholder="Type a message..." style="flex: 1;" onkeypress="if(event.key==='Enter') sendChat()">
+								<button onclick="sendChat()" class="action">SEND</button>
+							</div>
+							<h3 style="margin-top: 15px;">Session Event Log</h3>
+							<div id="event-log"></div>
 						</div>
 						<div class="card">
 							<h2>Virtual Audio Patching</h2>
@@ -242,19 +306,6 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 								</div>
 							</div>
 						</div>
-						<div class="card">
-							<h2>Music Theory & Algorithms</h2>
-							<div style="margin-bottom: 20px;">
-								<h3>Euclidean Rhythm</h3>
-								<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-									<input id="euc-track" placeholder="Trk ID" style="width: 60px;">
-									<input id="euc-hits" placeholder="Hits" style="width: 60px;">
-									<input id="euc-steps" placeholder="Steps" style="width: 60px;">
-									<input id="euc-pitch" placeholder="Pitch" style="width: 60px;">
-									<button onclick="generateEuclidean()" class="action">GENERATE</button>
-								</div>
-							</div>
-						</div>
 					</div>
 
 					<div class="card">
@@ -303,6 +354,29 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 								const state = msg;
 								document.getElementById('presence-count').innerText = state.user_count + ' users';
 
+								// Render Chat
+								let chatHtml = '';
+								if (state.messages) {
+									state.messages.forEach(m => {
+										chatHtml += '<div class="chat-msg"><span class="chat-sender">' + m.sender + ':</span> ' + m.text + '</div>';
+									});
+								}
+								const chatBox = document.getElementById('chat-box');
+								chatBox.innerHTML = chatHtml;
+								chatBox.scrollTop = chatBox.scrollHeight;
+
+								// Render Events
+								let eventHtml = '';
+								if (state.events) {
+									state.events.forEach(e => {
+										const time = new Date(e.timestamp * 1000).toLocaleTimeString();
+										eventHtml += '<div class="event-item"><span class="event-time">[' + time + ']</span>' + e.text + '</div>';
+									});
+								}
+								const eventLog = document.getElementById('event-log');
+								eventLog.innerHTML = eventHtml;
+								eventLog.scrollTop = eventLog.scrollHeight;
+
 								// Render DAWs
 								let dawHtml = '';
 								for (const name in state.daws) {
@@ -347,7 +421,18 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 										try {
 											const arrangement = JSON.parse(d.arrangement);
 											arrangement.forEach(track => {
-												timelineHtml += '<div class="track-lane" style="top: ' + top + 'px; position: relative;"><span style="width: 100px; display: inline-block;">' + track.track + '</span>';
+												const trackID = name + ':' + track.track;
+												timelineHtml += '<div class="track-lane" id="lane-' + trackID + '" style="top: ' + top + 'px; cursor: pointer;" onclick="selectTrack(\'' + trackID + '\')"><span style="width: 100px; display: inline-block;">' + track.track + '</span>';
+
+												// Show other users on this track
+												if (state.presences) {
+													state.presences.forEach(p => {
+														if (p.active_track === trackID) {
+															timelineHtml += '<span class="user-marker">' + p.id + '</span>';
+														}
+													});
+												}
+
 												track.clips.forEach(clip => {
 													const left = clip.start * 20;
 													const width = (clip.end - clip.start) * 20;
@@ -361,6 +446,18 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 								}
 								document.getElementById('timeline').innerHTML = timelineHtml || '<p style="color: #666; padding: 20px;">No arrangement data available.</p>';
 							};
+						}
+
+						function sendChat() {
+							const input = document.getElementById('chat-input');
+							if (input.value) {
+								ws.send(JSON.stringify({type: 'chat', text: input.value}));
+								input.value = '';
+							}
+						}
+
+						function selectTrack(trackID) {
+							ws.send(JSON.stringify({type: 'selection', track: trackID}));
 						}
 
 						function switchRoom(newRoom) {
@@ -498,13 +595,42 @@ func (s *DashboardState) getOrCreateRoom(id string) *RoomState {
 		return room
 	}
 	room := &RoomState{
-		ID:      id,
-		DAWs:    make(map[string]DAWState),
-		Patches: []AudioPatch{},
-		clients: make(map[*websocket.Conn]bool),
+		RoomData: RoomData{
+			ID:       id,
+			DAWs:     make(map[string]DAWState),
+			Patches:  []AudioPatch{},
+			Messages: []ChatMessage{},
+			Events:   []RoomEvent{},
+		},
+		Presences: make(map[*websocket.Conn]*ClientPresence),
 	}
 	s.rooms[id] = room
 	return room
+}
+
+func (r *RoomState) AddMessage(sender, text string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Messages = append(r.Messages, ChatMessage{
+		Sender:    sender,
+		Text:      text,
+		Timestamp: time.Now().Unix(),
+	})
+	if len(r.Messages) > 50 {
+		r.Messages = r.Messages[1:]
+	}
+}
+
+func (r *RoomState) AddEvent(text string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.Events = append(r.Events, RoomEvent{
+		Text:      text,
+		Timestamp: time.Now().Unix(),
+	})
+	if len(r.Events) > 50 {
+		r.Events = r.Events[1:]
+	}
 }
 
 // Global update methods that default to "default" room or can be updated to take roomID
@@ -530,25 +656,19 @@ func (s *DashboardState) UpdateJobs(roomID string, jobs []interface{}) {
 	room.broadcast()
 }
 
-func (s *DashboardState) GetState(roomID string) RoomState {
+func (s *DashboardState) GetState(roomID string) RoomData {
 	if roomID == "" { roomID = "default" }
 	room := s.getOrCreateRoom(roomID)
 	room.mu.RLock()
 	defer room.mu.RUnlock()
-	return RoomState{
-		ID:      room.ID,
-		DAWs:    room.DAWs,
-		Patches: room.Patches,
-		Jobs:    room.Jobs,
-	}
+	return room.RoomData
 }
 
-func (s *DashboardState) SetState(roomID string, state RoomState) {
+func (s *DashboardState) SetState(roomID string, state RoomData) {
 	if roomID == "" { roomID = "default" }
 	room := s.getOrCreateRoom(roomID)
 	room.mu.Lock()
-	room.DAWs = state.DAWs
-	room.Patches = state.Patches
+	room.RoomData = state
 	room.mu.Unlock()
 	room.broadcast()
 }
@@ -590,20 +710,41 @@ func (s *DashboardState) AddPatch(roomID string, p AudioPatch) {
 	room.broadcast()
 }
 
+func (s *DashboardState) AddEvent(roomID string, text string) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.AddEvent(text)
+	room.broadcast()
+}
+
 func (r *RoomState) broadcast() {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
+
+	presences := make([]*ClientPresence, 0, len(r.Presences))
+	for _, p := range r.Presences {
+		presences = append(presences, p)
+	}
 
 	msg := struct {
-		RoomState
-		UserCount int `json:"user_count"`
+		RoomData
+		UserCount int               `json:"user_count"`
+		Presences []*ClientPresence `json:"presences"`
 	}{
-		RoomState: *r,
-		UserCount: len(r.clients),
+		RoomData: r.RoomData,
+		UserCount: len(r.Presences),
+		Presences: presences,
 	}
 
 	data, _ := json.Marshal(msg)
-	for conn := range r.clients {
+
+	// Copy connections to avoid holding lock during I/O
+	conns := make([]*websocket.Conn, 0, len(r.Presences))
+	for conn := range r.Presences {
+		conns = append(conns, conn)
+	}
+	r.mu.RUnlock()
+
+	for _, conn := range conns {
 		conn.WriteMessage(websocket.TextMessage, data)
 	}
 }

@@ -315,6 +315,9 @@ func handleToolCallWithRoom(roomID string, name string, args map[string]interfac
 		if !ok { b = 120.0 }
 		driver.SetTransportState(p, b); dash.UpdateDAW(roomID, instanceID, p, b); link.Sync(p, b)
 		manager.CacheTransportState(manager.ResolveID(instanceID), p, b)
+		msg := "Transport: Play"
+		if !p { msg = "Transport: Stop" }
+		dash.AddEvent(roomID, msg)
 	case "superdaw_get_tracks":
 		tracks, _ := driver.GetTracks(); result = tracks
 	case "superdaw_get_transport_state":
@@ -332,6 +335,9 @@ func handleToolCallWithRoom(roomID string, name string, args map[string]interfac
 		result = scanner.ListPlugins()
 	case "superdaw_get_plugin_params":
 		name, _ := args["plugin_name"].(string); result, _ = scanner.GetPluginMetadata(name)
+	case "superdaw_vst_deep_scan":
+		name, _ := args["plugin_name"].(string); scanner.DeepScan(name)
+		result, _ = scanner.GetPluginMetadata(name)
 	case "superdaw_set_plugin_parameter":
 		pName, _ := args["plugin_name"].(string); paramName, _ := args["parameter_name"].(string); val, _ := args["value"].(float64); trackID, _ := args["track_id"].(string)
 		meta, ok := scanner.GetPluginMetadata(pName)
@@ -363,9 +369,11 @@ func handleToolCallWithRoom(roomID string, name string, args map[string]interfac
 	case "superdaw_patch_audio":
 		srcDaw, _ := args["source_daw"].(string); srcTrack, _ := args["source_track"].(string); dstDaw, _ := args["dest_daw"].(string); dstTrack, _ := args["dest_track"].(string)
 		router.Patch(srcDaw, srcTrack, dstDaw, dstTrack); dash.AddPatch(roomID, dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+		dash.AddEvent(roomID, fmt.Sprintf("Patched %s:%s to %s:%s", srcDaw, srcTrack, dstDaw, dstTrack))
 	case "superdaw_unpatch_audio":
 		srcDaw, _ := args["source_daw"].(string); srcTrack, _ := args["source_track"].(string); dstDaw, _ := args["dest_daw"].(string); dstTrack, _ := args["dest_track"].(string)
 		router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack); dash.RemovePatch(roomID, dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+		dash.AddEvent(roomID, fmt.Sprintf("Unpatched %s:%s", srcDaw, srcTrack))
 	case "superdaw_import_generative":
 		prompt, _ := args["prompt"].(string); target, _ := args["target_daw"].(string); result, _ = genImporter.ImportStems(prompt, target)
 	case "superdaw_list_generative_jobs":
@@ -375,7 +383,7 @@ func handleToolCallWithRoom(roomID string, name string, args map[string]interfac
 		data, _ := json.Marshal(dash.GetState(roomID)); os.WriteFile(fname, data, 0644); result = "Session saved."
 	case "superdaw_load_session":
 		fname, _ := args["filename"].(string); if fname == "" { fname = "studio_session.json" }
-		data, _ := os.ReadFile(fname); var state dashboard.RoomState; json.Unmarshal(data, &state); dash.SetState(roomID, state); result = "Session loaded."
+		data, _ := os.ReadFile(fname); var state dashboard.RoomData; json.Unmarshal(data, &state); dash.SetState(roomID, state); result = "Session loaded."
 	case "superdaw_generate_music":
 		style, _ := args["style"].(string); bars, _ := args["bars"].(float64); trackID, _ := args["track_id"].(string)
 		notes := engine.GenerateMusic(style, int(bars)); driver.WriteMIDIClip(trackID, 0, notes); result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
