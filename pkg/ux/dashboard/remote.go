@@ -15,7 +15,7 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 					<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 					<style>
 						body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #000; color: #fff; text-align: center; padding: 10px; margin: 0; overflow-x: hidden; }
-						.header { padding: 20px 0; background: #111; border-bottom: 1px solid #333; margin-bottom: 20px; }
+						.header { padding: 20px 0; background: #111; border-bottom: 1px solid #333; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
 						.section { background: #1a1a1a; margin: 10px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
 						h2 { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
 						.btn { display: inline-block; width: 45%%; padding: 25px 0; margin: 5px; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
@@ -28,11 +28,13 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 						.fader::-webkit-slider-thumb { -webkit-appearance: none; width: 50px; height: 50px; background: #00ff88; border-radius: 50%%; box-shadow: 0 0 10px rgba(0,255,136,0.5); }
 						.pan-fader::-webkit-slider-thumb { background: #00bcd4; }
 						select { width: 100%%; padding: 15px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+						.room-badge { background: #00ff88; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 12px; margin-top: 5px; font-weight: bold; }
 					</style>
 				</head>
 				<body>
 					<div class="header">
 						<h1 style="margin: 0; font-size: 24px; color: #00ff88;">SuperDAW Remote</h1>
+						<div id="room-display" class="room-badge">Room: default</div>
 					</div>
 
 					<div class="section">
@@ -69,8 +71,39 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 					</div>
 
 					<script>
-						const ws = new WebSocket('ws://' + window.location.host + '/ws');
-						let currentDAW = '';
+						let currentRoom = new URLSearchParams(window.location.search).get('room') || 'default';
+						document.getElementById('room-display').innerText = 'Room: ' + currentRoom;
+
+						let ws;
+						function connectWS() {
+							if (ws) ws.close();
+							ws = new WebSocket('ws://' + window.location.host + '/ws?room=' + currentRoom);
+							ws.onmessage = (event) => {
+								const state = JSON.parse(event.data);
+								console.log("State updated:", state);
+
+								const trackSelector = document.getElementById('track-id');
+								let currentVal = trackSelector.value;
+								const savedTrack = localStorage.getItem('superdaw_last_track');
+								if (!currentVal && savedTrack) currentVal = savedTrack;
+
+								let options = '<option value="0">Master</option>';
+								for (const name in state.daws) {
+									const d = state.daws[name];
+									if (d.arrangement) {
+										try {
+											const arrangement = JSON.parse(d.arrangement);
+											arrangement.forEach((track, idx) => {
+												options += '<option value="' + (idx+1) + '">' + track.track + '</option>';
+											});
+										} catch(e) {}
+									}
+								}
+								trackSelector.innerHTML = options;
+								trackSelector.value = currentVal;
+								updateFaderLabel();
+							};
+						}
 
 						// Restore saved track selection
 						window.onload = () => {
@@ -79,35 +112,7 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 								document.getElementById('track-id').value = savedTrack;
 								updateFaderLabel();
 							}
-						};
-
-						ws.onmessage = (event) => {
-							const state = JSON.parse(event.data);
-							console.log("State updated:", state);
-
-							// Update track list from arrangement
-							const trackSelector = document.getElementById('track-id');
-							let currentVal = trackSelector.value;
-							const savedTrack = localStorage.getItem('superdaw_last_track');
-							if (!currentVal && savedTrack) currentVal = savedTrack;
-
-							let options = '<option value="0">Master</option>';
-
-							for (const name in state.daws) {
-								const d = state.daws[name];
-								if (d.arrangement) {
-									try {
-										const arrangement = JSON.parse(d.arrangement);
-										arrangement.forEach((track, idx) => {
-											options += '<option value="' + (idx+1) + '">' + track.track + '</option>';
-										});
-									} catch(e) {}
-								}
-							}
-
-							trackSelector.innerHTML = options;
-							trackSelector.value = currentVal;
-							updateFaderLabel();
+							connectWS();
 						};
 
 						function updateFaderLabel() {
@@ -133,11 +138,11 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 						}
 
 						async function callTool(name, args) {
-							console.log("Calling tool:", name, args);
+							console.log("Calling tool in room " + currentRoom + ":", name, args);
 							fetch('/api/call', {
 								method: 'POST',
 								headers: {'Content-Type': 'application/json'},
-								body: JSON.stringify({name, arguments: args})
+								body: JSON.stringify({room_id: currentRoom, name, arguments: args})
 							});
 						}
 					</script>

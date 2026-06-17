@@ -56,10 +56,14 @@ func main() {
 			}
 			writeResponseRaw(notif)
 
+			// Collaborative updates default to "default" room for now
+			// In production, drivers would be assigned to specific rooms
+			roomID := "default"
+
 			if method == "superdaw/arrangement_update" {
 				if p, ok := params.(map[string]interface{}); ok {
 					if arr, ok := p["arrangement"].(string); ok {
-						dash.UpdateArrangement(instanceID, arr)
+						dash.UpdateArrangement(roomID, instanceID, arr)
 					}
 				}
 			}
@@ -67,7 +71,7 @@ func main() {
 			jobs := genImporter.GetJobs()
 			jList := make([]interface{}, len(jobs))
 			for i, j := range jobs { jList[i] = j }
-			dash.UpdateJobs(jList)
+			dash.UpdateJobs(roomID, jList)
 		})
 	}
 
@@ -173,7 +177,7 @@ func main() {
 
 	go func() {
 		for cmd := range dashboard.CommandBus {
-			handleToolCall(cmd.Name, cmd.Arguments, manager, scanner, dash, genImporter, link, router)
+			handleToolCallWithRoom(cmd.RoomID, cmd.Name, cmd.Arguments, manager, scanner, dash, genImporter, link, router)
 		}
 	}()
 
@@ -185,7 +189,7 @@ func main() {
 		}()
 	}
 
-	version := "3.1.0"
+	version := "3.2.0"
 	versionData, err := os.ReadFile("VERSION.md")
 	if err == nil {
 		version = strings.TrimSpace(string(versionData))
@@ -226,7 +230,8 @@ func main() {
 				sendError(req.ID, -32602, "Invalid params")
 				continue
 			}
-			result := handleToolCall(params.Name, params.Arguments, manager, scanner, dash, genImporter, link, router)
+			// MCP standard tools default to "default" room
+			result := handleToolCallWithRoom("default", params.Name, params.Arguments, manager, scanner, dash, genImporter, link, router)
 			var content []interface{}
 			if text, ok := result.(string); ok {
 				content = append(content, map[string]interface{}{"type": "text", "text": text})
@@ -261,6 +266,10 @@ func sendError(id interface{}, code int, message string) {
 }
 
 func handleToolCall(name string, args map[string]interface{}, manager *daw.ConnectionManager, scanner *vst.Scanner, dash *dashboard.DashboardState, genImporter *engine.GenerativeImporter, link *engine.LinkBridge, router *daw.AudioRouter) interface{} {
+	return handleToolCallWithRoom("default", name, args, manager, scanner, dash, genImporter, link, router)
+}
+
+func handleToolCallWithRoom(roomID string, name string, args map[string]interface{}, manager *daw.ConnectionManager, scanner *vst.Scanner, dash *dashboard.DashboardState, genImporter *engine.GenerativeImporter, link *engine.LinkBridge, router *daw.AudioRouter) interface{} {
 	instanceID := ""
 	if id, ok := args["daw"].(string); ok { instanceID = id }
 	driver, err := manager.Get(instanceID)
@@ -300,7 +309,7 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 	case "superdaw_transport_control":
 		p, _ := args["playing"].(bool); b, ok := args["bpm"].(float64)
 		if !ok { b = 120.0 }
-		driver.SetTransportState(p, b); dash.UpdateDAW(instanceID, p, b); link.Sync(p, b)
+		driver.SetTransportState(p, b); dash.UpdateDAW(roomID, instanceID, p, b); link.Sync(p, b)
 		manager.CacheTransportState(manager.ResolveID(instanceID), p, b)
 	case "superdaw_get_tracks":
 		tracks, _ := driver.GetTracks(); result = tracks
@@ -349,20 +358,20 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 		cmd, _ := args["command"].(string); cargs, _ := args["args"].(map[string]interface{}); result, _ = driver.ExecuteCustomCommand(cmd, cargs)
 	case "superdaw_patch_audio":
 		srcDaw, _ := args["source_daw"].(string); srcTrack, _ := args["source_track"].(string); dstDaw, _ := args["dest_daw"].(string); dstTrack, _ := args["dest_track"].(string)
-		router.Patch(srcDaw, srcTrack, dstDaw, dstTrack); dash.AddPatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+		router.Patch(srcDaw, srcTrack, dstDaw, dstTrack); dash.AddPatch(roomID, dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
 	case "superdaw_unpatch_audio":
 		srcDaw, _ := args["source_daw"].(string); srcTrack, _ := args["source_track"].(string); dstDaw, _ := args["dest_daw"].(string); dstTrack, _ := args["dest_track"].(string)
-		router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack); dash.RemovePatch(dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
+		router.Unpatch(srcDaw, srcTrack, dstDaw, dstTrack); dash.RemovePatch(roomID, dashboard.AudioPatch{SourceDAW: srcDaw, SourceTrack: srcTrack, DestDAW: dstDaw, DestTrack: dstTrack})
 	case "superdaw_import_generative":
 		prompt, _ := args["prompt"].(string); target, _ := args["target_daw"].(string); result, _ = genImporter.ImportStems(prompt, target)
 	case "superdaw_list_generative_jobs":
 		result = genImporter.GetJobs()
 	case "superdaw_save_session":
 		fname, _ := args["filename"].(string); if fname == "" { fname = "studio_session.json" }
-		data, _ := json.Marshal(dash.GetState()); os.WriteFile(fname, data, 0644); result = "Session saved."
+		data, _ := json.Marshal(dash.GetState(roomID)); os.WriteFile(fname, data, 0644); result = "Session saved."
 	case "superdaw_load_session":
 		fname, _ := args["filename"].(string); if fname == "" { fname = "studio_session.json" }
-		data, _ := os.ReadFile(fname); var state dashboard.DashboardState; json.Unmarshal(data, &state); dash.SetState(state); result = "Session loaded."
+		data, _ := os.ReadFile(fname); var state dashboard.RoomState; json.Unmarshal(data, &state); dash.SetState(roomID, state); result = "Session loaded."
 	case "superdaw_generate_music":
 		style, _ := args["style"].(string); bars, _ := args["bars"].(float64); trackID, _ := args["track_id"].(string)
 		notes := engine.GenerateMusic(style, int(bars)); driver.WriteMIDIClip(trackID, 0, notes); result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)

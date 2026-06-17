@@ -6,18 +6,26 @@ import (
 	"net/http"
 	"sync"
 	"github.com/gorilla/websocket"
+	"html"
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-type DashboardState struct {
+// RoomState holds the state and connected clients for a specific collaborative session
+type RoomState struct {
+	ID      string              `json:"id"`
 	DAWs    map[string]DAWState `json:"daws"`
 	Patches []AudioPatch        `json:"patches"`
 	Jobs    []interface{}       `json:"jobs"`
-	mu      sync.RWMutex
 	clients map[*websocket.Conn]bool
+	mu      sync.RWMutex
+}
+
+type DashboardState struct {
+	rooms map[string]*RoomState
+	mu    sync.RWMutex
 }
 
 type DAWState struct {
@@ -35,6 +43,7 @@ type AudioPatch struct {
 }
 
 type InternalCommand struct {
+	RoomID    string                 `json:"room_id"`
 	Name      string                 `json:"name"`
 	Arguments map[string]interface{} `json:"arguments"`
 }
@@ -42,11 +51,11 @@ type InternalCommand struct {
 var CommandBus = make(chan InternalCommand, 32)
 
 func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
-	state := &DashboardState{
-		DAWs:    make(map[string]DAWState),
-		Patches: []AudioPatch{},
-		clients: make(map[*websocket.Conn]bool),
+	orchestrator := &DashboardState{
+		rooms: make(map[string]*RoomState),
 	}
+	// Create default room
+	orchestrator.getOrCreateRoom("default")
 
 	mux := http.NewServeMux()
 
@@ -56,20 +65,46 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if req.RoomID == "" { req.RoomID = "default" }
 		CommandBus <- req
 		w.WriteHeader(http.StatusOK)
 	})
 
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		roomID := r.URL.Query().Get("room")
+		if roomID == "" { roomID = "default" }
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil { return }
-		state.mu.Lock()
-		state.clients[conn] = true
-		state.mu.Unlock()
-		state.broadcast()
+
+		room := orchestrator.getOrCreateRoom(roomID)
+		room.mu.Lock()
+		room.clients[conn] = true
+		room.mu.Unlock()
+
+		// Clean up on disconnect
+		defer func() {
+			room.mu.Lock()
+			delete(room.clients, conn)
+			room.mu.Unlock()
+			conn.Close()
+		}()
+
+		room.broadcast()
+
+		// Keep connection alive and read messages (though we mostly push state)
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				break
+			}
+		}
 	})
 
 	mux.HandleFunc("/obs", func(w http.ResponseWriter, r *http.Request) {
+		roomID := r.URL.Query().Get("room")
+		if roomID == "" { roomID = "default" }
+		// Escape the roomID to prevent XSS
+		safeRoomID := html.EscapeString(roomID)
 		fmt.Fprintf(w, `
 			<html>
 				<head>
@@ -82,7 +117,8 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 				<body>
 					<div id="stats"></div>
 					<script>
-						const ws = new WebSocket('ws://' + window.location.host + '/ws');
+						const roomID = '%s';
+						const ws = new WebSocket('ws://' + window.location.host + '/ws?room=' + roomID);
 						ws.onmessage = (event) => {
 							const state = JSON.parse(event.data);
 							let html = '';
@@ -97,14 +133,14 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 					</script>
 				</body>
 			</html>
-		`)
+		`, safeRoomID)
 	})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `
 			<html>
 				<head>
-					<title>SuperDAW Dashboard v3.1</title>
+					<title>SuperDAW Dashboard v3.2</title>
 					<style>
 						body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; padding: 20px; }
 						.card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
@@ -126,15 +162,22 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						.key:active { background: #00ff88; }
 						input, select { padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; }
 						button.action { cursor: pointer; background: #00ff88; color: #000; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; }
+						.room-info { background: #333; padding: 5px 15px; border-radius: 20px; font-size: 14px; color: #00ff88; display: flex; align-items: center; gap: 10px; }
+						.presence-indicator { width: 10px; height: 10px; background: #00ff88; border-radius: 50%%; display: inline-block; }
 					</style>
 				</head>
 				<body>
-					<div style="display: flex; justify-content: space-between; align-items: center;">
+					<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
 						<h1>SuperDAW Universal Dashboard</h1>
-						<div>
+						<div style="display: flex; gap: 10px; align-items: center;">
+							<div class="room-info">
+								Room: <input id="room-input" style="background: none; border: none; color: #fff; width: 80px; padding: 0;" value="default" onchange="switchRoom(this.value)">
+								<span id="presence-count" class="badge">1 users</span>
+								<div class="presence-indicator"></div>
+							</div>
 							<button onclick="callMcp('superdaw_save_session', {})" class="badge" style="cursor: pointer; background: #00ff88; color: #000; border: none;">SAVE SESSION</button>
 							<button onclick="callMcp('superdaw_load_session', {})" class="badge" style="cursor: pointer; background: #00bcd4; color: #000; border: none;">LOAD SESSION</button>
-							<div id="version-badge" class="badge">v3.1.0 (Active)</div>
+							<div id="version-badge" class="badge">v3.2.0 (Alpha)</div>
 						</div>
 					</div>
 
@@ -239,76 +282,92 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 					</div>
 
 					<script>
-						const ws = new WebSocket('ws://' + window.location.host + '/ws');
-						ws.onopen = () => {
-							loadPlugins();
-						};
-						ws.onmessage = (event) => {
-							const msg = JSON.parse(event.data);
-							if (msg.method === 'superdaw/plugin_params_update') {
-								const params = JSON.parse(msg.params.parameters);
-								params.forEach(p => {
-									const slider = document.getElementById('param-' + p.n);
-									if (slider) slider.value = p.v;
-								});
-								return;
-							}
-							const state = msg;
+						let currentRoom = new URLSearchParams(window.location.search).get('room') || 'default';
+						document.getElementById('room-input').value = currentRoom;
 
-							// Render DAWs
-							let dawHtml = '';
-							for (const name in state.daws) {
-								const d = state.daws[name];
-								dawHtml += ' 									<div class="patch-item"> 										<span><strong>' + name.toUpperCase() + '</strong></span> 										<span>' + (d.is_playing ? '▶️ PLAYING' : '⏹️ STOPPED') + '</span> 										<span class="badge">' + d.bpm.toFixed(1) + ' BPM</span> 									</div> 								';
-							}
-							document.getElementById('daws').innerHTML = dawHtml || '<p style="color: #666">No active DAWs connected.</p>';
-
-							// Render Patches
-							let patchHtml = '';
-							state.patches.forEach((p, idx) => {
-								patchHtml += ' 									<div class="patch-item"> 										<span>' + p.source_daw + ' (' + p.source_track + ')</span> 										<span class="patch-arrow">➔</span> 										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> 										<button onclick="removePatch(\'' + p.source_daw + '\', \'' + p.source_track + '\', \'' + p.dest_daw + '\', \'' + p.dest_track + '\')" style="background: none; border: none; color: #ff4444; cursor: pointer;">[X]</button> 									</div> 								';
-							});
-							document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
-
-							// Render Jobs
-							let jobHtml = '';
-							if (state.jobs) {
-								state.jobs.forEach(j => {
-									jobHtml += ' 										<div class="patch-item"> 											<span>' + j.prompt + '</span> 											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;"> 												<div style="background: #00ff88; width: ' + (j.progress*100) + '%%; height: 10px; border-radius: 5px;"></div> 											</span> 											<span>' + j.status + '</span> 										</div> 									';
-								});
-							}
-							document.getElementById('jobs').innerHTML = jobHtml || '<p style="color: #666">No active generation jobs.</p>';
-
-							// Render Blueprint (Mermaid-style text graph)
-							let blueprint = 'graph LR\n';
-							state.patches.forEach(p => {
-								blueprint += '  ' + p.source_daw + ' --> ' + p.dest_daw + '\n';
-							});
-							document.getElementById('blueprint').innerText = blueprint === 'graph LR\n' ? 'No connections.' : blueprint;
-
-							// Render Timeline
-							let timelineHtml = '';
-							let top = 0;
-							for (const name in state.daws) {
-								const d = state.daws[name];
-								if (d.arrangement) {
-									try {
-										const arrangement = JSON.parse(d.arrangement);
-										arrangement.forEach(track => {
-											timelineHtml += '<div class="track-lane" style="top: ' + top + 'px; position: relative;"><span style="width: 100px; display: inline-block;">' + track.track + '</span>';
-											track.clips.forEach(clip => {
-												const left = clip.start * 20; // 20 pixels per second
-												const width = (clip.end - clip.start) * 20;
-												timelineHtml += '<div class="clip-block" style="left: ' + (100+left) + 'px; width: ' + width + 'px;">' + clip.name + '</div>';
-											});
-											timelineHtml += '</div>';
-											top += 40;
-										});
-									} catch(e) {}
+						let ws;
+						function connectWS() {
+							if (ws) ws.close();
+							ws = new WebSocket('ws://' + window.location.host + '/ws?room=' + encodeURIComponent(currentRoom));
+							ws.onopen = () => { loadPlugins(); };
+							ws.onmessage = (event) => {
+								const msg = JSON.parse(event.data);
+								if (msg.method === 'superdaw/plugin_params_update') {
+									const params = JSON.parse(msg.params.parameters);
+									params.forEach(p => {
+										const slider = document.getElementById('param-' + p.n);
+										if (slider) slider.value = p.v;
+									});
+									return;
 								}
-							}
-							document.getElementById('timeline').innerHTML = timelineHtml || '<p style="color: #666; padding: 20px;">No arrangement data available.</p>';
-						};
+								const state = msg;
+								document.getElementById('presence-count').innerText = state.user_count + ' users';
+
+								// Render DAWs
+								let dawHtml = '';
+								for (const name in state.daws) {
+									const d = state.daws[name];
+									dawHtml += ' 									<div class="patch-item"> 										<span><strong>' + name.toUpperCase() + '</strong></span> 										<span>' + (d.is_playing ? '▶️ PLAYING' : '⏹️ STOPPED') + '</span> 										<span class="badge">' + d.bpm.toFixed(1) + ' BPM</span> 									</div> 								';
+								}
+								document.getElementById('daws').innerHTML = dawHtml || '<p style="color: #666">No active DAWs connected.</p>';
+
+								// Render Patches
+								let patchHtml = '';
+								if (state.patches) {
+									state.patches.forEach((p, idx) => {
+										patchHtml += ' 									<div class="patch-item"> 										<span>' + p.source_daw + ' (' + p.source_track + ')</span> 										<span class="patch-arrow">➔</span> 										<span>' + p.dest_daw + ' (' + p.dest_track + ')</span> 										<button onclick="removePatch(\'' + p.source_daw + '\', \'' + p.source_track + '\', \'' + p.dest_daw + '\', \'' + p.dest_track + '\')" style="background: none; border: none; color: #ff4444; cursor: pointer;">[X]</button> 									</div> 								';
+									});
+								}
+								document.getElementById('routing').innerHTML = patchHtml || '<p style="color: #666">No active audio patches.</p>';
+
+								// Render Jobs
+								let jobHtml = '';
+								if (state.jobs) {
+									state.jobs.forEach(j => {
+										jobHtml += ' 										<div class="patch-item"> 											<span>' + j.prompt + '</span> 											<span class="badge" style="width: 100px; background: #444; position: relative; overflow: hidden;"> 												<div style="background: #00ff88; width: ' + (j.progress*100) + '%%; height: 10px; border-radius: 5px;"></div> 											</span> 											<span>' + j.status + '</span> 										</div> 									';
+									});
+								}
+								document.getElementById('jobs').innerHTML = jobHtml || '<p style="color: #666">No active generation jobs.</p>';
+
+								// Render Blueprint
+								let blueprint = 'graph LR\n';
+								if (state.patches) {
+									state.patches.forEach(p => {
+										blueprint += '  ' + p.source_daw + ' --> ' + p.dest_daw + '\n';
+									});
+								}
+								document.getElementById('blueprint').innerText = blueprint === 'graph LR\n' ? 'No connections.' : blueprint;
+
+								// Render Timeline
+								let timelineHtml = '';
+								let top = 0;
+								for (const name in state.daws) {
+									const d = state.daws[name];
+									if (d.arrangement) {
+										try {
+											const arrangement = JSON.parse(d.arrangement);
+											arrangement.forEach(track => {
+												timelineHtml += '<div class="track-lane" style="top: ' + top + 'px; position: relative;"><span style="width: 100px; display: inline-block;">' + track.track + '</span>';
+												track.clips.forEach(clip => {
+													const left = clip.start * 20;
+													const width = (clip.end - clip.start) * 20;
+													timelineHtml += '<div class="clip-block" style="left: ' + (100+left) + 'px; width: ' + width + 'px;">' + clip.name + '</div>';
+												});
+												timelineHtml += '</div>';
+												top += 40;
+											});
+										} catch(e) {}
+									}
+								}
+								document.getElementById('timeline').innerHTML = timelineHtml || '<p style="color: #666; padding: 20px;">No arrangement data available.</p>';
+							};
+						}
+
+						function switchRoom(newRoom) {
+							currentRoom = newRoom;
+							window.history.pushState({}, '', '?room=' + encodeURIComponent(currentRoom));
+							connectWS();
+						}
 
 						function playNote(pitch) {
 							callMcp('superdaw_write_midi', {
@@ -321,7 +380,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							return fetch('/api/call', {
 								method: 'POST',
 								headers: {'Content-Type': 'application/json'},
-								body: JSON.stringify({name, arguments: args})
+								body: JSON.stringify({room_id: currentRoom, name, arguments: args})
 							});
 						}
 
@@ -416,6 +475,8 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 								pitch: parseInt(document.getElementById('euc-pitch').value)
 							});
 						}
+
+						connectWS();
 					</script>
 				</body>
 			</html>
@@ -427,77 +488,122 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 		Handler: mux,
 	}
 	go server.ListenAndServe()
-	return state, mux
+	return orchestrator, mux
 }
 
-func (s *DashboardState) UpdateDAW(name string, playing bool, bpm float64) {
+func (s *DashboardState) getOrCreateRoom(id string) *RoomState {
 	s.mu.Lock()
-	state := s.DAWs[name]
+	defer s.mu.Unlock()
+	if room, ok := s.rooms[id]; ok {
+		return room
+	}
+	room := &RoomState{
+		ID:      id,
+		DAWs:    make(map[string]DAWState),
+		Patches: []AudioPatch{},
+		clients: make(map[*websocket.Conn]bool),
+	}
+	s.rooms[id] = room
+	return room
+}
+
+// Global update methods that default to "default" room or can be updated to take roomID
+func (s *DashboardState) UpdateDAW(roomID string, name string, playing bool, bpm float64) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.Lock()
+	state := room.DAWs[name]
 	state.Name = name
 	state.IsPlaying = playing
 	state.BPM = bpm
-	s.DAWs[name] = state
-	s.mu.Unlock()
-	s.broadcast()
+	room.DAWs[name] = state
+	room.mu.Unlock()
+	room.broadcast()
 }
 
-func (s *DashboardState) UpdateJobs(jobs []interface{}) {
-	s.mu.Lock()
-	s.Jobs = jobs
-	s.mu.Unlock()
-	s.broadcast()
+func (s *DashboardState) UpdateJobs(roomID string, jobs []interface{}) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.Lock()
+	room.Jobs = jobs
+	room.mu.Unlock()
+	room.broadcast()
 }
 
-func (s *DashboardState) GetState() DashboardState {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return *s
+func (s *DashboardState) GetState(roomID string) RoomState {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.RLock()
+	defer room.mu.RUnlock()
+	return RoomState{
+		ID:      room.ID,
+		DAWs:    room.DAWs,
+		Patches: room.Patches,
+		Jobs:    room.Jobs,
+	}
 }
 
-func (s *DashboardState) SetState(state DashboardState) {
-	s.mu.Lock()
-	s.DAWs = state.DAWs
-	s.Patches = state.Patches
-	s.mu.Unlock()
-	s.broadcast()
+func (s *DashboardState) SetState(roomID string, state RoomState) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.Lock()
+	room.DAWs = state.DAWs
+	room.Patches = state.Patches
+	room.mu.Unlock()
+	room.broadcast()
 }
 
-func (s *DashboardState) UpdateArrangement(name string, arrangement string) {
-	s.mu.Lock()
-	state := s.DAWs[name]
+func (s *DashboardState) UpdateArrangement(roomID string, name string, arrangement string) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.Lock()
+	state := room.DAWs[name]
 	state.Arrangement = arrangement
-	s.DAWs[name] = state
-	s.mu.Unlock()
-	s.broadcast()
+	room.DAWs[name] = state
+	room.mu.Unlock()
+	room.broadcast()
 }
 
-func (s *DashboardState) RemovePatch(p AudioPatch) {
-	s.mu.Lock()
+func (s *DashboardState) RemovePatch(roomID string, p AudioPatch) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.Lock()
 	newPatches := []AudioPatch{}
-	for _, patch := range s.Patches {
+	for _, patch := range room.Patches {
 		if patch.SourceDAW == p.SourceDAW && patch.SourceTrack == p.SourceTrack &&
 			patch.DestDAW == p.DestDAW && patch.DestTrack == p.DestTrack {
 			continue
 		}
 		newPatches = append(newPatches, patch)
 	}
-	s.Patches = newPatches
-	s.mu.Unlock()
-	s.broadcast()
+	room.Patches = newPatches
+	room.mu.Unlock()
+	room.broadcast()
 }
 
-func (s *DashboardState) AddPatch(p AudioPatch) {
-	s.mu.Lock()
-	s.Patches = append(s.Patches, p)
-	s.mu.Unlock()
-	s.broadcast()
+func (s *DashboardState) AddPatch(roomID string, p AudioPatch) {
+	if roomID == "" { roomID = "default" }
+	room := s.getOrCreateRoom(roomID)
+	room.mu.Lock()
+	room.Patches = append(room.Patches, p)
+	room.mu.Unlock()
+	room.broadcast()
 }
 
-func (s *DashboardState) broadcast() {
-	s.mu.RLock()
-	data, _ := json.Marshal(s)
-	for conn := range s.clients {
+func (r *RoomState) broadcast() {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	msg := struct {
+		RoomState
+		UserCount int `json:"user_count"`
+	}{
+		RoomState: *r,
+		UserCount: len(r.clients),
+	}
+
+	data, _ := json.Marshal(msg)
+	for conn := range r.clients {
 		conn.WriteMessage(websocket.TextMessage, data)
 	}
-	s.mu.RUnlock()
 }
