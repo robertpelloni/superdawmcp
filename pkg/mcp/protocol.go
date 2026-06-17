@@ -71,6 +71,9 @@ func GenerateManifest() ListToolsResult {
 						"hits":     map[string]interface{}{"type": "integer"},
 						"steps":    map[string]interface{}{"type": "integer"},
 						"pitch":    map[string]interface{}{"type": "integer"},
+						"velocity": map[string]interface{}{"type": "integer"},
+						"rotation": map[string]interface{}{"type": "integer"},
+						"length":   map[string]interface{}{"type": "number"},
 						"daw":      map[string]interface{}{"type": "string"},
 					},
 					"required": []string{"track_id", "hits", "steps"},
@@ -124,21 +127,6 @@ func GenerateManifest() ListToolsResult {
 						"daw":  map[string]interface{}{"type": "string"},
 					},
 					"required": []string{"name", "type"},
-				},
-			},
-			{
-				Name:        "superdaw_generate_euclidean",
-				Description: "Generate a Euclidean rhythm.",
-				InputSchema: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"track_id": map[string]interface{}{"type": "string"},
-						"hits":     map[string]interface{}{"type": "integer"},
-						"steps":    map[string]interface{}{"type": "integer"},
-						"pitch":    map[string]interface{}{"type": "integer"},
-						"daw":      map[string]interface{}{"type": "string"},
-					},
-					"required": []string{"track_id", "hits", "steps", "pitch"},
 				},
 			},
 			{

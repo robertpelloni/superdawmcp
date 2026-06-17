@@ -16,11 +16,19 @@ type PluginMetadata struct {
 	Path       string          `json:"path"`
 	Parameters []ParamMetadata `json:"parameters"`
 	Presets    []string        `json:"presets"`
+	DeepMeta   DeepMetadata    `json:"deep_meta,omitempty"` // v3.2.0 Deep Scanning
 }
 
 type ParamMetadata struct {
 	Name  string `json:"name"`
 	Index int    `json:"index"`
+}
+
+type DeepMetadata struct {
+	IsDeepScanned bool     `json:"is_deep_scanned"`
+	BinaryInfo    string   `json:"binary_info"`
+	InputBuses    int      `json:"input_buses"`
+	OutputBuses   int      `json:"output_buses"`
 }
 
 type Scanner struct {
@@ -48,6 +56,28 @@ func (s *Scanner) loadCache() {
 func (s *Scanner) saveCache() {
 	data, _ := json.MarshalIndent(s.cache, "", "  ")
 	os.WriteFile(s.cachePath, data, 0644)
+}
+
+// DeepScan performs a granular binary analysis of the plugin using libvst3 (Stub v3.2.0)
+func (s *Scanner) DeepScan(pluginName string) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return os.ErrNotExist
+	}
+
+	// TODO: Integrate libvst3 cgo wrapper here
+	plugin.DeepMeta = DeepMetadata{
+		IsDeepScanned: true,
+		BinaryInfo:    "Placeholder metadata from v3.2.0 deep-scan stub.",
+		InputBuses:    2,
+		OutputBuses:   2,
+	}
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
 }
 
 func (s *Scanner) ScanDirectories(dirs []string) error {

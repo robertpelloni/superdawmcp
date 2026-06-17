@@ -110,6 +110,7 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						.card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
 						h1 { color: #00ff88; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
 						h2 { color: #00bcd4; border-bottom: 1px solid #333; padding-bottom: 10px; font-weight: 300; }
+						h3 { font-size: 14px; color: #888; text-transform: uppercase; margin-bottom: 10px; }
 						pre { background: #080808; padding: 15px; border-radius: 8px; border-left: 4px solid #00ff88; overflow: auto; font-family: 'Consolas', monospace; }
 						.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; }
 						.patch-item { background: #252525; padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
@@ -123,6 +124,8 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 						.key { width: 40px; height: 120px; border: 1px solid #000; background: white; cursor: pointer; }
 						.key.black { background: black; height: 80px; width: 30px; margin-left: -15px; margin-right: -15px; z-index: 2; }
 						.key:active { background: #00ff88; }
+						input, select { padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; }
+						button.action { cursor: pointer; background: #00ff88; color: #000; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; }
 					</style>
 				</head>
 				<body>
@@ -146,28 +149,68 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 							<div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
 								<h3>New Patch</h3>
 								<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-									<input id="src-daw" placeholder="Source DAW" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
-									<input id="src-track" placeholder="Source Track" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
+									<input id="src-daw" placeholder="Source DAW" style="flex: 1;">
+									<input id="src-track" placeholder="Source Track" style="flex: 1;">
 									<div class="patch-arrow" style="align-self: center;">➔</div>
-									<input id="dst-daw" placeholder="Dest DAW" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
-									<input id="dst-track" placeholder="Dest Track" style="flex: 1; padding: 5px; background: #222; border: 1px solid #444; color: #fff;">
-									<button onclick="addPatch()" class="badge" style="cursor: pointer; background: #00ff88; color: #000; border: none; padding: 5px 15px;">ADD</button>
+									<input id="dst-daw" placeholder="Dest DAW" style="flex: 1;">
+									<input id="dst-track" placeholder="Dest Track" style="flex: 1;">
+									<button onclick="addPatch()" class="action">ADD</button>
 								</div>
 							</div>
 							<div id="blueprint"></div>
 						</div>
 						<div class="card">
-							<h2>Generative AI Activity</h2>
-							<div id="jobs"></div>
-						</div>
-						<div class="card">
 							<h2>Plugin Inspector</h2>
 							<div id="plugin-selector">
-								<select id="plugin-list" onchange="loadPluginParams(this.value)" style="width: 100%%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;">
+								<select id="plugin-list" onchange="loadPluginParams(this.value)" style="width: 100%%;">
 									<option>Select a plugin...</option>
 								</select>
 							</div>
 							<div id="plugin-params" style="margin-top: 15px;"></div>
+						</div>
+						<div class="card">
+							<h2>MIDI CC & Custom Commands</h2>
+							<div style="margin-bottom: 20px;">
+								<h3>Send MIDI CC</h3>
+								<div style="display: flex; gap: 5px;">
+									<input id="cc-track" placeholder="Trk ID" style="width: 60px;">
+									<input id="cc-num" placeholder="CC #" style="width: 60px;">
+									<input id="cc-val" placeholder="Value" style="width: 60px;">
+									<button onclick="sendCC()" class="action">SEND</button>
+								</div>
+							</div>
+							<div style="border-top: 1px solid #333; padding-top: 10px;">
+								<h3>Custom Command</h3>
+								<div style="display: flex; gap: 5px; flex-direction: column;">
+									<input id="custom-cmd" placeholder="Command Name">
+									<textarea id="custom-args" placeholder='{"arg1": "val"}' style="background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; padding: 8px;"></textarea>
+									<button onclick="sendCustom()" class="action">EXECUTE</button>
+								</div>
+							</div>
+						</div>
+						<div class="card">
+							<h2>Generative AI Activities</h2>
+							<div id="jobs"></div>
+							<div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+								<h3>Prompt-to-Stem</h3>
+								<div style="display: flex; gap: 5px; flex-direction: column;">
+									<input id="gen-prompt" placeholder="Symphonic psytrance with tribal drums...">
+									<button onclick="importGenerative()" class="action">GENERATE & IMPORT</button>
+								</div>
+							</div>
+						</div>
+						<div class="card">
+							<h2>Music Theory & Algorithms</h2>
+							<div style="margin-bottom: 20px;">
+								<h3>Euclidean Rhythm</h3>
+								<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+									<input id="euc-track" placeholder="Trk ID" style="width: 60px;">
+									<input id="euc-hits" placeholder="Hits" style="width: 60px;">
+									<input id="euc-steps" placeholder="Steps" style="width: 60px;">
+									<input id="euc-pitch" placeholder="Pitch" style="width: 60px;">
+									<button onclick="generateEuclidean()" class="action">GENERATE</button>
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -338,6 +381,39 @@ func StartDashboard(port int) (*DashboardState, *http.ServeMux) {
 								source_track: srcTrack,
 								dest_daw: dstDaw,
 								dest_track: dstTrack
+							});
+						}
+
+						function sendCC() {
+							callMcp('superdaw_send_cc', {
+								track_id: document.getElementById('cc-track').value,
+								controller: parseInt(document.getElementById('cc-num').value),
+								value: parseInt(document.getElementById('cc-val').value)
+							});
+						}
+
+						function sendCustom() {
+							let args = {};
+							try { args = JSON.parse(document.getElementById('custom-args').value); } catch(e) {}
+							callMcp('superdaw_custom_command', {
+								command: document.getElementById('custom-cmd').value,
+								args: args
+							});
+						}
+
+						function importGenerative() {
+							callMcp('superdaw_import_generative', {
+								prompt: document.getElementById('gen-prompt').value,
+								target_daw: 'active'
+							});
+						}
+
+						function generateEuclidean() {
+							callMcp('superdaw_generate_euclidean', {
+								track_id: document.getElementById('euc-track').value,
+								hits: parseInt(document.getElementById('euc-hits').value),
+								steps: parseInt(document.getElementById('euc-steps').value),
+								pitch: parseInt(document.getElementById('euc-pitch').value)
 							});
 						}
 					</script>

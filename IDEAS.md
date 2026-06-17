@@ -1,23 +1,7 @@
-# SuperDAW-Universal-MCP Ideas
-
-## High-Priority Aggressive Expansions
-
-1. **Universal Audio Routing (Jack/ReRoute)**:
-   - Integrate with JACK Audio Connection Kit or REAPER's ReRoute to allow the core daemon to dynamically route audio between different DAWs.
-   - For example: "Route Ableton Track 1 to REAPER Track 4 for processing."
-
-2. **Generative AI Stem Import**:
-   - Automatically pull stems from AI generation services (e.g., Suno, Udio) and import them directly into active tracks.
-   - Protocol command: `superdaw_import_generated_stems --prompt "aggresive neuro-bass"`.
-
-3. **In-DAW LLM Reasoning Sidecar**:
-   - An agent that doesn't just execute commands but has a local "reasoning loop" to suggest track improvements based on the current project state.
-
-4. **WebAssembly VST Runners**:
-   - Attempt to host lightweight VST plugins directly within the Go daemon using a Wasm runtime for ultra-portable instrument processing.
-
-5. **Universal Preset Translator**:
-   - A tool to translate Serum presets to Vital or Ableton Wavetable using AI parameter mapping.
-
-6. **GPU-Accelerated VST Inspector**:
-   - Move the Plugin Inspector to a dedicated WebGL-based visualization for real-time waveform and spectrum analysis of the plugin's output.
+# IDEAS.md
+## Aggressive Pivots & Refactoring
+1. **Audio Routing Engine**: Transition from a basic CLI wrapper for JACK to a dedicated C-based routing engine using `libjack` or `pipewire-native` for sub-millisecond latency and automated jitter compensation.
+2. **DAW Agent Porting**: Implement a universal C++ "SuperDAW Agent" that can be compiled as a VST3 plugin itself, allowing it to bypass native API limitations in restricted environments like Ableton.
+3. **WebAssembly Dashboard**: Port the entire Dashboard logic to a WASM-based Go implementation for better performance in heavy-orchestration scenarios.
+4. **LLM Native Protocol**: Instead of JSON-RPC over TCP, implement a binary protocol optimized for token-efficient tool calls from local LLMs.
+5. **Generative Logic**: Integrate a local Stable Audio or AudioLDM engine directly into the Go core for offline stem generation.
