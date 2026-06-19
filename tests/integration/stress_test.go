@@ -5,18 +5,30 @@ import (
 	"fmt"
 	"os/exec"
 	"testing"
+	"os"
 	"time"
 	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
 )
 
 func TestIntegration_StressTest(t *testing.T) {
-	binPath := "../../bin/superdaw-mcp"
+	binPath := "./superdaw-stress-test"
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
+	}
+	defer os.Remove(binPath)
 
 	cmd := exec.Command(binPath)
 	stdin, _ := cmd.StdinPipe()
 	stdout, _ := cmd.StdoutPipe()
-	cmd.Start()
-	defer cmd.Process.Kill()
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Failed to start cmd: %v", err)
+	}
+	defer func() {
+		if cmd.Process != nil {
+			cmd.Process.Kill()
+		}
+	}()
 
 	decoder := json.NewDecoder(stdout)
 

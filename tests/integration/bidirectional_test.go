@@ -54,13 +54,23 @@ func TestIntegration_BidirectionalSync(t *testing.T) {
 
 	var res mcp.JSONRPCResponse
 	dec := json.NewDecoder(stdout)
-	if err := dec.Decode(&res); err != nil {
-		t.Fatalf("Failed to decode response: %v", err)
+	for {
+		if err := dec.Decode(&res); err != nil {
+			t.Fatalf("Failed to decode response: %v", err)
+		}
+		if res.ID == "1" {
+			break
+		}
+	}
+
+	if res.Error != nil {
+		t.Fatalf("Error from server: %+v", *res.Error)
 	}
 
 	resultMap, ok := res.Result.(map[string]interface{})
 	if !ok {
-		t.Fatalf("Unexpected result format: %v", res.Result)
+		responseJSON, _ := json.Marshal(res)
+		t.Fatalf("Unexpected result format: %v\nFull Response: %s", res.Result, string(responseJSON))
 	}
 
 	content, _ := resultMap["content"].([]interface{})
