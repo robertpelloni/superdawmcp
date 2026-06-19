@@ -5,23 +5,20 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
 )
 
-func TestIntegration_StateSync(t *testing.T) {
-	binPath := "./superdaw-sync-test"
+func TestIntegration_Routing(t *testing.T) {
+	binPath := "./superdaw-routing-test"
 	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
 	if out, err := buildCmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
 	}
 	defer os.Remove(binPath)
-
-	mockDAW := NewMockDAW(11000)
-	go mockDAW.Start()
-	defer mockDAW.Stop()
 
 	cmd := exec.Command(binPath)
 	stdin, _ := cmd.StdinPipe()
@@ -33,17 +30,10 @@ func TestIntegration_StateSync(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	// Send multiple rapid sync states to test race conditions
-	for i := 0; i < 100; i++ {
-		_ = mockDAW.SendMessage("127.0.0.1", 11001, "/superdaw/state/tempo", float32(120.0+float32(i)))
-	}
-
-	time.Sleep(200 * time.Millisecond)
-
 	req := mcp.JSONRPCRequest{
 		JSONRPC: "2.0",
 		Method:  "tools/call",
-		Params: json.RawMessage(`{"name": "superdaw_get_transport_state", "arguments": {"daw": "ableton"}}`),
+		Params: json.RawMessage(`{"name": "superdaw_dsl_track_create", "arguments": {"daw": "ableton", "name": "bass"}}`),
 		ID:      "1",
 	}
 	reqBytes, _ := json.Marshal(req)
@@ -62,5 +52,18 @@ func TestIntegration_StateSync(t *testing.T) {
 
 	if res.Error != nil {
 		t.Fatalf("Error from server: %+v", *res.Error)
+	}
+
+	resultMap, ok := res.Result.(map[string]interface{})
+	if !ok {
+		t.Fatalf("Unexpected result format")
+	}
+
+	content, _ := resultMap["content"].([]interface{})
+	textMap, _ := content[0].(map[string]interface{})
+	text, _ := textMap["text"].(string)
+
+	if !strings.Contains(text, "Sent to Ableton Live") {
+		t.Errorf("Routing failed. Got: %s", text)
 	}
 }
