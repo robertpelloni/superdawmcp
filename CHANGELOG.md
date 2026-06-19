@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.0] - 2024-11-21
+### Added
+- **Dynamic Schema Loading:** Integrated 30+ submodules via JSON schema discovery avoiding hardcoded binaries.
+- **Performance Profiling:** Added generic dispatch latency benchmarks and native Go `pprof` endpoints.
+- **Comprehensive Documentation:** Created `USER_GUIDE.md` and finalized end-to-end testing coverage.
+
 ## [3.1.0] - 2024-11-21
 ### Added
 - **Plugin Inspector:** Integrated a new UI component in the Web Dashboard for real-time VST3 parameter control.

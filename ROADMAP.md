@@ -14,6 +14,6 @@
 - [x] Pro Tools native driver & universal studio parity (v2.4)
 - [x] Multi-Instance Connection Manager & Bidirectional Telemetry (v3.0.0)
 - [x] Enhanced VST3 Parameter Discovery & Plugin Inspector (v3.1.0)
-- [ ] VST3 Parameters Deep-Scanning (libvst3 integration)
+- [x] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [ ] Multi-user Collaborative Studio Sessions
 - [ ] Mobile Control Application (React Native)
