@@ -1,0 +1,17 @@
+{
+  "name": "franz_mcp",
+  "display_name": "Franz MCP",
+  "description": "Music production assistant driving Arturia Pigments inside Reaper. Dynamically builds setter tools per synth parameter group, get_parameter, and state sync tools.",
+  "version": "1.0.0",
+  "tools": [
+    "set_<group>",
+    "get_parameter",
+    "get_played_notes",
+    "get_state",
+    "apply_state"
+  ],
+  "resources": [
+    "get_synth_guide",
+    "get_signal_flow"
+  ]
+}

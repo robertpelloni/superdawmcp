@@ -1,0 +1,14 @@
+{
+  "name": "ATRI_AGENT_mcp",
+  "display_name": "ATRI AGENT MCP",
+  "description": "Agent Runtime supporting DAW editing, audio host control, and generation.",
+  "version": "1.0.0",
+  "tools": [
+    "midi_write",
+    "midi_diff",
+    "midi_batch_edit",
+    "midi_query",
+    "midi_inspect",
+    "piano_playability_check"
+  ]
+}

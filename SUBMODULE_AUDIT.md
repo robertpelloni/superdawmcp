@@ -29,3 +29,11 @@ This document tracks the integration progress of architectural reference submodu
 - **Batch 1 (Ableton):** `pylive`, `ableton-osc`, `ableton-live-tools` (Scheduled after Step 8.1)
 - **Batch 2 (REAPER):** `reaper-reapy-mcp`, `reaper-daw-mcp-server` (Scheduled after Step 8.2)
 - **Batch 3 (Universal):** `daw-mcp-ptaczek`, `scribbletune` (Scheduled after Step 8.3)
+
+## 4. Newly Processed Architecture Submodules
+| Submodule | Key Functionality | Status | Integration Target |
+|-----------|-------------------|--------|--------------------|
+| `third_party/logic-pro-mcp` | Logic Pro specific tools | Integrated | `data/schemas/logic-pro-mcp.json` |
+| `third_party/ATRI_AGENT` | ATRI MIDI Tools | Integrated | `data/schemas/ATRI_AGENT_mcp.json` |
+| `third_party/franz` | Arturia Pigments parameters | Integrated | `data/schemas/franz_mcp.json` |
+| `third_party/cleaper` | REAPER full session IPC | Integrated | `data/schemas/cleaper_mcp.json` |

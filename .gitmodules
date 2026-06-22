@@ -97,3 +97,6 @@
 [submodule "third_party/reaper-mcp-twelvetake"]
 	path = third_party/reaper-mcp-twelvetake
 	url = https://github.com/TwelveTake-Studios/reaper-mcp
+[submodule "third_party/ATRI_AGENT"]
+	path = third_party/ATRI_AGENT
+	url = https://github.com/Tz-WIND/ATRI_AGENT
