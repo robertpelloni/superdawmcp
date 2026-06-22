@@ -117,7 +117,7 @@ class TcpGateway {
 			});
 
 			try {
-				this.socket!.write(JSON.stringify(request));
+				this.socket!.write(JSON.stringify(request) + '\n');
 			} catch (err) {
 				this.pending.delete(id);
 				reject(err);
