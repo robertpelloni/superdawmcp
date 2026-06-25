@@ -10,14 +10,11 @@
 - [x] Interactive SuperDAW Shell
 - [x] Universal Audio Routing (Jack/ReRoute integration)
 - [x] Generative AI Stem Import
-<<<<<<< HEAD
-- [x] Mobile Remote UX (React Native)
-=======
 - [x] VST3 Plugin Inspector UI (v3.1.0)
 - [x] Dynamic Schema loading architecture
 - [x] End-to-End Latency benchmarking
-- [ ] Mobile Remote UX (React Native)
->>>>>>> c96de119ff3ea3ab0f3ca0e4224bfae8d37d664a
+- [x] Mobile Remote UX (React Native)
+- [x] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [x] TCP MCP Gateway (v2.7.0)
 - [x] Remote Python SDK socket transport (v2.7.0)
 - [x] Universal MIDI CC Support (v2.7.0)
