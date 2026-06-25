@@ -18,3 +18,4 @@
 - [x] TCP MCP Gateway (v2.7.0)
 - [x] Remote Python SDK socket transport (v2.7.0)
 - [x] Universal MIDI CC Support (v2.7.0)
+- [x] Multi-user Collaborative Studio Sessions

@@ -13,7 +13,7 @@ type JSONRPCResponse struct {
 	JSONRPC string      `json:"jsonrpc"`
 	Result  interface{} `json:"result,omitempty"`
 	Error   *RPCError   `json:"error,omitempty"`
-	ID      interface{}     `json:"id"`
+	ID      interface{} `json:"id"`
 }
 
 type RPCError struct {
@@ -34,6 +34,27 @@ type ListToolsResult struct {
 func GenerateManifest() ListToolsResult {
 	return ListToolsResult{
 		Tools: []Tool{
+			{
+				Name:        "superdaw_session_join",
+				Description: "Join a multi-user collaborative studio session.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"user_id": map[string]interface{}{"type": "string"},
+						"name":    map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"user_id", "name"},
+				},
+			},
+			{
+				Name:        "superdaw_session_sync",
+				Description: "Sync current shared state of the multi-user studio session.",
+				InputSchema: map[string]interface{}{
+					"type":       "object",
+					"properties": map[string]interface{}{},
+				},
+			},
+
 			{
 				Name:        "superdaw_set_mixer",
 				Description: "Modify track volume and panning.",
@@ -157,7 +178,7 @@ func GenerateManifest() ListToolsResult {
 				Name:        "superdaw_list_plugins",
 				Description: "List available VST plugins.",
 				InputSchema: map[string]interface{}{
-					"type": "object",
+					"type":       "object",
 					"properties": map[string]interface{}{},
 				},
 			},
@@ -242,7 +263,7 @@ func GenerateManifest() ListToolsResult {
 				Name:        "superdaw_list_generative_jobs",
 				Description: "List all active and completed AI generation jobs.",
 				InputSchema: map[string]interface{}{
-					"type": "object",
+					"type":       "object",
 					"properties": map[string]interface{}{},
 				},
 			},

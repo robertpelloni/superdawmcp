@@ -167,6 +167,34 @@ func main() {
 						continue
 					}
 
+					if req.Method == "superdaw_session_join" {
+						var args map[string]interface{}
+						json.Unmarshal(req.Params, &args)
+						if userID, ok := args["user_id"].(string); ok {
+							engine.GlobalStudioSession.Join(userID, args["name"].(string), "collaborator")
+							resp := map[string]interface{}{
+								"jsonrpc": "2.0",
+								"id":      req.ID,
+								"result":  map[string]interface{}{"status": "joined", "session_id": engine.GlobalStudioSession.SessionID},
+							}
+							respBytes, _ := json.Marshal(resp)
+							c.Write(append(respBytes, '\n'))
+						}
+						continue
+					}
+
+					if req.Method == "superdaw_session_sync" {
+						dump := string(engine.GlobalStudioSession.GetSessionDump())
+						resp := map[string]interface{}{
+							"jsonrpc": "2.0",
+							"id":      req.ID,
+							"result":  map[string]interface{}{"state": dump},
+						}
+						respBytes, _ := json.Marshal(resp)
+						c.Write(append(respBytes, '\n'))
+						continue
+					}
+
 					if req.Method == "tools/call" {
 						var params struct {
 							Name      string                 `json:"name"`
