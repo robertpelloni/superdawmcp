@@ -183,6 +183,36 @@ func main() {
 						continue
 					}
 
+					if req.Method == "superdaw_analyze_project" {
+						var args map[string]interface{}
+						json.Unmarshal(req.Params, &args)
+						dump := ""
+						if d, ok := args["state_dump"].(string); ok {
+							dump = d
+						}
+						res := engine.GlobalReasoningSidecar.AnalyzeProjectState(dump)
+						resp := map[string]interface{}{
+							"jsonrpc": "2.0",
+							"id":      req.ID,
+							"result":  map[string]interface{}{"analysis": res},
+						}
+						respBytes, _ := json.Marshal(resp)
+						c.Write(append(respBytes, '\n'))
+						continue
+					}
+
+					if req.Method == "superdaw_get_suggestions" {
+						suggestions := engine.GlobalReasoningSidecar.GetSuggestions()
+						resp := map[string]interface{}{
+							"jsonrpc": "2.0",
+							"id":      req.ID,
+							"result":  map[string]interface{}{"suggestions": suggestions},
+						}
+						respBytes, _ := json.Marshal(resp)
+						c.Write(append(respBytes, '\n'))
+						continue
+					}
+
 					if req.Method == "superdaw_session_sync" {
 						dump := string(engine.GlobalStudioSession.GetSessionDump())
 						resp := map[string]interface{}{

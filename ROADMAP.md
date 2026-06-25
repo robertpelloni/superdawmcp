@@ -17,3 +17,4 @@
 - [x] VST3 Parameters Deep-Scanning (libvst3 integration)
 - [x] Mobile Control Application (React Native)
 - [x] Multi-user Collaborative Studio Sessions
+- [x] In-DAW LLM Reasoning Sidecar
