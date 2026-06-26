@@ -20,6 +20,7 @@ import (
 	"github.com/robertpelloni/superdaw-mcp/pkg/ux/dashboard"
 	"github.com/robertpelloni/superdaw-mcp/pkg/vst"
 	"sync"
+	"time"
 )
 
 var stdoutMu sync.Mutex
@@ -146,82 +147,62 @@ func main() {
 	scanner.ScanDirectories(vstDirs)
 
 	// TCP MCP Gateway (Remote SDK Access)
+	activeConnections := make(map[net.Conn]bool)
+	var connMutex sync.Mutex
+
+	// Goroutine to periodically push state syncs down to all TCP clients
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			if engine.GlobalStudioSession == nil {
+				continue
+			}
+
+			// Normally we fetch this directly from DAW drivers, but for stub we push simple heartbeat state
+			statePayload := map[string]interface{}{
+				"jsonrpc": "2.0",
+				"method":  "superdaw_state_update",
+				"params":  map[string]interface{}{"playing": false, "bpm": 145},
+			}
+			data, _ := json.Marshal(statePayload)
+
+			connMutex.Lock()
+			for conn := range activeConnections {
+				conn.Write(append(data, '\n'))
+			}
+			connMutex.Unlock()
+		}
+	}()
+
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:12002")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "TCP Gateway failed: %v\n", err)
 			return
 		}
+
 		for {
 			conn, err := ln.Accept()
 			if err != nil {
 				continue
 			}
+
+			connMutex.Lock()
+			activeConnections[conn] = true
+			connMutex.Unlock()
+
 			go func(c net.Conn) {
-				defer c.Close()
+				defer func() {
+					connMutex.Lock()
+					delete(activeConnections, c)
+					connMutex.Unlock()
+					c.Close()
+				}()
 				tcpScanner := bufio.NewScanner(c)
 				for tcpScanner.Scan() {
 					line := tcpScanner.Text()
 					var req mcp.JSONRPCRequest
 					if err := json.Unmarshal([]byte(line), &req); err != nil {
-						continue
-					}
-
-					if req.Method == "superdaw_session_join" {
-						var args map[string]interface{}
-						json.Unmarshal(req.Params, &args)
-						if userID, ok := args["user_id"].(string); ok {
-							engine.GlobalStudioSession.Join(userID, args["name"].(string), "collaborator")
-							resp := map[string]interface{}{
-								"jsonrpc": "2.0",
-								"id":      req.ID,
-								"result":  map[string]interface{}{"status": "joined", "session_id": engine.GlobalStudioSession.SessionID},
-							}
-							respBytes, _ := json.Marshal(resp)
-							c.Write(append(respBytes, '\n'))
-						}
-						continue
-					}
-
-					if req.Method == "superdaw_analyze_project" {
-						var args map[string]interface{}
-						json.Unmarshal(req.Params, &args)
-						dump := ""
-						if d, ok := args["state_dump"].(string); ok {
-							dump = d
-						}
-						res := engine.GlobalReasoningSidecar.AnalyzeProjectState(dump)
-						resp := map[string]interface{}{
-							"jsonrpc": "2.0",
-							"id":      req.ID,
-							"result":  map[string]interface{}{"analysis": res},
-						}
-						respBytes, _ := json.Marshal(resp)
-						c.Write(append(respBytes, '\n'))
-						continue
-					}
-
-					if req.Method == "superdaw_get_suggestions" {
-						suggestions := engine.GlobalReasoningSidecar.GetSuggestions()
-						resp := map[string]interface{}{
-							"jsonrpc": "2.0",
-							"id":      req.ID,
-							"result":  map[string]interface{}{"suggestions": suggestions},
-						}
-						respBytes, _ := json.Marshal(resp)
-						c.Write(append(respBytes, '\n'))
-						continue
-					}
-
-					if req.Method == "superdaw_session_sync" {
-						dump := string(engine.GlobalStudioSession.GetSessionDump())
-						resp := map[string]interface{}{
-							"jsonrpc": "2.0",
-							"id":      req.ID,
-							"result":  map[string]interface{}{"state": dump},
-						}
-						respBytes, _ := json.Marshal(resp)
-						c.Write(append(respBytes, '\n'))
 						continue
 					}
 
