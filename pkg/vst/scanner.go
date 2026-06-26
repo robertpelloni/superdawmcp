@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/robertpelloni/superdaw-mcp/pkg/vst/libvst3"
 )
 
 type PluginMetadata struct {
@@ -53,10 +55,13 @@ func (s *Scanner) saveCache() {
 }
 
 func deepScanParameters(pluginPath string) []ParamMetadata {
-	// Attempt 1: Native libvst3 CGo bridge (stubbed, will fail gracefully)
-	libScanner := NewLibVST3Scanner(pluginPath)
-	if params, err := libScanner.DeepScan(); err == nil && len(params) > 0 {
-		return params
+	// Attempt 1: Native libvst3 CGo bridge via C++ SDK bindings
+	if params, err := libvst3.DeepScan(pluginPath); err == nil && len(params) > 0 {
+		var mappedParams []ParamMetadata
+		for i, p := range params {
+			mappedParams = append(mappedParams, ParamMetadata{Name: p.Title, Index: i})
+		}
+		return mappedParams
 	}
 
 	// Attempt 2: call an external tool if present (e.g., typical for libvst3 wrappers)
