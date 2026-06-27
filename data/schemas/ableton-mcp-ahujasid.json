@@ -1,0 +1,11 @@
+{
+  "name": "ableton-mcp-ahujasid",
+  "version": "1.0.0",
+  "tools": [
+    "play",
+    "stop",
+    "record",
+    "set_tempo",
+    "get_tempo"
+  ]
+}

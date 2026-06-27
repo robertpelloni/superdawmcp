@@ -1,0 +1,10 @@
+{
+  "name": "ableton-live-mcp-server",
+  "version": "1.0.0",
+  "tools": [
+    "get_tracks",
+    "get_scenes",
+    "fire_scene",
+    "stop_scene"
+  ]
+}

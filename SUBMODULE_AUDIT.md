@@ -37,3 +37,12 @@ This document tracks the integration progress of architectural reference submodu
 | `third_party/ATRI_AGENT` | ATRI MIDI Tools | Integrated | `data/schemas/ATRI_AGENT_mcp.json` |
 | `third_party/franz` | Arturia Pigments parameters | Integrated | `data/schemas/franz_mcp.json` |
 | `third_party/cleaper` | REAPER full session IPC | Integrated | `data/schemas/cleaper_mcp.json` |
+
+## 5. Batch 5 (Ableton/DawPilot Extensions)
+| Submodule | Key Functionality | Status | Integration Target |
+|-----------|-------------------|--------|--------------------|
+| `third_party/ableton-mcp-ahujasid` | Basic Transport | Integrated | `data/schemas/ableton-mcp-ahujasid.json` |
+| `third_party/ableton-live-mcp-server` | Scene Management | Integrated | `data/schemas/ableton-live-mcp-server.json` |
+| `third_party/ableton-mcp-josefigueredo` | Device Parameters | Integrated | `data/schemas/ableton-mcp-josefigueredo.json` |
+| `third_party/ableton-mcp-jpoindexter` | Browser & Clips | Integrated | `data/schemas/ableton-mcp-jpoindexter.json` |
+| `third_party/dawpilot-mcp` | Multi-DAW orchestration | Integrated | `data/schemas/dawpilot-mcp.json` |

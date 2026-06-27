@@ -1,0 +1,10 @@
+{
+  "name": "ableton-mcp-jpoindexter",
+  "version": "1.0.0",
+  "tools": [
+    "get_clip_notes",
+    "add_clip_notes",
+    "delete_clip_notes",
+    "get_browser_items"
+  ]
+}

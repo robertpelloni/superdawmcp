@@ -22,3 +22,4 @@
 - [x] In-DAW LLM Reasoning Sidecar
 - [x] WebAssembly VST Runners
 - [x] Universal Preset Translator
+- [x] GPU-Accelerated VST Inspector

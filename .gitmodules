@@ -13,9 +13,6 @@
 [submodule "third_party/scribbletune"]
 	path = third_party/scribbletune
 	url = https://github.com/scribbletune/scribbletune
-[submodule "third_party/ableton-mcp-ahujasid"]
-	path = third_party/ableton-mcp-ahujasid
-	url = https://github.com/ahujasid/ableton-mcp
 [submodule "third_party/spleeter4max"]
 	path = third_party/spleeter4max
 	url = https://github.com/diracdeltas/spleeter4max
@@ -55,9 +52,6 @@
 [submodule "third_party/ableton-proj-mcp"]
 	path = third_party/ableton-proj-mcp
 	url = https://github.com/closestfriend/ableton-proj-mcp
-[submodule "third_party/dawpilot-mcp"]
-	path = third_party/dawpilot-mcp
-	url = https://github.com/squarewave-studio/dawpilot-mcp
 [submodule "third_party/reaper-mcp-server"]
 	path = third_party/reaper-mcp-server
 	url = https://github.com/yeeking/reaper-mcp-server
@@ -70,9 +64,6 @@
 [submodule "third_party/ableton-js"]
 	path = third_party/ableton-js
 	url = https://github.com/leolabs/ableton-js
-[submodule "third_party/ableton-live-mcp-server"]
-	path = third_party/ableton-live-mcp-server
-	url = https://github.com/Simon-Kansara/ableton-live-mcp-server
 [submodule "third_party/ableton-dj-template"]
 	path = third_party/ableton-dj-template
 	url = https://github.com/willrjmarshall/AbletonDJTemplateUnsupported
@@ -82,15 +73,9 @@
 [submodule "third_party/advanced-reason-mcp"]
 	path = third_party/advanced-reason-mcp
 	url = https://github.com/Kuon-dev/advanced-reason-mcp
-[submodule "third_party/ableton-mcp-jpoindexter"]
-	path = third_party/ableton-mcp-jpoindexter
-	url = https://github.com/jpoindexter/ableton-mcp
 [submodule "third_party/daw-mcp-ruud0"]
 	path = third_party/daw-mcp-ruud0
 	url = https://github.com/ruud0/daw-mcp
-[submodule "third_party/ableton-mcp-josefigueredo"]
-	path = third_party/ableton-mcp-josefigueredo
-	url = https://github.com/josefigueredo/ableton-mcp
 [submodule "third_party/ableton-rufoa"]
 	path = third_party/ableton-rufoa
 	url = https://github.com/rufoa/ableton
