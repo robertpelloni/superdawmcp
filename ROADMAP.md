@@ -18,3 +18,4 @@
 - [x] Mobile Control Application (React Native)
 - [x] Multi-user Collaborative Studio Sessions
 - [x] In-DAW LLM Reasoning Sidecar
+- [x] WebAssembly VST Runners

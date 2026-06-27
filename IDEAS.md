@@ -13,9 +13,6 @@
 3. **[COMPLETED] In-DAW LLM Reasoning Sidecar**:
    - An agent that doesn't just execute commands but has a local "reasoning loop" to suggest track improvements based on the current project state.
 
-4. **WebAssembly VST Runners**:
-   - Attempt to host lightweight VST plugins directly within the Go daemon using a Wasm runtime for ultra-portable instrument processing.
-
 5. **Universal Preset Translator**:
    - A tool to translate Serum presets to Vital or Ableton Wavetable using AI parameter mapping.
 
