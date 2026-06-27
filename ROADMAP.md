@@ -19,3 +19,4 @@
 - [x] Multi-user Collaborative Studio Sessions
 - [x] In-DAW LLM Reasoning Sidecar
 - [x] WebAssembly VST Runners
+- [x] Universal Preset Translator

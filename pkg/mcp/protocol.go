@@ -35,6 +35,19 @@ func GenerateManifest() ListToolsResult {
 	return ListToolsResult{
 		Tools: []Tool{
 			{
+				Name:        "superdaw_translate_preset",
+				Description: "Translates a VST preset parameter tree from a source synthesizer format into a target format using semantic mapping.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"preset_json":   map[string]interface{}{"type": "string"},
+						"target_format": map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"preset_json", "target_format"},
+				},
+			},
+
+			{
 				Name:        "superdaw_analyze_project",
 				Description: "Run the reasoning sidecar to analyze the current DAW project state for mixing and arrangement insights.",
 				InputSchema: map[string]interface{}{
