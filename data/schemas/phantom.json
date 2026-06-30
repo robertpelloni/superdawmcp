@@ -1,7 +1,0 @@
-{
-  "name": "phantom",
-  "version": "1.0.0",
-  "tools": [
-    "phantom_ghost_faders"
-  ]
-}

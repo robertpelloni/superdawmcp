@@ -1,8 +1,0 @@
-{
-  "name": "dawpilot-mcp",
-  "version": "1.0.0",
-  "tools": [
-    "orchestrate_daws",
-    "get_global_state"
-  ]
-}

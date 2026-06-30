@@ -1,8 +1,0 @@
-{
-  "name": "reaper-mcp-server",
-  "version": "1.0.0",
-  "tools": [
-    "reaper_get_item",
-    "reaper_set_item"
-  ]
-}

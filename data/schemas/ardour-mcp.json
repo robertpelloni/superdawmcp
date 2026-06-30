@@ -1,9 +1,0 @@
-{
-  "name": "ardour-mcp",
-  "version": "1.0.0",
-  "tools": [
-    "ardour_play",
-    "ardour_stop",
-    "ardour_get_tracks"
-  ]
-}

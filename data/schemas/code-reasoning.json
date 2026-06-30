@@ -1,7 +1,0 @@
-{
-  "name": "code-reasoning",
-  "version": "1.0.0",
-  "tools": [
-    "reason_about_code"
-  ]
-}

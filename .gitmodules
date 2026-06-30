@@ -1,30 +1,99 @@
+[submodule "third_party/ableton-mcp-extended"]
+	path = third_party/ableton-mcp-extended
+	url = https://github.com/uisato/ableton-mcp-extended
 [submodule "third_party/pylive"]
 	path = third_party/pylive
 	url = https://github.com/ideoforms/pylive
 [submodule "third_party/launchpad95"]
 	path = third_party/launchpad95
 	url = https://github.com/hdavid/Launchpad95
+[submodule "third_party/ableton-live-tools"]
+	path = third_party/ableton-live-tools
+	url = https://github.com/danielbayley/Ableton-Live-tools
 [submodule "third_party/scribbletune"]
 	path = third_party/scribbletune
 	url = https://github.com/scribbletune/scribbletune
+[submodule "third_party/ableton-mcp-ahujasid"]
+	path = third_party/ableton-mcp-ahujasid
+	url = https://github.com/ahujasid/ableton-mcp
 [submodule "third_party/spleeter4max"]
 	path = third_party/spleeter4max
 	url = https://github.com/diracdeltas/spleeter4max
+[submodule "third_party/total-reaper-mcp"]
+	path = third_party/total-reaper-mcp
+	url = https://github.com/shiehn/total-reaper-mcp
 [submodule "third_party/reaper-reapy-mcp"]
 	path = third_party/reaper-reapy-mcp
 	url = https://github.com/wegitor/reaper-reapy-mcp
 [submodule "third_party/daw-mcp-ptaczek"]
 	path = third_party/daw-mcp-ptaczek
 	url = https://github.com/ptaczek/daw-mcp
+[submodule "third_party/daw-midi-generator-mcp"]
+	path = third_party/daw-midi-generator-mcp
+	url = https://github.com/s2d01/daw-midi-generator-mcp
+[submodule "third_party/reaper-mcp-skills-example"]
+	path = third_party/reaper-mcp-skills-example
+	url = https://github.com/wastee/REAPER-MCP-Skills-Example
 [submodule "third_party/reaper-daw-mcp-server"]
 	path = third_party/reaper-daw-mcp-server
 	url = https://github.com/Aavishkar-Kolte/reaper-daw-mcp-server
+[submodule "third_party/ardour-mcp"]
+	path = third_party/ardour-mcp
+	url = https://github.com/pyroqbit/ardour-mcp
+[submodule "third_party/opendaw-mcp"]
+	path = third_party/opendaw-mcp
+	url = https://github.com/inin-zou/OpenDAW_MCP
+[submodule "third_party/reaper-mcp-xdarkzx"]
+	path = third_party/reaper-mcp-xdarkzx
+	url = https://github.com/xDarkzx/Reaper-MCP
+[submodule "third_party/phantom"]
+	path = third_party/phantom
+	url = https://github.com/fadelabs/phantom
+[submodule "third_party/livepilot"]
+	path = third_party/livepilot
+	url = https://github.com/dreamrec/LivePilot
+[submodule "third_party/ableton-proj-mcp"]
+	path = third_party/ableton-proj-mcp
+	url = https://github.com/closestfriend/ableton-proj-mcp
+[submodule "third_party/dawpilot-mcp"]
+	path = third_party/dawpilot-mcp
+	url = https://github.com/squarewave-studio/dawpilot-mcp
+[submodule "third_party/reaper-mcp-server"]
+	path = third_party/reaper-mcp-server
+	url = https://github.com/yeeking/reaper-mcp-server
+[submodule "third_party/ableton-osc"]
+	path = third_party/ableton-osc
+	url = https://github.com/ideoforms/AbletonOSC
 [submodule "third_party/ableton-link"]
 	path = third_party/ableton-link
 	url = https://github.com/Ableton/link
+[submodule "third_party/ableton-js"]
+	path = third_party/ableton-js
+	url = https://github.com/leolabs/ableton-js
+[submodule "third_party/ableton-live-mcp-server"]
+	path = third_party/ableton-live-mcp-server
+	url = https://github.com/Simon-Kansara/ableton-live-mcp-server
 [submodule "third_party/ableton-dj-template"]
 	path = third_party/ableton-dj-template
 	url = https://github.com/willrjmarshall/AbletonDJTemplateUnsupported
+[submodule "third_party/code-reasoning"]
+	path = third_party/code-reasoning
+	url = https://github.com/mettamatt/code-reasoning
+[submodule "third_party/advanced-reason-mcp"]
+	path = third_party/advanced-reason-mcp
+	url = https://github.com/Kuon-dev/advanced-reason-mcp
+[submodule "third_party/ableton-mcp-jpoindexter"]
+	path = third_party/ableton-mcp-jpoindexter
+	url = https://github.com/jpoindexter/ableton-mcp
+[submodule "third_party/daw-mcp-ruud0"]
+	path = third_party/daw-mcp-ruud0
+	url = https://github.com/ruud0/daw-mcp
+[submodule "third_party/ableton-mcp-josefigueredo"]
+	path = third_party/ableton-mcp-josefigueredo
+	url = https://github.com/josefigueredo/ableton-mcp
+[submodule "third_party/ableton-rufoa"]
+	path = third_party/ableton-rufoa
+	url = https://github.com/rufoa/ableton
 [submodule "third_party/reaper-mcp-twelvetake"]
 	path = third_party/reaper-mcp-twelvetake
 	url = https://github.com/TwelveTake-Studios/reaper-mcp

@@ -1,8 +1,0 @@
-{
-  "name": "daw-mcp-ruud0",
-  "version": "1.0.0",
-  "tools": [
-    "ruud0_ping",
-    "ruud0_get_state"
-  ]
-}

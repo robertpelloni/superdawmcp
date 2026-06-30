@@ -1,8 +1,0 @@
-{
-  "name": "reaper-mcp-skills-example",
-  "version": "1.0.0",
-  "tools": [
-    "reaper_get_skills",
-    "reaper_execute_skill"
-  ]
-}

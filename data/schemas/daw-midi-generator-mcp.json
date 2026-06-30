@@ -1,7 +1,0 @@
-{
-  "name": "daw-midi-generator-mcp",
-  "version": "1.0.0",
-  "tools": [
-    "generate_midi_pattern"
-  ]
-}

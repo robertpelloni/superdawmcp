@@ -1,8 +1,0 @@
-{
-  "name": "advanced-reason-mcp",
-  "version": "1.0.0",
-  "tools": [
-    "reason_get_rack",
-    "reason_create_device"
-  ]
-}

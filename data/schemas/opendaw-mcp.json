@@ -1,8 +1,0 @@
-{
-  "name": "opendaw-mcp",
-  "version": "1.0.0",
-  "tools": [
-    "opendaw_open_project",
-    "opendaw_export_stems"
-  ]
-}

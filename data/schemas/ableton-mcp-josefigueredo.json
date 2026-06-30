@@ -1,8 +1,0 @@
-{
-  "name": "ableton-mcp-josefigueredo",
-  "version": "1.0.0",
-  "tools": [
-    "get_devices",
-    "get_parameters"
-  ]
-}
