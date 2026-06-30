@@ -35,26 +35,6 @@ func GenerateManifest() ListToolsResult {
 	return ListToolsResult{
 		Tools: []Tool{
 			{
-				Name:        "superdaw_start_gpu_inspector",
-				Description: "Starts the high-frequency FFT telemetry stream for a specific plugin, targeting a GPU-Accelerated WebGL frontend.",
-				InputSchema: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"plugin_id": map[string]interface{}{"type": "string"},
-					},
-					"required": []string{"plugin_id"},
-				},
-			},
-			{
-				Name:        "superdaw_stop_gpu_inspector",
-				Description: "Stops the high-frequency FFT telemetry stream.",
-				InputSchema: map[string]interface{}{
-					"type":       "object",
-					"properties": map[string]interface{}{},
-				},
-			},
-
-			{
 				Name:        "superdaw_translate_preset",
 				Description: "Translates a VST preset parameter tree from a source synthesizer format into a target format using semantic mapping.",
 				InputSchema: map[string]interface{}{

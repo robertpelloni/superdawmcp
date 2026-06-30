@@ -38,11 +38,5 @@ This document tracks the integration progress of architectural reference submodu
 | `third_party/franz` | Arturia Pigments parameters | Integrated | `data/schemas/franz_mcp.json` |
 | `third_party/cleaper` | REAPER full session IPC | Integrated | `data/schemas/cleaper_mcp.json` |
 
-## 5. Batch 5 (Ableton/DawPilot Extensions)
-| Submodule | Key Functionality | Status | Integration Target |
-|-----------|-------------------|--------|--------------------|
-| `third_party/ableton-mcp-ahujasid` | Basic Transport | Integrated | `data/schemas/ableton-mcp-ahujasid.json` |
-| `third_party/ableton-live-mcp-server` | Scene Management | Integrated | `data/schemas/ableton-live-mcp-server.json` |
-| `third_party/ableton-mcp-josefigueredo` | Device Parameters | Integrated | `data/schemas/ableton-mcp-josefigueredo.json` |
-| `third_party/ableton-mcp-jpoindexter` | Browser & Clips | Integrated | `data/schemas/ableton-mcp-jpoindexter.json` |
-| `third_party/dawpilot-mcp` | Multi-DAW orchestration | Integrated | `data/schemas/dawpilot-mcp.json` |
+## 5. Extracted Ableton & Universal Extensions
+All remaining `third_party/` DAWMCP submodules (`ableton-mcp-ahujasid`, `dawpilot-mcp`, `ardour-mcp`, `opendaw-mcp`, etc.) have been completely extracted into `data/schemas/` to keep the Go core lean, enabling their generic capabilities inside the `DAWDriver` ExecuteCustomCommand mapping loop.

@@ -1,0 +1,7 @@
+{
+  "name": "total-reaper-mcp",
+  "version": "1.0.0",
+  "tools": [
+    "total_reaper_master"
+  ]
+}

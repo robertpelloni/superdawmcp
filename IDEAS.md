@@ -13,3 +13,5 @@
 3. **[COMPLETED] In-DAW LLM Reasoning Sidecar**:
    - An agent that doesn't just execute commands but has a local "reasoning loop" to suggest track improvements based on the current project state.
 
+6. **GPU-Accelerated VST Inspector**:
+   - Move the Plugin Inspector to a dedicated WebGL-based visualization for real-time waveform and spectrum analysis of the plugin's output.

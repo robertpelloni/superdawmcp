@@ -1,0 +1,7 @@
+{
+  "name": "reaper-mcp-xdarkzx",
+  "version": "1.0.0",
+  "tools": [
+    "xdarkzx_transport_play"
+  ]
+}

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "tools": [
     "get_devices",
-    "get_parameters",
-    "set_parameter"
+    "get_parameters"
   ]
 }

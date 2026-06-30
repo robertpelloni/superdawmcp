@@ -1,0 +1,7 @@
+{
+  "name": "ableton-live-tools",
+  "version": "1.0.0",
+  "tools": [
+    "ableton_cli_export"
+  ]
+}

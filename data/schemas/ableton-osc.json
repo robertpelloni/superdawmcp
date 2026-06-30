@@ -1,0 +1,7 @@
+{
+  "name": "ableton-osc",
+  "version": "1.0.0",
+  "tools": [
+    "osc_send_message"
+  ]
+}

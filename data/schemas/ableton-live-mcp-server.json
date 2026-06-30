@@ -4,7 +4,6 @@
   "tools": [
     "get_tracks",
     "get_scenes",
-    "fire_scene",
-    "stop_scene"
+    "fire_scene"
   ]
 }

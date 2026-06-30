@@ -1,0 +1,7 @@
+{
+  "name": "ableton-mcp-extended",
+  "version": "1.0.0",
+  "tools": [
+    "ableton_extended_get_devices"
+  ]
+}

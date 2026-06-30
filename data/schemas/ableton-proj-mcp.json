@@ -1,0 +1,7 @@
+{
+  "name": "ableton-proj-mcp",
+  "version": "1.0.0",
+  "tools": [
+    "proj_mcp_get_info"
+  ]
+}
