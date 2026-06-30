@@ -117,7 +117,7 @@ class TcpGateway {
 			});
 
 			try {
-				this.socket!.write(JSON.stringify(request));
+				this.socket!.write(JSON.stringify(request) + '\n');
 			} catch (err) {
 				this.pending.delete(id);
 				reject(err);
@@ -128,6 +128,7 @@ class TcpGateway {
 	/**
 	 * Parse complete JSON lines from the receive buffer and dispatch responses.
 	 */
+
 	private processBuffer(): void {
 		const lines = this.buffer.split("\n");
 		// Keep the (possibly partial) last line in the buffer
@@ -140,7 +141,16 @@ class TcpGateway {
 			}
 
 			try {
-				const resp: RPCResponse = JSON.parse(trimmed);
+				const resp = JSON.parse(trimmed);
+
+				// Handle bidirectional state sync notifications from server
+				if (resp.method === "superdaw_state_update") {
+					if (this.onStateUpdate) {
+						this.onStateUpdate(resp.params);
+					}
+					continue;
+				}
+
 				const handler = this.pending.get(resp.id);
 				if (handler) {
 					handler(resp);
@@ -151,6 +161,9 @@ class TcpGateway {
 			}
 		}
 	}
+
+	public onStateUpdate?: (state: any) => void;
+
 }
 
 const gateway = new TcpGateway();

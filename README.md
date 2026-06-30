@@ -21,7 +21,7 @@ SuperDAW-MCP is a unified Model Context Protocol (MCP) server that standardizes 
 - **Multi-Language SDKs:** Ready-to-use libraries for Python, Go, TypeScript, Rust, and more.
 
 ## Quick Start
-See [DEPLOY.md](DEPLOY.md) for installation and environment setup instructions.
+See [DEPLOY.md](DEPLOY.md) for installation instructions and the [User Guide](docs/USER_GUIDE.md) for comprehensive usage and workflows.
 
 ## Developer SDKs
 
