@@ -3,8 +3,10 @@ import { View, Text, StyleSheet } from "react-native";
 import { useMcp } from "../hooks/useMcp";
 import PlayButton from "../components/PlayButton";
 import TempoSlider from "../components/TempoSlider";
+import Slider from "@react-native-community/slider";
+import { Button } from "react-native";
 
-export default function HomeScreen(): React.JSX.Element {
+export default function HomeScreen({ navigation }: any): React.JSX.Element {
 	const {
 		connected,
 		connecting,
@@ -15,6 +17,8 @@ export default function HomeScreen(): React.JSX.Element {
 		disconnect,
 		togglePlay,
 		setTempo,
+		masterVolume,
+		setMasterVolume,
 	} = useMcp();
 
 	return (
@@ -76,6 +80,28 @@ export default function HomeScreen(): React.JSX.Element {
 					step={1}
 				/>
 			</View>
+
+			{/* Master Volume section */}
+			<View style={styles.section}>
+				<Text style={styles.sectionTitle}>Master Volume</Text>
+				<Slider
+					style={styles.slider}
+					minimumValue={0}
+					maximumValue={1}
+					value={masterVolume}
+					onSlidingComplete={setMasterVolume}
+					disabled={!connected}
+					minimumTrackTintColor="#4caf50"
+					maximumTrackTintColor="#2c3e50"
+					thumbTintColor="#e0e0e0"
+				/>
+			</View>
+
+			<View style={styles.navSection}>
+				<Button title="Mixer" onPress={() => navigation?.navigate("Mixer")} />
+				<View style={{height: 10}} />
+				<Button title="Plugins" onPress={() => navigation?.navigate("Plugins")} />
+			</View>
 		</View>
 	);
 }
@@ -135,5 +161,12 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		textDecorationLine: "underline",
 		marginTop: 8,
+	},
+	slider: {
+		width: "100%",
+		height: 40,
+	},
+	navSection: {
+		marginTop: 20,
 	},
 });
