@@ -1,12 +1,14 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.2.0 - Active)
+## Current Milestone (v3.3.0 - Active)
 - [x] **Consolidated Single-Page Dashboard**: Unified Master Studio Console categorizing features by high value (Transport, VST3 Inspector, Mixer, Audio Patching Matrix, Generative DSP, Arrangement Timeline, Virtual MIDI Performance).
 - [x] **Advanced VST3 Parameter Discovery**: Deep scanning with moduleinfo.json & binary header validation, preset extraction, calibrated parameter ranges, and synchronous API endpoints (`/api/plugins`).
+- [x] **Sound Design Quick Macro Knobs**: One-click sound design macros (Brighten, Warmth, Space Out, Punch) integrated into Plugin Inspector with direct parameter modulation.
+- [x] **Granular VST3 Category Classification**: Multi-oscillator parameter trees, category filter tabs (Filter/Tone, Envelopes, Mod/LFO, FX/Mix, Master), and live slider-input synchronization.
 - [x] **Desktop / Process Governance**: Full server shutdown & quit endpoint (`/api/quit`) with responsive controls for system tray & dashboard management.
 - [x] **DAW Parity Hardening**: Unified interface implementation fixes across Logic Pro, Pro Tools, Ableton Live, Bitwig, FL Studio, REAPER, Ardour, and Cubase.
 
-## Upcoming Milestones (v3.3.0 - Future)
+## Upcoming Milestones (v3.4.0 - Future)
 - [ ] **Hardware System Tray Daemon**: Native desktop systray icon (macOS menu bar / Windows system tray / Linux AppIndicator) with background toggle and process manager.
 - [ ] **Native CGO VST3 Deep-Scanning Bridge**: Direct `libvst3` dynamic loading (`dlopen`/`LoadLibrary`) for direct parameter queries without host DAW bridging.
 - [ ] **Multi-User Realtime Collaborative Studios**: Operational WebRTC / WebSocket room synchronization for distributed jam sessions and shared parameter locking.

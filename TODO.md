@@ -19,5 +19,7 @@
 - [x] Consolidated Master Studio Dashboard UI (v3.2.0)
 - [x] Synchronous VST3 Parameter Inspection API & Deep Scan (v3.2.0)
 - [x] Graceful Server Shutdown & Process Control (v3.2.0)
+- [x] Sound Design Quick Macro Knobs & Parameter Classification (v3.3.0)
+- [x] Multi-oscillator and synthesis parameter heuristics (v3.3.0)
 - [ ] Native Desktop System Tray Applet
 - [ ] Multi-User Studio Jam Rooms

@@ -27,10 +27,13 @@ This session advanced the SuperDAW-MCP ecosystem to version **3.2.0**, focusing 
   - Python E2E compatibility tests pass 100%.
   - Verified dashboard layout and interactions via Playwright screenshot (`/home/jules/verification/unified_dashboard.png`).
 - **Governance**:
-  - Synchronized version string `v3.2.0` across `VERSION.md`, `ROADMAP.md`, `TODO.md`, `CHANGELOG.md`, `VISION.md`, `MEMORY.md`, and dashboard UI.
+  - Synchronized version string `v3.3.0` across `VERSION.md`, `ROADMAP.md`, `TODO.md`, `CHANGELOG.md`, `VISION.md`, `MEMORY.md`, and dashboard UI.
+- **VST3 Discovery Refinement & Sound Design Quick Macros**:
+  - Implemented multi-oscillator and synthesis parameters in `pkg/vst/scanner.go` (Osc 1 Waveform, Osc 1 Octave, Osc 2 Detune, Sub Osc Level, Filter Cutoff/Resonance, Envelopes, LFOs).
+  - Added real-time Sound Design Macro Controls (Brighten, Warmth, Space Out, Punch) directly in the Plugin Inspector UI with live parameter dispatch.
 
 ## Current State
-- **Binary**: `bin/superdaw-mcp` (v3.2.0 ready)
+- **Binary**: `bin/superdaw-mcp` (v3.3.0 ready)
 - **Dashboard**: Available on port 8081 with real-time WebSocket telemetry and synchronous plugin parameter inspection.
 - **Gateways**: TCP Gateway on port 12002, OSC Server on port 12001, Link Bridge active.
 

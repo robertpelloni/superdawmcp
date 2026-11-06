@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.2.0 Active</span>
+			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.3.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -491,6 +491,20 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				</div>
 			</div>
 			<div id="plugin-meta-banner" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px;"></div>
+
+			<!-- Quick Macro Sound Design Knobs -->
+			<div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-top: 10px;">
+				<div style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between;">
+					<span>Sound Design Macro Controls</span>
+					<span style="color: var(--accent-blue);">Realtime DAW Bridge</span>
+				</div>
+				<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+					<button class="btn btn-subtle" onclick="triggerMacroPreset('brighten')" data-tooltip="Increase filter cutoff and presence on target plugin">✨ Brighten</button>
+					<button class="btn btn-subtle" onclick="triggerMacroPreset('warmth')" data-tooltip="Increase saturation/drive and slight low boost">🔥 Warmth</button>
+					<button class="btn btn-subtle" onclick="triggerMacroPreset('space')" data-tooltip="Boost reverb wet mix and pre-delay">🌌 Space Out</button>
+					<button class="btn btn-subtle" onclick="triggerMacroPreset('punch')" data-tooltip="Fast attack, punchy decay and envelope depth">🥊 Snappy / Punch</button>
+				</div>
+			</div>
 
 			<!-- Inspector Filter Toolbar -->
 			<div class="inspector-toolbar">
@@ -858,6 +872,37 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				plugin_name: pluginName,
 				parameter_name: paramName,
 				value: numVal
+			});
+		}
+
+		function triggerMacroPreset(macroType) {
+			if (!activePlugin || !cachedPlugins[activePlugin]) {
+				alert("Please select a plugin first.");
+				return;
+			}
+			const p = cachedPlugins[activePlugin];
+			(p.parameters || []).forEach(param => {
+				let newVal = null;
+				const pName = param.name.toLowerCase();
+				if (macroType === 'brighten' && (pName.includes('cutoff') || pName.includes('high cut') || pName.includes('tone'))) {
+					newVal = Math.min((param.max_value || 1.0), (param.default_value || 0.5) * 1.5);
+				} else if (macroType === 'warmth' && (pName.includes('drive') || pName.includes('band 1 gain') || pName.includes('damping'))) {
+					newVal = Math.min((param.max_value || 1.0), 0.65);
+				} else if (macroType === 'space' && (pName.includes('reverb') || pName.includes('delay') || pName.includes('wet') || pName.includes('decay'))) {
+					newVal = Math.min((param.max_value || 1.0), 0.70);
+				} else if (macroType === 'punch' && (pName.includes('attack'))) {
+					newVal = 0.01;
+				} else if (macroType === 'punch' && (pName.includes('decay') || pName.includes('env amount'))) {
+					newVal = 0.80;
+				}
+
+				if (newVal !== null) {
+					const slider = document.getElementById('slider-' + param.index);
+					const numInput = document.getElementById('num-' + param.index);
+					if (slider) slider.value = newVal;
+					if (numInput) numInput.value = newVal.toFixed(2);
+					sendPluginParam(activePlugin, param.name, newVal);
+				}
 			});
 		}
 

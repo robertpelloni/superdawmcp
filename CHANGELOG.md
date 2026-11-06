@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.3.0] - 2026-11-06
+### Added
+- **Refined VST3 Discovery & Sound Design Macro Controls**: Expanded VST3 heuristic parameter generation with multi-oscillator parameters (Osc 1 Waveform, Osc 1 Octave, Osc 2 Detune, Sub Osc Level) and binary signature heuristics.
+- **Interactive Macro Knobs in Plugin Inspector**: Added real-time sound design macro buttons (✨ Brighten, 🔥 Warmth, 🌌 Space Out, 🥊 Snappy / Punch) connected to the active plugin parameter bus.
+- **Granular Category Filtering & Bidirectional Synchronization**: Filter parameter controls by functional category (Filter/Tone, Envelopes, Mod/LFO, FX/Mix, Master) with live search and slider-input sync.
+
 ## [v3.2.0] - 2026-11-06
 ### Added
 - **Consolidated Master Studio Console**: Redesigned the entire dashboard into a single, unified responsive control surface organized by high-value functional domains.
