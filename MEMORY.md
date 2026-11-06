@@ -1,7 +1,8 @@
-# SuperDAW-Universal-MCP Memory
+# Codebase Memory & Architectural Observations
 
-## Architectural Observations
-- **Ableton Agent**: Implemented as a MIDI Remote Script. Due to Ableton's restricted Python 3 environment, we vendor the \`pythonosc\` library directly within the package to ensure reliable UDP communication.
-- **Protocol Mapping**: The agent acts as a translation layer, mapping unified \`/superdaw/\` OSC commands to the native Live API and broadcasting state changes back with \`/superdaw/state/\` prefixes.
-- **VST3 Discovery (v3.1.0)**: Enhanced heuristics in `pkg/vst/scanner.go` provide high-confidence mapping for common parameters (LFO, Filters) across generic plugins.
-- **Unified Inspector**: The dashboard now features a `Plugin Inspector` that leverages MCP tool `superdaw_get_plugin_params` for real-time control.
+- **Unified Dashboard Architecture**: The web console lives in `pkg/ux/dashboard/` and is served on port 8081. It avoids template variable collision by escaping `%` signs (`%%`).
+- **Synchronous Plugin Querying**: In addition to asynchronous MCP bus dispatch (`/api/call`), the dashboard provides synchronous REST query endpoints (`/api/plugins?name=...&deep=true`) for instant parameter population.
+- **Process Management**: Graceful server termination is exposed via `/api/quit`, triggering clean daemon teardown across HTTP, WebSocket, OSC, and TCP socket listeners.
+- **Root Directory Cleanliness**: Do not leave runnable `main` package files at the repository root (`test_*.go`), as they break package builds (`go test ./...`). Auxiliary scratch scripts must be archived in `archive/`.
+- **DAW Driver Completeness**: All drivers must implement every method on `daw.DAWDriver` (`SendCC`, `SetPluginParameter`, etc.) even if stubbed for uncooperative DAWs, avoiding duplicate declaration collisions.
+- **Version Governance**: `VERSION.md` is the single source of truth for versioning (currently `v3.2.0`), read dynamically by both documentation and the Go binary at runtime.

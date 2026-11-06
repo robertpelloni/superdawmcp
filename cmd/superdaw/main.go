@@ -25,7 +25,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
 
-	dash, dashMux := dashboard.StartDashboard(8081)
+	dash, dashMux := dashboard.StartDashboard(8081, scanner)
 	dashboard.RegisterMobileRemote(dashMux)
 
 	router := daw.NewAudioRouter("127.0.0.1", 12000)
