@@ -122,6 +122,21 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		.btn-danger:hover { background: #e0325d; }
 		.btn-subtle { background: var(--bg-card-sub); color: var(--text-main); border: 1px solid var(--border); }
 		.btn-subtle:hover { background: #282f3a; border-color: #3e4758; }
+		.btn-tab {
+			padding: 5px 12px;
+			border-radius: 4px;
+			font-size: 11px;
+			cursor: pointer;
+			background: var(--bg-card-sub);
+			color: var(--text-muted);
+			border: 1px solid var(--border);
+			font-weight: 600;
+		}
+		.btn-tab.active {
+			background: var(--secondary);
+			color: #000;
+			border-color: var(--secondary);
+		}
 
 		.badge {
 			padding: 4px 10px;
@@ -215,11 +230,25 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		}
 
 		/* Plugin Inspector Sliders & Metadata */
+		.inspector-toolbar {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 10px;
+			flex-wrap: wrap;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+		.filter-tabs {
+			display: flex;
+			gap: 6px;
+			flex-wrap: wrap;
+		}
 		.param-grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 			gap: 15px;
-			margin-top: 15px;
+			margin-top: 10px;
 			max-height: 380px;
 			overflow-y: auto;
 			padding-right: 5px;
@@ -236,12 +265,18 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		.param-header {
 			display: flex;
 			justify-content: space-between;
+			align-items: center;
 			font-size: 12px;
 			font-weight: 600;
 		}
+		.param-slider-row {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+		}
 		.param-slider {
 			-webkit-appearance: none;
-			width: 100%%;
+			flex: 1;
 			height: 8px;
 			border-radius: 4px;
 			background: #111;
@@ -255,6 +290,17 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			background: var(--primary);
 			cursor: pointer;
 			box-shadow: 0 0 6px rgba(0,255,136,0.6);
+		}
+		.param-input {
+			width: 65px;
+			padding: 3px 6px;
+			font-size: 11px;
+			font-family: var(--font-mono);
+			background: #111;
+			border: 1px solid var(--border);
+			color: #fff;
+			border-radius: 4px;
+			text-align: right;
 		}
 		.meta-tag {
 			font-size: 11px;
@@ -445,6 +491,20 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				</div>
 			</div>
 			<div id="plugin-meta-banner" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px;"></div>
+
+			<!-- Inspector Filter Toolbar -->
+			<div class="inspector-toolbar">
+				<div class="filter-tabs">
+					<button class="btn-tab active" onclick="setParamFilter('all', this)">All</button>
+					<button class="btn-tab" onclick="setParamFilter('Filter/Tone', this)">Filter/Tone</button>
+					<button class="btn-tab" onclick="setParamFilter('Envelopes', this)">Envelopes</button>
+					<button class="btn-tab" onclick="setParamFilter('Mod/LFO', this)">Mod/LFO</button>
+					<button class="btn-tab" onclick="setParamFilter('FX/Mix', this)">FX/Mix</button>
+					<button class="btn-tab" onclick="setParamFilter('Master', this)">Master</button>
+				</div>
+				<input type="text" id="param-search" class="input-text" placeholder="Filter parameter..." style="padding: 4px 8px; font-size: 11px; width: 140px;" oninput="applyParamFilter()">
+			</div>
+
 			<div id="plugin-params" class="param-grid">
 				<p style="color: var(--text-muted); padding: 15px;">Select a plugin above to inspect parameters and modulate in real time.</p>
 			</div>
@@ -593,6 +653,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 	<script>
 		let cachedPlugins = {};
 		let activePlugin = "";
+		let activeCategoryFilter = "all";
 
 		const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const ws = new WebSocket(wsProtocol + '//' + window.location.host + '/ws');
@@ -719,6 +780,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			document.getElementById('plugin-meta-banner').innerHTML = ' \
 				<span class="meta-tag">Vendor: ' + p.vendor + '</span> \
 				<span class="meta-tag">Version: ' + p.version + '</span> \
+				<span class="meta-tag">Category: ' + (p.deep_meta?.category || 'General') + '</span> \
 				<span class="meta-tag">UID: ' + (p.deep_meta?.uuid || 'VST3-CORE') + '</span> \
 				<span class="meta-tag">Buses: ' + (p.deep_meta?.input_buses || 2) + 'In / ' + (p.deep_meta?.output_buses || 2) + 'Out</span> \
 			';
@@ -730,21 +792,73 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				presetSel.innerHTML += '<option value="' + pr + '">' + pr + '</option>';
 			});
 
-			// Render parameter sliders
+			renderParameters();
+		}
+
+		function setParamFilter(cat, btn) {
+			activeCategoryFilter = cat;
+			document.querySelectorAll('.filter-tabs .btn-tab').forEach(b => b.classList.remove('active'));
+			if (btn) btn.classList.add('active');
+			renderParameters();
+		}
+
+		function applyParamFilter() {
+			renderParameters();
+		}
+
+		function renderParameters() {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			const search = (document.getElementById('param-search').value || '').toLowerCase();
+
 			let html = '';
 			(p.parameters || []).forEach(param => {
+				if (activeCategoryFilter !== 'all' && param.category && param.category !== activeCategoryFilter) {
+					return;
+				}
+				if (search && !param.name.toLowerCase().includes(search) && !(param.category || '').toLowerCase().includes(search)) {
+					return;
+				}
+
 				const val = param.default_value !== undefined ? param.default_value : 0.5;
 				html += ' \
 					<div class="param-box"> \
 						<div class="param-header"> \
 							<span>' + param.name + '</span> \
-							<span id="p-val-' + param.index + '" class="badge">' + val.toFixed(2) + ' ' + (param.unit || '') + '</span> \
+							<span class="badge" style="font-size: 10px;">' + (param.category || 'General') + '</span> \
 						</div> \
-						<input type="range" class="param-slider" min="' + (param.min_value || 0) + '" max="' + (param.max_value || 1) + '" step="0.01" value="' + val + '" oninput="setPluginParam(\'' + name + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+						<div class="param-slider-row"> \
+							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value || 0) + '" max="' + (param.max_value || 1) + '" step="0.01" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+							<input type="number" id="num-' + param.index + '" class="param-input" value="' + val.toFixed(2) + '" step="0.01" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+						</div> \
 					</div> \
 				';
 			});
-			document.getElementById('plugin-params').innerHTML = html || '<p style="color: var(--text-muted); padding: 15px;">No parameters discovered.</p>';
+			document.getElementById('plugin-params').innerHTML = html || '<p style="color: var(--text-muted); padding: 15px;">No matching parameters.</p>';
+		}
+
+		function syncParamSlider(pluginName, paramName, value, index, unit) {
+			const numVal = parseFloat(value);
+			const numInput = document.getElementById('num-' + index);
+			if (numInput) numInput.value = numVal.toFixed(2);
+			sendPluginParam(pluginName, paramName, numVal);
+		}
+
+		function syncParamInput(pluginName, paramName, value, index, unit) {
+			const numVal = parseFloat(value);
+			const slider = document.getElementById('slider-' + index);
+			if (slider) slider.value = numVal;
+			sendPluginParam(pluginName, paramName, numVal);
+		}
+
+		function sendPluginParam(pluginName, paramName, numVal) {
+			callMcp('superdaw_set_plugin_parameter', {
+				daw: document.getElementById('mixer-daw').value,
+				track_id: document.getElementById('mixer-track-id').value,
+				plugin_name: pluginName,
+				parameter_name: paramName,
+				value: numVal
+			});
 		}
 
 		async function deepScanSelected() {
@@ -768,20 +882,6 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				plugin_name: activePlugin,
 				parameter_name: "Preset",
 				value: 1.0
-			});
-		}
-
-		function setPluginParam(pluginName, paramName, value, index, unit) {
-			const numVal = parseFloat(value);
-			const label = document.getElementById('p-val-' + index);
-			if (label) label.innerText = numVal.toFixed(2) + ' ' + unit;
-
-			callMcp('superdaw_set_plugin_parameter', {
-				daw: document.getElementById('mixer-daw').value,
-				track_id: document.getElementById('mixer-track-id').value,
-				plugin_name: pluginName,
-				parameter_name: paramName,
-				value: numVal
 			});
 		}
 

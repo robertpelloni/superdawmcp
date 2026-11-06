@@ -39,6 +39,18 @@ func TestScanner_DiscoveryAndDeepScan(t *testing.T) {
 		t.Errorf("Expected parameters for Surge XT, got 0")
 	}
 
+	// Verify category tagging
+	hasFilterTone := false
+	for _, p := range meta.Parameters {
+		if p.Category == "Filter/Tone" {
+			hasFilterTone = true
+			break
+		}
+	}
+	if !hasFilterTone {
+		t.Errorf("Expected parameter with Category 'Filter/Tone'")
+	}
+
 	deepMeta, err := scanner.DeepScan("Surge XT")
 	if err != nil {
 		t.Fatalf("DeepScan failed: %v", err)

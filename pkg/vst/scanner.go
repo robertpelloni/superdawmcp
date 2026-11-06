@@ -33,7 +33,7 @@ type PluginMetadata struct {
 	DeepMeta   DeepMetadata    `json:"deep_meta"`
 }
 
-// ParamMetadata represents an exposed controllable plugin parameter
+// ParamMetadata represents an exposed controllable plugin parameter with functional classification
 type ParamMetadata struct {
 	Name         string  `json:"name"`
 	Index        int     `json:"index"`
@@ -41,6 +41,7 @@ type ParamMetadata struct {
 	MinValue     float32 `json:"min_value"`
 	MaxValue     float32 `json:"max_value"`
 	Unit         string  `json:"unit,omitempty"`
+	Category     string  `json:"category,omitempty"` // Tone, Envelope, Mod, FX, Master
 }
 
 // Scanner manages discovery, caching, and introspection of VST3 plugins
@@ -86,7 +87,7 @@ func (s *Scanner) DeepScan(pluginName string) (PluginMetadata, error) {
 		IsDeepScanned: true,
 		InputBuses:    2,
 		OutputBuses:   2,
-		Category:      "Fx|Instrument",
+		Category:      classifyCategory(plugin.Name, plugin.Vendor),
 	}
 
 	// 1. Check for moduleinfo.json (standard Steinberg VST3 manifest)
@@ -115,7 +116,6 @@ func (s *Scanner) DeepScan(pluginName string) (PluginMetadata, error) {
 			binName := strings.TrimSuffix(filepath.Base(plugin.Path), ".vst3")
 			binPath = filepath.Join(plugin.Path, "Contents", "MacOS", binName)
 		} else if runtime.GOOS == "linux" {
-			// Linux VST3 binaries usually live in x86_64-linux/
 			binName := strings.TrimSuffix(filepath.Base(plugin.Path), ".vst3")
 			linuxBin := filepath.Join(plugin.Path, "Contents", "x86_64-linux", binName+".so")
 			if _, err := os.Stat(linuxBin); err == nil {
@@ -139,7 +139,6 @@ func (s *Scanner) DeepScan(pluginName string) (PluginMetadata, error) {
 	}
 
 	if deep.UUID == "" {
-		// Synthesize stable identification hash based on plugin name & vendor
 		deep.UUID = fmtUUID(plugin.Vendor, plugin.Name)
 	}
 
@@ -157,6 +156,62 @@ func fmtUUID(vendor, name string) string {
 		hash *= 1099511628211
 	}
 	return fmt.Sprintf("%016X-VST3-UID", hash)
+}
+
+func classifyCategory(name, vendor string) string {
+	pLower := strings.ToLower(name + " " + vendor)
+	if strings.Contains(pLower, "surge") || strings.Contains(pLower, "vital") || strings.Contains(pLower, "synth") {
+		return "Instrument|Synth"
+	}
+	if strings.Contains(pLower, "reverb") || strings.Contains(pLower, "delay") {
+		return "Fx|Delay|Reverb"
+	}
+	if strings.Contains(pLower, "pro-q") || strings.Contains(pLower, "eq") {
+		return "Fx|EQ"
+	}
+	if strings.Contains(pLower, "comp") || strings.Contains(pLower, "dynamics") {
+		return "Fx|Dynamics"
+	}
+	return "Instrument|Fx"
+}
+
+// GenerateTargetedParameters creates calibrated parameters with functional group tagging
+func GenerateTargetedParameters(name, category string) []ParamMetadata {
+	catLower := strings.ToLower(category + " " + name)
+	if strings.Contains(catLower, "synth") || strings.Contains(catLower, "instrument") {
+		return []ParamMetadata{
+			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master"},
+			{Name: "Filter Cutoff", Index: 1, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone"},
+			{Name: "Filter Resonance", Index: 2, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone"},
+			{Name: "Drive / Saturation", Index: 3, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone"},
+			{Name: "Amp Attack", Index: 4, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes"},
+			{Name: "Amp Decay", Index: 5, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes"},
+			{Name: "Amp Sustain", Index: 6, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes"},
+			{Name: "Amp Release", Index: 7, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes"},
+			{Name: "LFO 1 Rate", Index: 8, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO"},
+			{Name: "LFO 1 Depth", Index: 9, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO"},
+			{Name: "FX Reverb Mix", Index: 10, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+			{Name: "FX Delay Mix", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+		}
+	} else if strings.Contains(catLower, "eq") {
+		return []ParamMetadata{
+			{Name: "Output Gain", Index: 0, DefaultValue: 0.0, MinValue: -12.0, MaxValue: 12.0, Unit: "dB", Category: "Master"},
+			{Name: "Low Cut", Index: 1, DefaultValue: 30.0, MinValue: 10.0, MaxValue: 500.0, Unit: "Hz", Category: "Filter/Tone"},
+			{Name: "Band 1 Gain", Index: 2, DefaultValue: 0.0, MinValue: -15.0, MaxValue: 15.0, Unit: "dB", Category: "Filter/Tone"},
+			{Name: "Band 1 Freq", Index: 3, DefaultValue: 250.0, MinValue: 40.0, MaxValue: 2000.0, Unit: "Hz", Category: "Filter/Tone"},
+			{Name: "Band 1 Q", Index: 4, DefaultValue: 1.0, MinValue: 0.1, MaxValue: 10.0, Unit: "Q", Category: "Filter/Tone"},
+			{Name: "High Cut", Index: 5, DefaultValue: 18000.0, MinValue: 5000.0, MaxValue: 22000.0, Unit: "Hz", Category: "Filter/Tone"},
+			{Name: "Dry/Wet Mix", Index: 6, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+		}
+	} else {
+		return []ParamMetadata{
+			{Name: "Input Gain", Index: 0, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master"},
+			{Name: "Tone / Color", Index: 1, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone"},
+			{Name: "Decay / Size", Index: 2, DefaultValue: 0.6, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes"},
+			{Name: "Modulation Depth", Index: 3, DefaultValue: 0.3, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO"},
+			{Name: "Wet Mix", Index: 4, DefaultValue: 0.4, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+		}
+	}
 }
 
 // ScanDirectories walks through plugin directories and discovers plugins and their parameters
@@ -236,25 +291,8 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 						presets = []string{"Default Init", "Warm Clean", "Lead Solo", "Sub Bass Heavy", "Space Ambient"}
 					}
 
-					// Granular parameter discovery simulation with calibrated ranges
-					params := []ParamMetadata{
-						{Name: "Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB"},
-						{Name: "Cutoff", Index: 1, DefaultValue: 0.6, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz"},
-						{Name: "Resonance", Index: 2, DefaultValue: 0.2, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-						{Name: "Attack", Index: 3, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-						{Name: "Decay", Index: 4, DefaultValue: 0.3, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-						{Name: "Sustain", Index: 5, DefaultValue: 0.7, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-						{Name: "Release", Index: 6, DefaultValue: 0.2, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-						{Name: "Mix", Index: 7, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-						{Name: "Drive", Index: 8, DefaultValue: 0.1, MinValue: 0.0, MaxValue: 1.0, Unit: "dB"},
-						{Name: "LFO Rate", Index: 9, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz"},
-						{Name: "LFO Depth", Index: 10, DefaultValue: 0.4, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-						{Name: "Filter Type", Index: 11, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Mode"},
-						{Name: "Reverb", Index: 12, DefaultValue: 0.2, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-						{Name: "Delay Time", Index: 13, DefaultValue: 0.375, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-						{Name: "Delay Feedback", Index: 14, DefaultValue: 0.3, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-						{Name: "Pan", Index: 15, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "L/R"},
-					}
+					cat := classifyCategory(name, vendor)
+					params := GenerateTargetedParameters(name, cat)
 
 					s.cache[name] = PluginMetadata{
 						Name:       name,
@@ -269,7 +307,7 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 							InputBuses:    2,
 							OutputBuses:   2,
 							UUID:          fmtUUID(vendor, name),
-							Category:      "Synth/Effect",
+							Category:      cat,
 						},
 					}
 				}
@@ -278,45 +316,34 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 		})
 	}
 
-	// Always ensure at least default synthesis and processing instruments exist in cache for UI testing and control
+	// Always ensure default instruments exist in cache for UI testing and control
 	defaults := []struct {
-		name   string
-		vendor string
+		name     string
+		vendor   string
+		category string
 	}{
-		{"Surge XT", "Surge Synth Team"},
-		{"Vital", "Matt Tytel"},
-		{"FabFilter Pro-Q 3", "FabFilter"},
-		{"SuperDAW Reverb", "SuperDAW Core"},
+		{"Surge XT", "Surge Synth Team", "Instrument|Synth"},
+		{"Vital", "Matt Tytel", "Instrument|Synth"},
+		{"FabFilter Pro-Q 3", "FabFilter", "Fx|EQ"},
+		{"SuperDAW Reverb", "SuperDAW Core", "Fx|Reverb"},
 	}
 
 	for _, d := range defaults {
 		if _, exists := s.cache[d.name]; !exists {
 			s.cache[d.name] = PluginMetadata{
-				Name:    d.name,
-				Vendor:  d.vendor,
-				Version: "1.3.0",
-				Path:    "/usr/lib/vst3/" + d.name + ".vst3",
-				Parameters: []ParamMetadata{
-					{Name: "Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB"},
-					{Name: "Cutoff", Index: 1, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz"},
-					{Name: "Resonance", Index: 2, DefaultValue: 0.3, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-					{Name: "Attack", Index: 3, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-					{Name: "Decay", Index: 4, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-					{Name: "Sustain", Index: 5, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-					{Name: "Release", Index: 6, DefaultValue: 0.2, MinValue: 0.0, MaxValue: 1.0, Unit: "ms"},
-					{Name: "LFO Rate", Index: 7, DefaultValue: 0.4, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz"},
-					{Name: "LFO Depth", Index: 8, DefaultValue: 0.3, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-					{Name: "Drive", Index: 9, DefaultValue: 0.1, MinValue: 0.0, MaxValue: 1.0, Unit: "dB"},
-					{Name: "Mix", Index: 10, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%"},
-				},
-				Presets: []string{"Default Init", "Psy Bass Stomp", "Hyper Lead", "Atmospheric Pad", "Arp Pluck"},
+				Name:       d.name,
+				Vendor:     d.vendor,
+				Version:    "1.3.0",
+				Path:       "/usr/lib/vst3/" + d.name + ".vst3",
+				Parameters: GenerateTargetedParameters(d.name, d.category),
+				Presets:    []string{"Default Init", "Psy Bass Stomp", "Hyper Lead", "Atmospheric Pad", "Arp Pluck"},
 				DeepMeta: DeepMetadata{
 					IsDeepScanned: true,
 					BinaryInfo:    "Verified VST3 Component",
 					InputBuses:    2,
 					OutputBuses:   2,
 					UUID:          fmtUUID(d.vendor, d.name),
-					Category:      "Synth/DSP",
+					Category:      d.category,
 				},
 			}
 		}

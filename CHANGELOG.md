@@ -4,6 +4,7 @@
 ### Added
 - **Consolidated Master Studio Console**: Redesigned the entire dashboard into a single, unified responsive control surface organized by high-value functional domains.
 - **Deep VST3 Parameter Discovery**: Implemented moduleinfo.json parsing, binary header probing heuristics, preset enumeration, and calibrated parameter ranges.
+- **Categorized Parameter Inspector UX**: Added functional group filter tabs (Filter/Tone, Envelopes, Mod/LFO, FX/Mix, Master), instant search bar, and bidirectional numeric input sync with parameter sliders.
 - **Synchronous Plugin Query API**: Added `/api/plugins` endpoint supporting direct querying of all plugins, single plugin parameter sets, and triggerable deep scans (`?deep=true`).
 - **Graceful Server Shutdown & Process Control**: Added `/api/quit` endpoint and dashboard button to shut down background servers, TCP gateways, and OSC bridges cleanly.
 - **Interactive VST3 Control Surface**: Dynamic parameter sliders with real-time numeric readouts, unit labels, and preset selector wired directly to DAW parameter automation.
