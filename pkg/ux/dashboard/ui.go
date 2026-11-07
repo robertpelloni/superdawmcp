@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.5.0 Active</span>
+			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.6.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -845,15 +845,30 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				const stepVal = param.step || (param.unit === "Shape" || param.unit === "Oct" ? 1.0 : 0.01);
 				const unitLabel = param.unit ? ' (' + param.unit + ')' : '';
 				const curveLabel = param.curve ? ' • ' + param.curve : '';
+
+				let syncDivisionsHtml = '';
+				if (param.sync_divisions && param.sync_divisions.length > 0) {
+					syncDivisionsHtml = '<select class="select-box" style="padding: 2px 4px; font-size: 10px; width: auto;" onchange="applySyncDivision(\'' + activePlugin + '\', \'' + param.name + '\', ' + param.index + ', this.value)" data-tooltip="Tempo-synced division"><option value="">Sync Division...</option>';
+					param.sync_divisions.forEach(div => {
+						syncDivisionsHtml += '<option value="' + div + '">' + div + '</option>';
+					});
+					syncDivisionsHtml += '</select>';
+				}
+
 				html += ' \
 					<div class="param-box"> \
 						<div class="param-header"> \
 							<span>' + param.name + '<small style="color: var(--text-muted); font-size: 10px;">' + unitLabel + '</small></span> \
-							<span class="badge" style="font-size: 10px;">' + (param.category || 'General') + curveLabel + '</span> \
+							<div style="display: flex; gap: 4px; align-items: center;"> \
+								' + syncDivisionsHtml + ' \
+								<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" id="midi-learn-' + param.index + '" onclick="toggleMidiLearn(' + param.index + ', \'' + param.name + '\')" data-tooltip="Map physical MIDI CC controller to this parameter">🎹 Learn</button> \
+								<span class="badge" style="font-size: 10px;">' + (param.category || 'General') + curveLabel + '</span> \
+							</div> \
 						</div> \
 						<div class="param-slider-row"> \
 							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + stepVal + '" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
 							<input type="number" id="num-' + param.index + '" class="param-input" value="' + (Number.isInteger(stepVal) ? parseInt(val) : parseFloat(val).toFixed(2)) + '" step="' + stepVal + '" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+							<span id="display-readout-' + param.index + '" style="font-size: 11px; color: var(--accent-blue); min-width: 50px; text-align: right;">' + formatReadout(param, val) + '</span> \
 						</div> \
 					</div> \
 				';
@@ -861,10 +876,28 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			document.getElementById('plugin-params').innerHTML = html || '<p style="color: var(--text-muted); padding: 15px;">No matching parameters.</p>';
 		}
 
+		function formatReadout(param, val) {
+			const num = parseFloat(val);
+			if (param.unit === "Hz") {
+				return num >= 1000 ? (num/1000).toFixed(1) + " kHz" : num.toFixed(0) + " Hz";
+			} else if (param.unit === "dB") {
+				return (num > 0 ? "+" : "") + num.toFixed(1) + " dB";
+			} else if (param.unit === "%") {
+				return (num * 100).toFixed(0) + "%%";
+			} else if (param.unit === "ms") {
+				return num >= 1000 ? (num/1000).toFixed(2) + " s" : num.toFixed(1) + " ms";
+			} else if (param.unit === "Shape" || param.unit === "Wave") {
+				const shapes = ["Sine", "Tri", "Saw", "Square", "Noise"];
+				return shapes[parseInt(num)] || "Shape " + num;
+			}
+			return num.toFixed(2) + (param.unit ? " " + param.unit : "");
+		}
+
 		function syncParamSlider(pluginName, paramName, value, index, unit) {
 			const numVal = parseFloat(value);
 			const numInput = document.getElementById('num-' + index);
 			if (numInput) numInput.value = numVal.toFixed(2);
+			updateReadout(index, numVal, unit);
 			sendPluginParam(pluginName, paramName, numVal);
 		}
 
@@ -872,7 +905,48 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			const numVal = parseFloat(value);
 			const slider = document.getElementById('slider-' + index);
 			if (slider) slider.value = numVal;
+			updateReadout(index, numVal, unit);
 			sendPluginParam(pluginName, paramName, numVal);
+		}
+
+		function updateReadout(index, val, unit) {
+			const el = document.getElementById('display-readout-' + index);
+			if (el) el.innerText = formatReadout({ unit }, val);
+		}
+
+		let activeMidiLearnIndex = null;
+		function toggleMidiLearn(index, name) {
+			const btn = document.getElementById('midi-learn-' + index);
+			if (activeMidiLearnIndex === index) {
+				activeMidiLearnIndex = null;
+				if (btn) { btn.innerText = '🎹 Learn'; btn.style.background = ''; }
+			} else {
+				if (activeMidiLearnIndex !== null) {
+					const oldBtn = document.getElementById('midi-learn-' + activeMidiLearnIndex);
+					if (oldBtn) { oldBtn.innerText = '🎹 Learn'; oldBtn.style.background = ''; }
+				}
+				activeMidiLearnIndex = index;
+				if (btn) { btn.innerText = 'Listening...'; btn.style.background = '#f59e0b'; }
+			}
+		}
+
+		function applySyncDivision(pluginName, paramName, index, division) {
+			if (!division) return;
+			// Convert musical division (e.g., 1/4 = 0.25, 1/8 = 0.125) to normalized float
+			const parts = division.replace('d', '').replace('t', '').split('/');
+			let val = 0.25;
+			if (parts.length === 2) {
+				val = parseFloat(parts[0]) / parseFloat(parts[1]);
+				if (division.includes('d')) val *= 1.5;
+				if (division.includes('t')) val *= (2.0 / 3.0);
+			}
+			const slider = document.getElementById('slider-' + index);
+			const numInput = document.getElementById('num-' + index);
+			if (slider) slider.value = val;
+			if (numInput) numInput.value = val.toFixed(3);
+			const el = document.getElementById('display-readout-' + index);
+			if (el) el.innerText = division;
+			sendPluginParam(pluginName, paramName, val);
 		}
 
 		function sendPluginParam(pluginName, paramName, numVal) {

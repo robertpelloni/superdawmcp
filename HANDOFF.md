@@ -27,14 +27,13 @@ This session advanced the SuperDAW-MCP ecosystem to version **3.2.0**, focusing 
   - Python E2E compatibility tests pass 100%.
   - Verified dashboard layout and interactions via Playwright screenshot (`/home/jules/verification/unified_dashboard.png`).
 - **Governance**:
-  - Synchronized version string `v3.5.0` across `VERSION.md`, `ROADMAP.md`, `TODO.md`, `CHANGELOG.md`, `VISION.md`, `MEMORY.md`, and dashboard UI.
-- **Mobile Remote & Plugin Inspector Integration**:
-  - Upgraded `/remote` with touch-friendly VST3 plugin selector, sound design macro buttons, and responsive faders.
-  - Built `mobile/src/screens/PluginScreen.tsx` in React Native with touch sliders and macro triggers, wiring `setPluginParam` into `useMcp`.
-  - Added background daemon persistence in `cmd/superdaw/main.go` on stdin EOF.
+  - Synchronized version string `v3.6.0` across `VERSION.md`, `ROADMAP.md`, `TODO.md`, `CHANGELOG.md`, `VISION.md`, `MEMORY.md`, and dashboard UI.
+- **Plugin Inspector Readouts & MIDI Learn**:
+  - Implemented `FormatDisplayValue` in `pkg/vst/scanner.go` for human-readable musical frequencies, decibel gains, and envelope times.
+  - Integrated live display readout text, MIDI Learn simulation buttons, and tempo-synced musical division pickers into `pkg/ux/dashboard/ui.go`.
 
 ## Current State
-- **Binary**: `bin/superdaw-mcp` (v3.5.0 ready)
+- **Binary**: `bin/superdaw-mcp` (v3.6.0 ready)
 - **Dashboard**: Available on port 8081 with real-time WebSocket telemetry and synchronous plugin parameter inspection.
 - **Gateways**: TCP Gateway on port 12002, OSC Server on port 12001, Link Bridge active.
 

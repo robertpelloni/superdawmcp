@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v3.6.0] - 2026-11-06
+### Added
+- **Human-Readable Parameter Readout & Display Value Formatting**: Added `FormatDisplayValue` in `pkg/vst/scanner.go` formatting raw parameter floats into musical frequencies ("kHz/Hz"), decibel gains ("dB"), percentages, envelope time units ("ms/s"), and waveform shape names.
+- **Dynamic Display Readout & MIDI Learn in Plugin Inspector**: Live formatted value readouts next to parameter inputs, interactive MIDI Learn simulation buttons for hardware CC controller mapping, and tempo-synced musical division pickers (1/4, 1/8d, 1/16, etc.).
+
 ## [v3.5.0] - 2026-11-06
 ### Added
 - **Touch Mobile Remote VST3 Touch Inspector**: Added touch-friendly plugin selector, macro buttons (Brighten, Warmth, Space Out, Punch), and live parameter faders on the `/remote` endpoint (`pkg/ux/dashboard/remote.go`).

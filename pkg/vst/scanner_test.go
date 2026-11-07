@@ -2,6 +2,7 @@ package vst
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func TestScanner_DiscoveryAndDeepScan(t *testing.T) {
 		t.Fatalf("Vital parameters should not be empty")
 	}
 
-	// Verify parameter classification and curve properties
+	// Verify parameter classification, display formatting, and curve properties
 	foundOsc := false
 	foundFilter := false
 	for _, p := range synthMeta.Parameters {
@@ -39,11 +40,19 @@ func TestScanner_DiscoveryAndDeepScan(t *testing.T) {
 			if p.Category != "Filter/Tone" || p.Step != 1.0 {
 				t.Errorf("Unexpected Osc 1 mapping: category=%s, step=%f", p.Category, p.Step)
 			}
+			formatted := p.FormatDisplayValue(0.0)
+			if formatted != "Sine" {
+				t.Errorf("Expected Sine waveform format, got %s", formatted)
+			}
 		}
 		if p.Name == "Filter Cutoff" {
 			foundFilter = true
 			if p.Curve != "logarithmic" {
 				t.Errorf("Filter Cutoff curve should be logarithmic, got %s", p.Curve)
+			}
+			formatted := p.FormatDisplayValue(0.55)
+			if !strings.Contains(formatted, "Hz") && !strings.Contains(formatted, "kHz") {
+				t.Errorf("Expected Hz or kHz formatting, got %s", formatted)
 			}
 		}
 	}
@@ -65,6 +74,10 @@ func TestScanner_DiscoveryAndDeepScan(t *testing.T) {
 			foundThresh = true
 			if p.Unit != "dB" || p.Curve != "decibel" {
 				t.Errorf("Unexpected Threshold unit/curve: %s / %s", p.Unit, p.Curve)
+			}
+			formatted := p.FormatDisplayValue(-18.0)
+			if formatted != "-18.0 dB" {
+				t.Errorf("Expected -18.0 dB formatted, got %s", formatted)
 			}
 		}
 	}

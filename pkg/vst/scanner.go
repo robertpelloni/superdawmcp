@@ -36,15 +36,66 @@ type PluginMetadata struct {
 
 // ParamMetadata represents an exposed controllable plugin parameter with functional classification and scaling curves
 type ParamMetadata struct {
-	Name         string  `json:"name"`
-	Index        int     `json:"index"`
-	DefaultValue float32 `json:"default_value"`
-	MinValue     float32 `json:"min_value"`
-	MaxValue     float32 `json:"max_value"`
-	Unit         string  `json:"unit,omitempty"`
-	Category     string  `json:"category,omitempty"`   // Tone, Envelope, Mod, FX, Master
-	Curve        string  `json:"curve,omitempty"`      // linear, logarithmic, decibel, toggle
-	Step         float32 `json:"step,omitempty"`       // step resolution (e.g. 0.01, 1.0, 0.1)
+	Name         string   `json:"name"`
+	Index        int      `json:"index"`
+	DefaultValue float32  `json:"default_value"`
+	MinValue     float32  `json:"min_value"`
+	MaxValue     float32  `json:"max_value"`
+	Unit         string   `json:"unit,omitempty"`
+	Category     string   `json:"category,omitempty"`   // Tone, Envelope, Mod, FX, Master
+	Curve        string   `json:"curve,omitempty"`      // linear, logarithmic, decibel, toggle
+	Step         float32  `json:"step,omitempty"`       // step resolution (e.g. 0.01, 1.0, 0.1)
+	SyncDivisions []string `json:"sync_divisions,omitempty"` // tempo-synced divisions (1/4, 1/8d, 1/16, etc.)
+}
+
+// FormatDisplayValue returns a formatted human-readable string representation of a parameter value
+func (p *ParamMetadata) FormatDisplayValue(val float32) string {
+	switch p.Unit {
+	case "Hz":
+		if p.Curve == "logarithmic" {
+			// Frequency scaling from 20 Hz to 20,000 Hz if normalized 0..1
+			if p.MinValue == 0 && p.MaxValue == 1 {
+				hz := 20.0 * float32(pow(1000.0, float64(val)))
+				if hz >= 1000.0 {
+					return fmt.Sprintf("%.2f kHz", hz/1000.0)
+				}
+				return fmt.Sprintf("%.0f Hz", hz)
+			}
+		}
+		if val >= 1000.0 {
+			return fmt.Sprintf("%.2f kHz", val/1000.0)
+		}
+		return fmt.Sprintf("%.0f Hz", val)
+	case "dB":
+		return fmt.Sprintf("%+.1f dB", val)
+	case "%":
+		return fmt.Sprintf("%.0f%%", val*100.0)
+	case "ms":
+		if val >= 1000.0 {
+			return fmt.Sprintf("%.2f s", val/1000.0)
+		}
+		return fmt.Sprintf("%.1f ms", val)
+	case ":1":
+		return fmt.Sprintf("%.1f:1", val)
+	case "Shape", "Wave":
+		shapes := []string{"Sine", "Triangle", "Saw", "Square", "Noise", "Wavetable"}
+		idx := int(val)
+		if idx >= 0 && idx < len(shapes) {
+			return shapes[idx]
+		}
+		return fmt.Sprintf("Shape %d", idx)
+	default:
+		return fmt.Sprintf("%.2f %s", val, p.Unit)
+	}
+}
+
+func pow(base, exp float64) float64 {
+	res := 1.0
+	for exp > 0 {
+		res *= base
+		exp--
+	}
+	return res
 }
 
 // Scanner manages discovery, caching, and introspection of VST3 plugins
@@ -157,7 +208,6 @@ func (s *Scanner) DeepScan(pluginName string) (PluginMetadata, error) {
 	}
 
 	plugin.DeepMeta = deep
-	// Re-generate targeted parameters to incorporate any discovered categories
 	plugin.Parameters = GenerateTargetedParameters(plugin.Name, deep.Category)
 	s.cache[pluginName] = plugin
 	s.saveCache()
@@ -197,6 +247,8 @@ func classifyCategory(name, vendor string) string {
 // GenerateTargetedParameters creates calibrated parameters with functional group tagging, response curves, and precision step resolution
 func GenerateTargetedParameters(name, category string) []ParamMetadata {
 	catLower := strings.ToLower(category + " " + name)
+	divisions := []string{"1/1", "1/2", "1/4", "1/8", "1/8d", "1/16", "1/16t", "1/32"}
+
 	if strings.Contains(catLower, "synth") || strings.Contains(catLower, "instrument") {
 		return []ParamMetadata{
 			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.01},
@@ -212,12 +264,12 @@ func GenerateTargetedParameters(name, category string) []ParamMetadata {
 			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01},
 			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005},
 			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01},
-			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01},
+			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions},
 			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01},
 			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0},
 			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
 			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
-			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
+			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions},
 		}
 	} else if strings.Contains(catLower, "dynamics") || strings.Contains(catLower, "comp") {
 		return []ParamMetadata{
@@ -246,11 +298,11 @@ func GenerateTargetedParameters(name, category string) []ParamMetadata {
 		return []ParamMetadata{
 			{Name: "Input Gain", Index: 0, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.2},
 			{Name: "Output Gain", Index: 1, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.2},
-			{Name: "Pre-Delay", Index: 2, DefaultValue: 20.0, MinValue: 0.0, MaxValue: 100.0, Unit: "ms", Category: "Filter/Tone", Curve: "linear", Step: 0.5},
+			{Name: "Pre-Delay", Index: 2, DefaultValue: 20.0, MinValue: 0.0, MaxValue: 100.0, Unit: "ms", Category: "Filter/Tone", Curve: "linear", Step: 0.5, SyncDivisions: divisions},
 			{Name: "Decay / Size", Index: 3, DefaultValue: 0.65, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01},
 			{Name: "Damping / Color", Index: 4, DefaultValue: 0.45, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01},
 			{Name: "Modulation Depth", Index: 5, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01},
-			{Name: "Modulation Rate", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01},
+			{Name: "Modulation Rate", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions},
 			{Name: "Wet Mix", Index: 7, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
 		}
 	}

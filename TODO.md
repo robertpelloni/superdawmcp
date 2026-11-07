@@ -24,5 +24,7 @@
 - [x] Parameter Curve Mapping & Step Resolution (v3.4.0)
 - [x] Plugin Inspector A/B Comparison, Randomize & Reset Tools (v3.4.0)
 - [x] Touch Mobile Remote & React Native PluginScreen (v3.5.0)
+- [x] Musical Display Value Readout Formatting & MIDI Learn Simulation (v3.6.0)
+- [x] Tempo-synced division pickers (v3.6.0)
 - [ ] Native Desktop System Tray Applet
 - [ ] Multi-User Studio Jam Rooms
