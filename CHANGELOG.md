@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.5.0] - 2026-11-06
+### Added
+- **Touch Mobile Remote VST3 Touch Inspector**: Added touch-friendly plugin selector, macro buttons (Brighten, Warmth, Space Out, Punch), and live parameter faders on the `/remote` endpoint (`pkg/ux/dashboard/remote.go`).
+- **React Native Mobile Plugin Inspector Screen**: Implemented `mobile/src/screens/PluginScreen.tsx` with VST3 parameter modulation sliders, macro buttons, and wired `setPluginParam` in `mobile/src/hooks/useMcp.ts` and `mobile/App.tsx`.
+- **Daemon Background Persistence**: Refined daemon standard input handling to prevent premature exit on EOF and sustain background HTTP, OSC, and TCP gateway operations.
+
 ## [v3.4.0] - 2026-11-06
 ### Added
 - **Enhanced VST3 Parameter Mapping Accuracy**: Added logarithmic, decibel, and linear response curve classifications and precision step resolutions (`Step`, `Curve`) across synths, dynamics processors (compressors, limiters), and filters.

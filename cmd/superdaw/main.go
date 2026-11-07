@@ -194,7 +194,10 @@ func main() {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			if err == io.EOF { return }
+			// In stdio MCP mode, EOF indicates parent process closed standard input
+			if err == io.EOF {
+				return
+			}
 			continue
 		}
 		var req mcp.JSONRPCRequest

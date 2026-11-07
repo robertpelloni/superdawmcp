@@ -23,5 +23,6 @@
 - [x] Multi-oscillator and synthesis parameter heuristics (v3.3.0)
 - [x] Parameter Curve Mapping & Step Resolution (v3.4.0)
 - [x] Plugin Inspector A/B Comparison, Randomize & Reset Tools (v3.4.0)
+- [x] Touch Mobile Remote & React Native PluginScreen (v3.5.0)
 - [ ] Native Desktop System Tray Applet
 - [ ] Multi-User Studio Jam Rooms

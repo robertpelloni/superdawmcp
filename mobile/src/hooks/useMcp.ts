@@ -13,6 +13,7 @@ export interface UseMcpReturn {
 	stop: () => Promise<void>;
 	setTempo: (bpm: number) => Promise<void>;
 	togglePlay: () => Promise<void>;
+	setPluginParam: (pluginName: string, paramName: string, value: number) => Promise<void>;
 }
 
 export function useMcp(): UseMcpReturn {
@@ -85,6 +86,20 @@ export function useMcp(): UseMcpReturn {
 		[playing, transport],
 	);
 
+	const setPluginParam = useCallback(
+		async (pluginName: string, paramName: string, value: number) => {
+			if (!TcpGateway.connected) return;
+			await TcpGateway.sendRequest("superdaw_set_plugin_parameter", {
+				daw: "ableton",
+				track_id: "0",
+				plugin_name: pluginName,
+				parameter_name: paramName,
+				value,
+			});
+		},
+		[],
+	);
+
 	return {
 		connected,
 		connecting,
@@ -97,5 +112,6 @@ export function useMcp(): UseMcpReturn {
 		stop,
 		setTempo,
 		togglePlay,
+		setPluginParam,
 	};
 }
