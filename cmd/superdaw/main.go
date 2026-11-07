@@ -195,8 +195,9 @@ func main() {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			// In stdio MCP mode, EOF indicates parent process closed standard input
+			// If running headless / detached, block to keep HTTP dashboard and gateways active
 			if err == io.EOF {
-				return
+				select {}
 			}
 			continue
 		}

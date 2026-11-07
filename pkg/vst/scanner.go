@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -55,7 +56,7 @@ func (p *ParamMetadata) FormatDisplayValue(val float32) string {
 		if p.Curve == "logarithmic" {
 			// Frequency scaling from 20 Hz to 20,000 Hz if normalized 0..1
 			if p.MinValue == 0 && p.MaxValue == 1 {
-				hz := 20.0 * float32(pow(1000.0, float64(val)))
+				hz := 20.0 * float32(math.Pow(1000.0, float64(val)))
 				if hz >= 1000.0 {
 					return fmt.Sprintf("%.2f kHz", hz/1000.0)
 				}
@@ -87,15 +88,6 @@ func (p *ParamMetadata) FormatDisplayValue(val float32) string {
 	default:
 		return fmt.Sprintf("%.2f %s", val, p.Unit)
 	}
-}
-
-func pow(base, exp float64) float64 {
-	res := 1.0
-	for exp > 0 {
-		res *= base
-		exp--
-	}
-	return res
 }
 
 // Scanner manages discovery, caching, and introspection of VST3 plugins
