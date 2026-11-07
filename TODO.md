@@ -21,5 +21,7 @@
 - [x] Graceful Server Shutdown & Process Control (v3.2.0)
 - [x] Sound Design Quick Macro Knobs & Parameter Classification (v3.3.0)
 - [x] Multi-oscillator and synthesis parameter heuristics (v3.3.0)
+- [x] Parameter Curve Mapping & Step Resolution (v3.4.0)
+- [x] Plugin Inspector A/B Comparison, Randomize & Reset Tools (v3.4.0)
 - [ ] Native Desktop System Tray Applet
 - [ ] Multi-User Studio Jam Rooms

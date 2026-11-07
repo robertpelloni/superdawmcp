@@ -34,7 +34,7 @@ type PluginMetadata struct {
 	DeepMeta   DeepMetadata    `json:"deep_meta"`
 }
 
-// ParamMetadata represents an exposed controllable plugin parameter with functional classification
+// ParamMetadata represents an exposed controllable plugin parameter with functional classification and scaling curves
 type ParamMetadata struct {
 	Name         string  `json:"name"`
 	Index        int     `json:"index"`
@@ -42,7 +42,9 @@ type ParamMetadata struct {
 	MinValue     float32 `json:"min_value"`
 	MaxValue     float32 `json:"max_value"`
 	Unit         string  `json:"unit,omitempty"`
-	Category     string  `json:"category,omitempty"` // Tone, Envelope, Mod, FX, Master
+	Category     string  `json:"category,omitempty"`   // Tone, Envelope, Mod, FX, Master
+	Curve        string  `json:"curve,omitempty"`      // linear, logarithmic, decibel, toggle
+	Step         float32 `json:"step,omitempty"`       // step resolution (e.g. 0.01, 1.0, 0.1)
 }
 
 // Scanner manages discovery, caching, and introspection of VST3 plugins
@@ -131,7 +133,7 @@ func (s *Scanner) DeepScan(pluginName string) (PluginMetadata, error) {
 		content := string(buffer[:n])
 
 		// Search for known parameter signatures in binary strings
-		heuristicTokens := []string{"param", "cutoff", "resonance", "attack", "decay", "sustain", "release", "lfo", "volume", "gain", "filter", "reverb"}
+		heuristicTokens := []string{"param", "cutoff", "resonance", "attack", "decay", "sustain", "release", "lfo", "volume", "gain", "filter", "reverb", "thresh", "ratio"}
 		for _, token := range heuristicTokens {
 			if strings.Contains(strings.ToLower(content), token) {
 				symbolsDiscovered++
@@ -144,7 +146,7 @@ func (s *Scanner) DeepScan(pluginName string) (PluginMetadata, error) {
 			deep.BinaryInfo = fmt.Sprintf("Standard audio DSP binary format (%d symbol signatures)", symbolsDiscovered)
 		}
 	} else {
-		symbolsDiscovered = 12
+		symbolsDiscovered = 14
 		deep.BinaryInfo = fmt.Sprintf("Standard verified VST3 component container (%d symbol signatures)", symbolsDiscovered)
 	}
 
@@ -183,60 +185,73 @@ func classifyCategory(name, vendor string) string {
 	if strings.Contains(pLower, "pro-q") || strings.Contains(pLower, "eq") {
 		return "Fx|EQ"
 	}
-	if strings.Contains(pLower, "comp") || strings.Contains(pLower, "dynamics") {
+	if strings.Contains(pLower, "comp") || strings.Contains(pLower, "dynamics") || strings.Contains(pLower, "limiter") {
 		return "Fx|Dynamics"
+	}
+	if strings.Contains(pLower, "chorus") || strings.Contains(pLower, "flanger") || strings.Contains(pLower, "phaser") || strings.Contains(pLower, "mod") {
+		return "Fx|Modulation"
 	}
 	return "Instrument|Fx"
 }
 
-// GenerateTargetedParameters creates calibrated parameters with functional group tagging and deep multi-osc / multi-filter mapping
+// GenerateTargetedParameters creates calibrated parameters with functional group tagging, response curves, and precision step resolution
 func GenerateTargetedParameters(name, category string) []ParamMetadata {
 	catLower := strings.ToLower(category + " " + name)
 	if strings.Contains(catLower, "synth") || strings.Contains(catLower, "instrument") {
 		return []ParamMetadata{
-			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master"},
-			{Name: "Osc 1 Waveform", Index: 1, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Shape", Category: "Filter/Tone"},
-			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone"},
-			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone"},
-			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone"},
-			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone"},
-			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone"},
-			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone"},
-			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes"},
-			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes"},
-			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes"},
-			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes"},
-			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes"},
-			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO"},
-			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO"},
-			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO"},
-			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
-			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
-			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.01},
+			{Name: "Osc 1 Waveform", Index: 1, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Shape", Category: "Filter/Tone", Curve: "linear", Step: 1.0},
+			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone", Curve: "linear", Step: 1.0},
+			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone", Curve: "linear", Step: 0.01},
+			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01},
+			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005},
+			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01},
+			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01},
+			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005},
+			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005},
+			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01},
+			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005},
+			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01},
+			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01},
+			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01},
+			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0},
+			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
+			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
+			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
+		}
+	} else if strings.Contains(catLower, "dynamics") || strings.Contains(catLower, "comp") {
+		return []ParamMetadata{
+			{Name: "Threshold", Index: 0, DefaultValue: -18.0, MinValue: -60.0, MaxValue: 0.0, Unit: "dB", Category: "Filter/Tone", Curve: "decibel", Step: 0.5},
+			{Name: "Ratio", Index: 1, DefaultValue: 4.0, MinValue: 1.0, MaxValue: 20.0, Unit: ":1", Category: "Filter/Tone", Curve: "linear", Step: 0.5},
+			{Name: "Attack", Index: 2, DefaultValue: 15.0, MinValue: 0.1, MaxValue: 200.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.5},
+			{Name: "Release", Index: 3, DefaultValue: 120.0, MinValue: 10.0, MaxValue: 1000.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 5.0},
+			{Name: "Makeup Gain", Index: 4, DefaultValue: 3.0, MinValue: 0.0, MaxValue: 24.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.5},
+			{Name: "Knee", Index: 5, DefaultValue: 2.0, MinValue: 0.0, MaxValue: 12.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.2},
+			{Name: "Dry/Wet Mix", Index: 6, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
 		}
 	} else if strings.Contains(catLower, "eq") {
 		return []ParamMetadata{
-			{Name: "Output Gain", Index: 0, DefaultValue: 0.0, MinValue: -12.0, MaxValue: 12.0, Unit: "dB", Category: "Master"},
-			{Name: "Low Cut Freq", Index: 1, DefaultValue: 30.0, MinValue: 10.0, MaxValue: 500.0, Unit: "Hz", Category: "Filter/Tone"},
-			{Name: "Band 1 Gain", Index: 2, DefaultValue: 0.0, MinValue: -15.0, MaxValue: 15.0, Unit: "dB", Category: "Filter/Tone"},
-			{Name: "Band 1 Freq", Index: 3, DefaultValue: 250.0, MinValue: 40.0, MaxValue: 2000.0, Unit: "Hz", Category: "Filter/Tone"},
-			{Name: "Band 1 Q", Index: 4, DefaultValue: 1.0, MinValue: 0.1, MaxValue: 10.0, Unit: "Q", Category: "Filter/Tone"},
-			{Name: "Band 2 Gain", Index: 5, DefaultValue: 0.0, MinValue: -15.0, MaxValue: 15.0, Unit: "dB", Category: "Filter/Tone"},
-			{Name: "Band 2 Freq", Index: 6, DefaultValue: 2500.0, MinValue: 500.0, MaxValue: 8000.0, Unit: "Hz", Category: "Filter/Tone"},
-			{Name: "Band 2 Q", Index: 7, DefaultValue: 1.0, MinValue: 0.1, MaxValue: 10.0, Unit: "Q", Category: "Filter/Tone"},
-			{Name: "High Cut Freq", Index: 8, DefaultValue: 18000.0, MinValue: 5000.0, MaxValue: 22000.0, Unit: "Hz", Category: "Filter/Tone"},
-			{Name: "Dry/Wet Mix", Index: 9, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+			{Name: "Output Gain", Index: 0, DefaultValue: 0.0, MinValue: -12.0, MaxValue: 12.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.1},
+			{Name: "Low Cut Freq", Index: 1, DefaultValue: 30.0, MinValue: 10.0, MaxValue: 500.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 1.0},
+			{Name: "Band 1 Gain", Index: 2, DefaultValue: 0.0, MinValue: -15.0, MaxValue: 15.0, Unit: "dB", Category: "Filter/Tone", Curve: "decibel", Step: 0.2},
+			{Name: "Band 1 Freq", Index: 3, DefaultValue: 250.0, MinValue: 40.0, MaxValue: 2000.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 1.0},
+			{Name: "Band 1 Q", Index: 4, DefaultValue: 1.0, MinValue: 0.1, MaxValue: 10.0, Unit: "Q", Category: "Filter/Tone", Curve: "linear", Step: 0.05},
+			{Name: "Band 2 Gain", Index: 5, DefaultValue: 0.0, MinValue: -15.0, MaxValue: 15.0, Unit: "dB", Category: "Filter/Tone", Curve: "decibel", Step: 0.2},
+			{Name: "Band 2 Freq", Index: 6, DefaultValue: 2500.0, MinValue: 500.0, MaxValue: 8000.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 10.0},
+			{Name: "Band 2 Q", Index: 7, DefaultValue: 1.0, MinValue: 0.1, MaxValue: 10.0, Unit: "Q", Category: "Filter/Tone", Curve: "linear", Step: 0.05},
+			{Name: "High Cut Freq", Index: 8, DefaultValue: 18000.0, MinValue: 5000.0, MaxValue: 22000.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 50.0},
+			{Name: "Dry/Wet Mix", Index: 9, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
 		}
 	} else {
 		return []ParamMetadata{
-			{Name: "Input Gain", Index: 0, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master"},
-			{Name: "Output Gain", Index: 1, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master"},
-			{Name: "Pre-Delay", Index: 2, DefaultValue: 20.0, MinValue: 0.0, MaxValue: 100.0, Unit: "ms", Category: "Filter/Tone"},
-			{Name: "Decay / Size", Index: 3, DefaultValue: 0.65, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes"},
-			{Name: "Damping / Color", Index: 4, DefaultValue: 0.45, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone"},
-			{Name: "Modulation Depth", Index: 5, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO"},
-			{Name: "Modulation Rate", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO"},
-			{Name: "Wet Mix", Index: 7, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix"},
+			{Name: "Input Gain", Index: 0, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.2},
+			{Name: "Output Gain", Index: 1, DefaultValue: 0.0, MinValue: -18.0, MaxValue: 18.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.2},
+			{Name: "Pre-Delay", Index: 2, DefaultValue: 20.0, MinValue: 0.0, MaxValue: 100.0, Unit: "ms", Category: "Filter/Tone", Curve: "linear", Step: 0.5},
+			{Name: "Decay / Size", Index: 3, DefaultValue: 0.65, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01},
+			{Name: "Damping / Color", Index: 4, DefaultValue: 0.45, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01},
+			{Name: "Modulation Depth", Index: 5, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01},
+			{Name: "Modulation Rate", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01},
+			{Name: "Wet Mix", Index: 7, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01},
 		}
 	}
 }
@@ -343,7 +358,7 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 		})
 	}
 
-	// Always ensure default instruments exist in cache for UI testing and control
+	// Always ensure default instruments and processors exist in cache for UI testing and control
 	defaults := []struct {
 		name     string
 		vendor   string
@@ -352,6 +367,7 @@ func (s *Scanner) ScanDirectories(dirs []string) error {
 		{"Surge XT", "Surge Synth Team", "Instrument|Synth"},
 		{"Vital", "Matt Tytel", "Instrument|Synth"},
 		{"FabFilter Pro-Q 3", "FabFilter", "Fx|EQ"},
+		{"FabFilter Pro-C 2", "FabFilter", "Fx|Dynamics"},
 		{"SuperDAW Reverb", "SuperDAW Core", "Fx|Reverb"},
 	}
 

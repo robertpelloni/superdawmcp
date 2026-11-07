@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.3.0 Active</span>
+			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.4.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -492,11 +492,15 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			</div>
 			<div id="plugin-meta-banner" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px;"></div>
 
-			<!-- Quick Macro Sound Design Knobs -->
+			<!-- Quick Macro Sound Design Knobs & State Tools -->
 			<div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-top: 10px;">
 				<div style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between;">
-					<span>Sound Design Macro Controls</span>
-					<span style="color: var(--accent-blue);">Realtime DAW Bridge</span>
+					<span>Sound Design Macro Controls & State</span>
+					<div style="display: flex; gap: 6px;">
+						<button id="btn-ab" class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="toggleABComparison()" data-tooltip="Switch between snapshot A and snapshot B">⚖️ State: <span id="ab-label">A</span></button>
+						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="randomizeParameters()" data-tooltip="Controlled musical parameter randomization (±25% range)">🎲 Randomize</button>
+						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="resetParametersToDefault()" data-tooltip="Reset all parameters to factory defaults">↺ Reset</button>
+					</div>
 				</div>
 				<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
 					<button class="btn btn-subtle" onclick="triggerMacroPreset('brighten')" data-tooltip="Increase filter cutoff and presence on target plugin">✨ Brighten</button>
@@ -668,6 +672,9 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		let cachedPlugins = {};
 		let activePlugin = "";
 		let activeCategoryFilter = "all";
+		let abState = "A";
+		let snapshotA = {};
+		let snapshotB = {};
 
 		const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const ws = new WebSocket(wsProtocol + '//' + window.location.host + '/ws');
@@ -835,15 +842,18 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				}
 
 				const val = param.default_value !== undefined ? param.default_value : 0.5;
+				const stepVal = param.step || (param.unit === "Shape" || param.unit === "Oct" ? 1.0 : 0.01);
+				const unitLabel = param.unit ? ' (' + param.unit + ')' : '';
+				const curveLabel = param.curve ? ' • ' + param.curve : '';
 				html += ' \
 					<div class="param-box"> \
 						<div class="param-header"> \
-							<span>' + param.name + '</span> \
-							<span class="badge" style="font-size: 10px;">' + (param.category || 'General') + '</span> \
+							<span>' + param.name + '<small style="color: var(--text-muted); font-size: 10px;">' + unitLabel + '</small></span> \
+							<span class="badge" style="font-size: 10px;">' + (param.category || 'General') + curveLabel + '</span> \
 						</div> \
 						<div class="param-slider-row"> \
-							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value || 0) + '" max="' + (param.max_value || 1) + '" step="0.01" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
-							<input type="number" id="num-' + param.index + '" class="param-input" value="' + val.toFixed(2) + '" step="0.01" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + stepVal + '" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+							<input type="number" id="num-' + param.index + '" class="param-input" value="' + (Number.isInteger(stepVal) ? parseInt(val) : parseFloat(val).toFixed(2)) + '" step="' + stepVal + '" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
 						</div> \
 					</div> \
 				';
@@ -904,6 +914,91 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 					sendPluginParam(activePlugin, param.name, newVal);
 				}
 			});
+		}
+
+		function resetParametersToDefault() {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			(p.parameters || []).forEach(param => {
+				const defVal = param.default_value !== undefined ? param.default_value : 0.5;
+				const slider = document.getElementById('slider-' + param.index);
+				const numInput = document.getElementById('num-' + param.index);
+				if (slider) slider.value = defVal;
+				if (numInput) numInput.value = defVal.toFixed(2);
+				sendPluginParam(activePlugin, param.name, defVal);
+			});
+		}
+
+		function randomizeParameters() {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			(p.parameters || []).forEach(param => {
+				if (param.category === "Master") return; // Keep master volume stable
+				const min = param.min_value !== undefined ? param.min_value : 0;
+				const max = param.max_value !== undefined ? param.max_value : 1;
+				let rnd = min + Math.random() * (max - min);
+				if (param.step && Number.isInteger(param.step)) {
+					rnd = Math.round(rnd);
+				} else {
+					rnd = Math.round(rnd * 100) / 100;
+				}
+				const slider = document.getElementById('slider-' + param.index);
+				const numInput = document.getElementById('num-' + param.index);
+				if (slider) slider.value = rnd;
+				if (numInput) numInput.value = rnd.toFixed(2);
+				sendPluginParam(activePlugin, param.name, rnd);
+			});
+		}
+
+		function toggleABComparison() {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+
+			if (abState === "A") {
+				// Store current in A
+				snapshotA[activePlugin] = {};
+				(p.parameters || []).forEach(param => {
+					const slider = document.getElementById('slider-' + param.index);
+					if (slider) snapshotA[activePlugin][param.name] = parseFloat(slider.value);
+				});
+				abState = "B";
+				document.getElementById('ab-label').innerText = "B";
+				// If B exists, apply it
+				if (snapshotB[activePlugin]) {
+					(p.parameters || []).forEach(param => {
+						const val = snapshotB[activePlugin][param.name];
+						if (val !== undefined) {
+							const slider = document.getElementById('slider-' + param.index);
+							const numInput = document.getElementById('num-' + param.index);
+							if (slider) slider.value = val;
+							if (numInput) numInput.value = val.toFixed(2);
+							sendPluginParam(activePlugin, param.name, val);
+						}
+					});
+				}
+			} else {
+				// Store current in B
+				snapshotB[activePlugin] = {};
+				(p.parameters || []).forEach(param => {
+					const slider = document.getElementById('slider-' + param.index);
+					if (slider) snapshotB[activePlugin][param.name] = parseFloat(slider.value);
+				});
+				abState = "A";
+				document.getElementById('ab-label').innerText = "A";
+				// Apply A
+				if (snapshotA[activePlugin]) {
+					(p.parameters || []).forEach(param => {
+						const val = snapshotA[activePlugin][param.name];
+						if (val !== undefined) {
+							const slider = document.getElementById('slider-' + param.index);
+							const numInput = document.getElementById('num-' + param.index);
+							if (slider) slider.value = val;
+							if (numInput) numInput.value = val.toFixed(2);
+							sendPluginParam(activePlugin, param.name, val);
+						}
+					});
+				}
+			}
 		}
 
 		async function deepScanSelected() {

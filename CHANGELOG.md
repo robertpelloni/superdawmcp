@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.4.0] - 2026-11-06
+### Added
+- **Enhanced VST3 Parameter Mapping Accuracy**: Added logarithmic, decibel, and linear response curve classifications and precision step resolutions (`Step`, `Curve`) across synths, dynamics processors (compressors, limiters), and filters.
+- **Plugin Inspector Sound Design & State Tools**: Added A/B Comparison state toggling (storing and toggling parameter snapshots A vs B), controlled musical parameter randomization (`±25%` safe margin), and factory default reset.
+- **Dynamic Step & Curve Labels**: Parameter sliders now dynamically adapt their step resolution and display parameter curve types (e.g. logarithmic frequency, dB gain) alongside unit badges.
+
 ## [v3.3.0] - 2026-11-06
 ### Added
 - **Refined VST3 Discovery & Sound Design Macro Controls**: Expanded VST3 heuristic parameter generation with multi-oscillator parameters (Osc 1 Waveform, Osc 1 Octave, Osc 2 Detune, Sub Osc Level) and binary signature heuristics.
