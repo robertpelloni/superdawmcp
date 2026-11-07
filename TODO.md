@@ -26,5 +26,8 @@
 - [x] Touch Mobile Remote & React Native PluginScreen (v3.5.0)
 - [x] Musical Display Value Readout Formatting & MIDI Learn Simulation (v3.6.0)
 - [x] Tempo-synced division pickers (v3.6.0)
+- [x] Consolidated Single-Page Master Console UI & Responsive Hierarchy (v3.7.0)
+- [x] Bidirectional Parameter Curve Mapping Engine (Logarithmic, dB, S-Curve, Linear) (v3.8.0)
+- [x] Master Console & Mobile Remote Preset Snapshot Banks & Continuous Morphing (v3.9.0)
 - [ ] Native Desktop System Tray Applet
 - [ ] Multi-User Studio Jam Rooms

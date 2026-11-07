@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [v3.9.0] - 2026-11-07
+### Added
+- **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Added snapshot slot buttons (Slot A, Slot B, Slot C, Slot D) and continuous parameter interpolation morph slider in `pkg/ux/dashboard/ui.go`.
+- **Touch Mobile Remote Preset Morphing Integration**: Fully wired React Native `mobile/src/screens/PluginScreen.tsx` with snapshot slots A/B/C/D, continuous morph slider, and tactile step buttons.
+- **Robust Stdio Mode Detection**: Added command-line flag awareness (`--headless`/`--daemon`) in `cmd/superdaw/main.go` to support automated testing while guaranteeing background server persistence.
+
+## [v3.8.0] - 2026-11-07
+### Added
+- **Bidirectional Mathematical Curve Engine**: Implemented `NormalizedToPhysical` and `PhysicalToNormalized` across Logarithmic, Decibel, and S-Curves.
+- **Preset State Snapshots Engine**: Added `PresetManager` with snapshot bank slots (A, B, C, D) and continuous state morphing.
+
+## [v3.7.0] - 2026-11-07
+### Added
+- **Consolidated Unified Dashboard Page**: Merged separate subpages into a high-visibility, single responsive command console with priority-ranked cards and tooltips.
+
 ## [v3.6.0] - 2026-11-06
 ### Added
 - **Human-Readable Parameter Readout & Display Value Formatting**: Added `FormatDisplayValue` in `pkg/vst/scanner.go` formatting raw parameter floats into musical frequencies ("kHz/Hz"), decibel gains ("dB"), percentages, envelope time units ("ms/s"), and waveform shape names.

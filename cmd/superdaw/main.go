@@ -195,9 +195,15 @@ func main() {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			// In stdio MCP mode, EOF indicates parent process closed standard input
-			// If running headless / detached, block to keep HTTP dashboard and gateways active
+			// Check if standard input was connected to a pipe or closed by client
 			if err == io.EOF {
-				select {}
+				// If launched with --headless or detached daemon flag, block to keep HTTP/OSC running
+				for _, arg := range os.Args {
+					if arg == "--headless" || arg == "--daemon" {
+						select {}
+					}
+				}
+				return
 			}
 			continue
 		}

@@ -8,7 +8,7 @@ import (
 // renderUnifiedDashboard outputs the consolidated, single responsive dashboard page.
 // Escape %% properly for fmt.Fprintf to avoid fmt template substitution errors.
 func renderUnifiedDashboard(w http.ResponseWriter) {
-	fmt.Fprintf(w, `<!DOCTYPE html>
+	fmt.Fprint(w, `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
