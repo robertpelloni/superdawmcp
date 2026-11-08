@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span id="version-badge" class="badge badge-online" data-tooltip="Single global release version string">v3.6.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.11.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -445,17 +445,37 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		<section class="card col-4">
 			<div class="card-header">
 				<h2 class="card-title">🎛️ DAW Instances & Transport</h2>
-				<span class="badge" data-tooltip="Active synchronized instances">Universal Link</span>
+				<span class="badge" id="link-peer-badge" data-tooltip="Active synchronized Link peers on local subnet">Link: 1 Peer</span>
 			</div>
-			<div class="input-row" style="margin-bottom: 15px;">
-				<button class="btn btn-primary" style="flex: 1;" onclick="callMcp('superdaw_transport_control', {playing: true, bpm: parseFloat(document.getElementById('global-bpm').value)})" data-tooltip="Trigger playback on all active DAWs">▶ Play All</button>
-				<button class="btn btn-danger" style="flex: 1;" onclick="callMcp('superdaw_transport_control', {playing: false})" data-tooltip="Stop transport on all connected DAWs">⏹ Stop All</button>
+			<div class="input-row" style="margin-bottom: 12px;">
+				<button class="btn btn-primary" style="flex: 1;" onclick="syncTransport(true)" data-tooltip="Trigger playback on all active DAWs and Link network">▶ Play All</button>
+				<button class="btn btn-danger" style="flex: 1;" onclick="syncTransport(false)" data-tooltip="Stop transport on all connected DAWs and Link network">⏹ Stop All</button>
 			</div>
+
+			<!-- Universal Link Clock HUD -->
+			<div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+				<div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+					<span>Link Studio Clock</span>
+					<span id="link-quantum-label" style="color: var(--secondary);">4/4 Bar</span>
+				</div>
+				<div style="display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono);">
+					<div>
+						<span style="font-size: 11px; color: var(--text-muted);">Beat:</span>
+						<span id="link-beat-val" style="font-size: 15px; font-weight: bold; color: var(--primary); margin-left: 4px;">0.00</span>
+					</div>
+					<div>
+						<span style="font-size: 11px; color: var(--text-muted);">Phase:</span>
+						<span id="link-phase-val" style="font-size: 15px; font-weight: bold; color: #a855f7; margin-left: 4px;">0.00</span>
+					</div>
+					<div id="link-beat-led" style="width: 12px; height: 12px; border-radius: 50%; background: #334155; border: 1px solid #475569;" data-tooltip="Flashing pulse indicator for active tempo"></div>
+				</div>
+			</div>
+
 			<div class="control-group">
 				<label data-tooltip="Master BPM clock broadcast to Ableton Link and OSC bridges">Global Tempo (BPM)</label>
 				<div class="input-row">
-					<input type="number" id="global-bpm" class="input-text" value="128.0" step="0.1" style="flex: 1;">
-					<button class="btn btn-subtle" onclick="callMcp('superdaw_transport_control', {playing: true, bpm: parseFloat(document.getElementById('global-bpm').value)})">Set</button>
+					<input type="number" id="global-bpm" class="input-text" value="128.0" step="0.1" style="flex: 1;" onchange="syncBpm(this.value)">
+					<button class="btn btn-subtle" onclick="syncBpm(document.getElementById('global-bpm').value)">Set</button>
 				</div>
 			</div>
 			<div id="daws" style="margin-top: 10px;">
@@ -772,6 +792,53 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				body: JSON.stringify({name, arguments: args})
 			});
 		}
+
+		let linkPlaying = false;
+		let linkBpm = 128.0;
+		let linkStartTime = 0;
+		let clockInterval = null;
+
+		function syncTransport(playing) {
+			linkPlaying = playing;
+			if (playing) {
+				linkStartTime = Date.now();
+			}
+			linkBpm = parseFloat(document.getElementById('global-bpm').value) || 120.0;
+			callMcp('superdaw_transport_control', { playing, bpm: linkBpm });
+			callMcp('superdaw_link_sync', { playing, bpm: linkBpm });
+		}
+
+		function syncBpm(val) {
+			linkBpm = parseFloat(val) || 120.0;
+			callMcp('superdaw_transport_control', { playing: linkPlaying, bpm: linkBpm });
+			callMcp('superdaw_link_sync', { playing: linkPlaying, bpm: linkBpm });
+		}
+
+		function updateLinkClock() {
+			if (!linkPlaying) {
+				document.getElementById('link-beat-val').innerText = '0.00';
+				document.getElementById('link-phase-val').innerText = '0.00';
+				const led = document.getElementById('link-beat-led');
+				if (led) { led.style.background = '#334155'; led.style.boxShadow = 'none'; }
+				return;
+			}
+			const elapsedSec = (Date.now() - linkStartTime) / 1000.0;
+			const beat = elapsedSec * (linkBpm / 60.0);
+			const phase = beat % 4.0;
+			document.getElementById('link-beat-val').innerText = beat.toFixed(2);
+			document.getElementById('link-phase-val').innerText = phase.toFixed(2);
+			const led = document.getElementById('link-beat-led');
+			if (led) {
+				if (phase < 0.25) {
+					led.style.background = 'var(--primary)';
+					led.style.boxShadow = '0 0 8px var(--primary)';
+				} else {
+					led.style.background = '#334155';
+					led.style.boxShadow = 'none';
+				}
+			}
+		}
+		setInterval(updateLinkClock, 50);
 
 		async function refreshPlugins() {
 			try {

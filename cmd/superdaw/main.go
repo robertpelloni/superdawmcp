@@ -376,6 +376,14 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 	case "superdaw_generate_music":
 		style, _ := args["style"].(string); bars, _ := args["bars"].(float64); trackID, _ := args["track_id"].(string)
 		notes := engine.GenerateMusic(style, int(bars)); driver.WriteMIDIClip(trackID, 0, notes); result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
+	case "superdaw_link_sync":
+		play, _ := args["playing"].(bool)
+		bpm, _ := args["bpm"].(float64)
+		if bpm <= 0 { bpm = 120.0 }
+		link.Sync(play, bpm)
+		result = link.GetStatus()
+	case "superdaw_link_status":
+		result = link.GetStatus()
 	}
 	return result
 }

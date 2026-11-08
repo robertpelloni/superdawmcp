@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.11.0] - 2026-11-08
+### Added
+- **Universal Link Synchronization & Studio Clock**: Expanded `LinkBridge` in `pkg/engine/link.go` with synchronized tempo ramping, quantization phase alignment, beat calculation, and peer monitoring.
+- **MCP Link Protocol Tools**: Registered `superdaw_link_sync` and `superdaw_link_status` in protocol schemas and MCP message dispatch loop.
+- **Master Console Universal Link Clock HUD**: Integrated real-time beat counter, 4/4 bar phase readout, tempo pulse LED, and bidirectional tempo sync into `pkg/ux/dashboard/ui.go`.
+
 ## [v3.10.0] - 2026-11-08
 ### Added
 - **Desktop System Tray Controller (`scripts/superdaw_tray.py`)**: Implemented status inspection, port monitoring (HTTP 8081, OSC 12001, TCP 12002), and graceful shutdown integration via `/api/quit`.

@@ -1,6 +1,9 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.10.0 - Active)
+## Current Milestone (v3.11.0 - Active)
+- [x] **Universal Link Synchronization & Studio Clock**: Unified network clock arbiter (`LinkBridge`), tempo ramping, beat time calculation, and 4/4 phase quantization alignment.
+- [x] **Link MCP Protocol Integration**: Added `superdaw_link_sync` and `superdaw_link_status` MCP tools with JSON schemas and gateway routing.
+- [x] **Master Studio Console Link Clock HUD**: Real-time beat counter, phase bar readout, tempo pulse indicator, and peer network status.
 - [x] **Desktop System Tray Controller (`scripts/superdaw_tray.py`)**: Platform status monitor, port inspection (HTTP 8081, OSC 12001, TCP 12002), and graceful termination integration via `/api/quit`.
 - [x] **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Preset bank slots (A, B, C, D) and continuous parameter morph slider in Master Console UI.
 - [x] **Mobile Touch Remote VST3 & Preset Morphing Integration**: Mobile remote and React Native `PluginScreen` with snapshot slots, tactile +/- step buttons, and continuous morph slider.
@@ -12,8 +15,7 @@
 - [x] **Desktop / Process Governance**: Full server shutdown & quit endpoint (`/api/quit`) with responsive controls for system tray & dashboard management.
 - [x] **DAW Parity Hardening**: Unified interface implementation fixes across Logic Pro, Pro Tools, Ableton Live, Bitwig, FL Studio, REAPER, Ardour, and Cubase.
 
-## Upcoming Milestones (v3.11.0 - Future)
-- [ ] **Hardware System Tray Daemon**: Native desktop systray icon (macOS menu bar / Windows system tray / Linux AppIndicator) with background toggle and process manager.
+## Upcoming Milestones (v3.12.0 - Future)
 - [ ] **Native CGO VST3 Deep-Scanning Bridge**: Direct `libvst3` dynamic loading (`dlopen`/`LoadLibrary`) for direct parameter queries without host DAW bridging.
 - [ ] **Multi-User Realtime Collaborative Studios**: Operational WebRTC / WebSocket room synchronization for distributed jam sessions and shared parameter locking.
 - [ ] **Expanded Mobile Remote**: Touch-screen clip launching grid and mixer fader banks in React Native.

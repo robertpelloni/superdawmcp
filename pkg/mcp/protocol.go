@@ -301,6 +301,25 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_link_sync",
+				Description: "Synchronize Ableton Link session transport and BPM across studio network.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"playing": map[string]interface{}{"type": "boolean"},
+						"bpm":     map[string]interface{}{"type": "number"},
+					},
+				},
+			},
+			{
+				Name:        "superdaw_link_status",
+				Description: "Query real-time Ableton Link session clock, beat time, phase, and peer count.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{},
+				},
+			},
+			{
 				Name:        "superdaw_set_plugin_parameter",
 				Description: "Adjust a parameter of a VST plugin by name.",
 				InputSchema: map[string]interface{}{
