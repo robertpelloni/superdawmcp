@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.13.0] - 2026-11-08
+### Added
+- **Bidirectional Parameter Curve Conversion & Snapping**: Implemented `NormalizedToPhysical`, `PhysicalToNormalized`, and `SnapToStep` methods on `ParamMetadata` in `pkg/vst/scanner.go` supporting Logarithmic, Decibel, Sigmoidal S-Curve, and Stepped snapping.
+- **Enhanced Curve Visualization**: Added distinct mathematical curve icons (📐 logarithmic, 🔊 decibel, 〰️ scurve, 📈 linear) and interactive badges in the Master Console Plugin Inspector (`pkg/ux/dashboard/ui.go`).
+- **Comprehensive Curve Test Suite**: Added `TestParamMetadata_CurveConversionsAndSnapping` in `pkg/vst/scanner_test.go` verifying round-trip fidelity and boundary clamping.
+
 ## [v3.12.0] - 2026-11-08
 ### Added
 - **VST3 Parameter Modulation Routing & Automation Engine**: Implemented `SetParamModulation` and `GetParamModulation` in `pkg/vst/scanner.go` supporting LFO 1/2, Envelope 1/2, Velocity, and Aftertouch modulation sources with bipolar depth scaling (-100% to +100%).

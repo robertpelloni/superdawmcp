@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.12.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.13.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -911,7 +911,11 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				const val = param.default_value !== undefined ? param.default_value : 0.5;
 				const stepVal = param.step || (param.unit === "Shape" || param.unit === "Oct" ? 1.0 : 0.01);
 				const unitLabel = param.unit ? ' (' + param.unit + ')' : '';
-				const curveLabel = param.curve ? ' • ' + param.curve : '';
+				let curveIcon = '📈';
+				if (param.curve === 'logarithmic') curveIcon = '📐';
+				else if (param.curve === 'decibel') curveIcon = '🔊';
+				else if (param.curve === 'scurve') curveIcon = '〰️';
+				const curveLabel = param.curve ? ' • ' + curveIcon + ' ' + param.curve : '';
 
 				let syncDivisionsHtml = '';
 				if (param.sync_divisions && param.sync_divisions.length > 0) {

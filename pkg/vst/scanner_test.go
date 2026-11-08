@@ -139,3 +139,71 @@ func TestScanner_ParamModulationRouting(t *testing.T) {
 		t.Errorf("Expected error for non-existent parameter index, got nil")
 	}
 }
+
+func TestParamMetadata_CurveConversionsAndSnapping(t *testing.T) {
+	// 1. Logarithmic Frequency Curve (20 Hz to 20,000 Hz)
+	logParam := ParamMetadata{
+		Name:     "Cutoff",
+		MinValue: 20.0,
+		MaxValue: 20000.0,
+		Curve:    "logarithmic",
+		Step:     1.0,
+	}
+
+	normVal := float32(0.5)
+	physVal := logParam.NormalizedToPhysical(normVal)
+	roundTripNorm := logParam.PhysicalToNormalized(physVal)
+	if (roundTripNorm - normVal) > 0.001 || (normVal - roundTripNorm) > 0.001 {
+		t.Errorf("Log curve round-trip failed: initial %f, physical %f, round-trip %f", normVal, physVal, roundTripNorm)
+	}
+
+	// 2. Decibel Curve (-60 dB to +6 dB)
+	dbParam := ParamMetadata{
+		Name:     "Gain",
+		MinValue: -60.0,
+		MaxValue: 6.0,
+		Curve:    "decibel",
+		Step:     0.1,
+	}
+
+	normDb := float32(0.75)
+	physDb := dbParam.NormalizedToPhysical(normDb)
+	roundTripDb := dbParam.PhysicalToNormalized(physDb)
+	if (roundTripDb - normDb) > 0.001 || (normDb - roundTripDb) > 0.001 {
+		t.Errorf("Decibel curve round-trip failed: initial %f, physical %f, round-trip %f", normDb, physDb, roundTripDb)
+	}
+
+	// 3. S-Curve Mapping
+	sParam := ParamMetadata{
+		Name:     "Morph",
+		MinValue: 0.0,
+		MaxValue: 100.0,
+		Curve:    "scurve",
+		Step:     0.5,
+	}
+
+	normS := float32(0.3)
+	physS := sParam.NormalizedToPhysical(normS)
+	roundTripS := sParam.PhysicalToNormalized(physS)
+	if (roundTripS - normS) > 0.005 || (normS - roundTripS) > 0.005 {
+		t.Errorf("S-curve round-trip failed: initial %f, physical %f, round-trip %f", normS, physS, roundTripS)
+	}
+
+	// 4. Stepped Snapping
+	stepParam := ParamMetadata{
+		Name:     "Octave",
+		MinValue: -2.0,
+		MaxValue: 2.0,
+		Step:     1.0,
+	}
+
+	snapped := stepParam.SnapToStep(0.78)
+	if snapped != 1.0 {
+		t.Errorf("Expected 0.78 snapped to 1.0, got %f", snapped)
+	}
+
+	snappedNeg := stepParam.SnapToStep(-1.3)
+	if snappedNeg != -1.0 {
+		t.Errorf("Expected -1.3 snapped to -1.0, got %f", snappedNeg)
+	}
+}

@@ -56,6 +56,105 @@ type ParamMetadata struct {
 	Modulation    ParamModulation `json:"modulation,omitempty"` // Real-time modulation routing & depth
 }
 
+// NormalizedToPhysical converts a 0.0-1.0 normalized DAW fader float into physical unit value
+func (p *ParamMetadata) NormalizedToPhysical(norm float32) float64 {
+	if norm < 0.0 {
+		norm = 0.0
+	} else if norm > 1.0 {
+		norm = 1.0
+	}
+
+	minVal := float64(p.MinValue)
+	maxVal := float64(p.MaxValue)
+	if minVal >= maxVal {
+		return minVal
+	}
+
+	switch p.Curve {
+	case "logarithmic":
+		// Handle frequency-style log curves where minVal > 0
+		if minVal > 0 {
+			return minVal * math.Pow(maxVal/minVal, float64(norm))
+		}
+		// Fallback for 0-based log: exp curve
+		return minVal + (maxVal-minVal)*(math.Pow(10.0, float64(norm))-1.0)/9.0
+	case "decibel":
+		// -60dB to 0dB or similar ranges
+		return minVal + (maxVal-minVal)*float64(norm)
+	case "scurve":
+		// Sigmoidal S-curve mapping: 3*x^2 - 2*x^3
+		x := float64(norm)
+		s := x * x * (3.0 - 2.0*x)
+		return minVal + (maxVal-minVal)*s
+	default:
+		// Linear
+		return minVal + (maxVal-minVal)*float64(norm)
+	}
+}
+
+// PhysicalToNormalized converts a physical unit value back to a 0.0-1.0 normalized DAW fader float
+func (p *ParamMetadata) PhysicalToNormalized(phys float64) float32 {
+	minVal := float64(p.MinValue)
+	maxVal := float64(p.MaxValue)
+	if minVal >= maxVal {
+		return 0.0
+	}
+
+	if phys <= minVal {
+		return 0.0
+	}
+	if phys >= maxVal {
+		return 1.0
+	}
+
+	switch p.Curve {
+	case "logarithmic":
+		if minVal > 0 {
+			norm := math.Log(phys/minVal) / math.Log(maxVal/minVal)
+			return float32(norm)
+		}
+		norm := math.Log10(1.0 + 9.0*(phys-minVal)/(maxVal-minVal))
+		return float32(norm)
+	case "decibel":
+		norm := (phys - minVal) / (maxVal - minVal)
+		return float32(norm)
+	case "scurve":
+		// Inverse S-curve using binary search approximation
+		target := (phys - minVal) / (maxVal - minVal)
+		low := 0.0
+		high := 1.0
+		for i := 0; i < 20; i++ {
+			mid := (low + high) / 2.0
+			s := mid * mid * (3.0 - 2.0*mid)
+			if s < target {
+				low = mid
+			} else {
+				high = mid
+			}
+		}
+		return float32((low + high) / 2.0)
+	default:
+		// Linear
+		return float32((phys - minVal) / (maxVal - minVal))
+	}
+}
+
+// SnapToStep rounds a value to the nearest parameter step resolution
+func (p *ParamMetadata) SnapToStep(val float32) float32 {
+	if p.Step <= 0.0 {
+		return val
+	}
+	steps := math.Round(float64(val / p.Step))
+	snapped := float32(steps) * p.Step
+	if snapped < p.MinValue {
+		return p.MinValue
+	}
+	if snapped > p.MaxValue {
+		return p.MaxValue
+	}
+	return snapped
+}
+
 // FormatDisplayValue returns a formatted human-readable string representation of a parameter value
 func (p *ParamMetadata) FormatDisplayValue(val float32) string {
 	switch p.Unit {

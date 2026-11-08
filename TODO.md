@@ -32,4 +32,5 @@
 - [x] Native Desktop System Tray Controller (`scripts/superdaw_tray.py`) (v3.10.0)
 - [x] Universal Link Synchronization & Studio Clock HUD (v3.11.0)
 - [x] VST3 Parameter Modulation & Automation Target Mapping Engine (v3.12.0)
+- [x] Bidirectional Parameter Curve Conversion & Snapping (v3.13.0)
 - [ ] Multi-User Studio Jam Rooms
