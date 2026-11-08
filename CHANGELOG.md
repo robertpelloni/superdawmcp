@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.12.0] - 2026-11-08
+### Added
+- **VST3 Parameter Modulation Routing & Automation Engine**: Implemented `SetParamModulation` and `GetParamModulation` in `pkg/vst/scanner.go` supporting LFO 1/2, Envelope 1/2, Velocity, and Aftertouch modulation sources with bipolar depth scaling (-100% to +100%).
+- **MCP Modulation Protocol Tools**: Registered `superdaw_set_plugin_param_mod` and `superdaw_get_plugin_param_mod` MCP tools for programmatic AI modulation patching.
+- **Enhanced Master Console & Mobile Inspector Controls**: Integrated interactive modulation source dropdowns and bipolar depth sliders directly beneath each parameter card on the Master Console (`pkg/ux/dashboard/ui.go`) and mobile remote (`pkg/ux/dashboard/remote.go`).
+
 ## [v3.11.0] - 2026-11-08
 ### Added
 - **Universal Link Synchronization & Studio Clock**: Expanded `LinkBridge` in `pkg/engine/link.go` with synchronized tempo ramping, quantization phase alignment, beat calculation, and peer monitoring.

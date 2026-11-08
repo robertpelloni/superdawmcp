@@ -119,6 +119,7 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 							(p.parameters || []).forEach(param => {
 								const val = param.default_value !== undefined ? param.default_value : 0.5;
 								const unit = param.unit ? ' ' + param.unit : '';
+								const modSrc = param.modulation ? param.modulation.source || "None" : "None";
 								html += ' \
 									<div class="param-row"> \
 										<div class="param-header"> \
@@ -126,10 +127,29 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 											<span class="badge" id="val-' + param.index + '">' + val.toFixed(2) + unit + '</span> \
 										</div> \
 										<input type="range" class="fader" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + (param.step || 0.01) + '" value="' + val + '" oninput="syncMobileParam(\'' + name + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+										<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px;"> \
+											<span style="color: #94a3b8;">Mod: ' + modSrc + '</span> \
+											<div style="display: flex; gap: 4px;"> \
+												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="stepMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', -0.05, \'' + (param.unit || '') + '\')">-0.05</button> \
+												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="stepMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', 0.05, \'' + (param.unit || '') + '\')">+0.05</button> \
+											</div> \
+										</div> \
 									</div> \
 								';
 							});
 							document.getElementById('mobile-param-list').innerHTML = html;
+						}
+
+						function stepMobileParam(pluginName, paramName, index, delta, unit) {
+							const slider = document.querySelector('input.fader[oninput*="\'' + paramName + '\'"]');
+							if (!slider) return;
+							let newVal = parseFloat(slider.value) + delta;
+							const min = parseFloat(slider.min || 0);
+							const max = parseFloat(slider.max || 1);
+							if (newVal < min) newVal = min;
+							if (newVal > max) newVal = max;
+							slider.value = newVal;
+							syncMobileParam(pluginName, paramName, newVal, index, unit);
 						}
 
 						function syncMobileParam(pluginName, paramName, value, index, unit) {

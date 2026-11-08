@@ -329,6 +329,26 @@ func handleToolCall(name string, args map[string]interface{}, manager *daw.Conne
 		result = scanner.ListPlugins()
 	case "superdaw_get_plugin_params":
 		name, _ := args["plugin_name"].(string); result, _ = scanner.GetPluginMetadata(name)
+	case "superdaw_set_plugin_param_mod":
+		pName, _ := args["plugin_name"].(string)
+		idx, _ := args["param_index"].(float64)
+		src, _ := args["source"].(string)
+		depth, _ := args["depth"].(float64)
+		err := scanner.SetParamModulation(pName, int(idx), src, float32(depth))
+		if err != nil {
+			result = fmt.Sprintf("Error setting modulation: %v", err)
+		} else {
+			result = fmt.Sprintf("Assigned mod %s (depth %.2f) to param %d on %s", src, depth, int(idx), pName)
+		}
+	case "superdaw_get_plugin_param_mod":
+		pName, _ := args["plugin_name"].(string)
+		idx, _ := args["param_index"].(float64)
+		mod, err := scanner.GetParamModulation(pName, int(idx))
+		if err != nil {
+			result = fmt.Sprintf("Error getting modulation: %v", err)
+		} else {
+			result = mod
+		}
 	case "superdaw_set_plugin_parameter":
 		pName, _ := args["plugin_name"].(string); paramName, _ := args["parameter_name"].(string); val, _ := args["value"].(float64); trackID, _ := args["track_id"].(string)
 		meta, ok := scanner.GetPluginMetadata(pName)

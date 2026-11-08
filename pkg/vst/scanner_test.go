@@ -97,3 +97,45 @@ func TestScanner_DiscoveryAndDeepScan(t *testing.T) {
 		t.Errorf("Expected discovered symbols count > 0, got %d", updated.DeepMeta.SymbolCount)
 	}
 }
+
+func TestScanner_ParamModulationRouting(t *testing.T) {
+	cachePath := "/tmp/test_vst3_mod_cache.json"
+	os.Remove(cachePath)
+	defer os.Remove(cachePath)
+
+	scanner := NewScanner(cachePath)
+	err := scanner.ScanDirectories(nil)
+	if err != nil {
+		t.Fatalf("ScanDirectories failed: %v", err)
+	}
+
+	// Assign LFO 1 modulation to Filter Cutoff (index 5 on Surge XT)
+	err = scanner.SetParamModulation("Surge XT", 5, "LFO 1", 0.65)
+	if err != nil {
+		t.Fatalf("SetParamModulation failed: %v", err)
+	}
+
+	mod, err := scanner.GetParamModulation("Surge XT", 5)
+	if err != nil {
+		t.Fatalf("GetParamModulation failed: %v", err)
+	}
+	if mod.Source != "LFO 1" || mod.Depth != 0.65 {
+		t.Errorf("Expected LFO 1 with depth 0.65, got %+v", mod)
+	}
+
+	// Test boundary clamp on depth
+	err = scanner.SetParamModulation("Surge XT", 5, "Envelope 1", 2.5) // clamps to 1.0
+	if err != nil {
+		t.Fatalf("SetParamModulation failed: %v", err)
+	}
+	mod, _ = scanner.GetParamModulation("Surge XT", 5)
+	if mod.Depth != 1.0 {
+		t.Errorf("Expected depth clamp to 1.0, got %f", mod.Depth)
+	}
+
+	// Test invalid parameter index error
+	err = scanner.SetParamModulation("Surge XT", 999, "Velocity", 0.5)
+	if err == nil {
+		t.Errorf("Expected error for non-existent parameter index, got nil")
+	}
+}

@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.11.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.12.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -922,6 +922,9 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 					syncDivisionsHtml += '</select>';
 				}
 
+				const modSrc = param.modulation ? param.modulation.source || "None" : "None";
+				const modDepth = param.modulation ? param.modulation.depth || 0.0 : 0.0;
+
 				html += ' \
 					<div class="param-box"> \
 						<div class="param-header"> \
@@ -936,6 +939,24 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + stepVal + '" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
 							<input type="number" id="num-' + param.index + '" class="param-input" value="' + (Number.isInteger(stepVal) ? parseInt(val) : parseFloat(val).toFixed(2)) + '" step="' + stepVal + '" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
 							<span id="display-readout-' + param.index + '" style="font-size: 11px; color: var(--accent-blue); min-width: 50px; text-align: right;">' + formatReadout(param, val) + '</span> \
+						</div> \
+						<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding-top: 4px; border-top: 1px dashed rgba(255,255,255,0.06); font-size: 11px;"> \
+							<div style="display: flex; align-items: center; gap: 6px;"> \
+								<span style="color: var(--text-muted); font-size: 10px;" data-tooltip="Modulation routing source">Mod Src:</span> \
+								<select id="mod-src-' + param.index + '" class="select-box" style="padding: 2px 4px; font-size: 10px; width: 95px;" onchange="updateParamModulation(\'' + activePlugin + '\', ' + param.index + ')"> \
+									<option value="None"' + (modSrc === "None" ? " selected" : "") + '>None</option> \
+									<option value="LFO 1"' + (modSrc === "LFO 1" ? " selected" : "") + '>LFO 1</option> \
+									<option value="LFO 2"' + (modSrc === "LFO 2" ? " selected" : "") + '>LFO 2</option> \
+									<option value="Envelope 1"' + (modSrc === "Envelope 1" ? " selected" : "") + '>Envelope 1</option> \
+									<option value="Velocity"' + (modSrc === "Velocity" ? " selected" : "") + '>Velocity</option> \
+									<option value="Aftertouch"' + (modSrc === "Aftertouch" ? " selected" : "") + '>Aftertouch</option> \
+								</select> \
+							</div> \
+							<div style="display: flex; align-items: center; gap: 6px;"> \
+								<span style="color: var(--text-muted); font-size: 10px;" data-tooltip="Bipolar modulation depth (-100% to +100%)">Depth:</span> \
+								<input type="range" id="mod-depth-' + param.index + '" class="param-slider" style="width: 70px;" min="-1" max="1" step="0.05" value="' + modDepth + '" oninput="updateParamModulation(\'' + activePlugin + '\', ' + param.index + ')"> \
+								<span id="mod-depth-val-' + param.index + '" style="font-size: 10px; color: var(--secondary); min-width: 35px; text-align: right;">' + (modDepth > 0 ? "+" : "") + Math.round(modDepth*100) + '%</span> \
+							</div> \
 						</div> \
 					</div> \
 				';
@@ -966,6 +987,24 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			if (numInput) numInput.value = numVal.toFixed(2);
 			updateReadout(index, numVal, unit);
 			sendPluginParam(pluginName, paramName, numVal);
+		}
+
+		function updateParamModulation(plugin, idx) {
+			const srcSel = document.getElementById('mod-src-' + idx);
+			const depthSlider = document.getElementById('mod-depth-' + idx);
+			const depthVal = document.getElementById('mod-depth-val-' + idx);
+			if (!srcSel || !depthSlider) return;
+			const src = srcSel.value;
+			const depth = parseFloat(depthSlider.value);
+			if (depthVal) {
+				depthVal.innerText = (depth > 0 ? "+" : "") + Math.round(depth * 100) + "%";
+			}
+			callMcp('superdaw_set_plugin_param_mod', {
+				plugin_name: plugin,
+				param_index: idx,
+				source: src,
+				depth: depth
+			});
 		}
 
 		function syncParamInput(pluginName, paramName, value, index, unit) {

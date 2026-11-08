@@ -31,4 +31,5 @@
 - [x] Master Console & Mobile Remote Preset Snapshot Banks & Continuous Morphing (v3.9.0)
 - [x] Native Desktop System Tray Controller (`scripts/superdaw_tray.py`) (v3.10.0)
 - [x] Universal Link Synchronization & Studio Clock HUD (v3.11.0)
+- [x] VST3 Parameter Modulation & Automation Target Mapping Engine (v3.12.0)
 - [ ] Multi-User Studio Jam Rooms

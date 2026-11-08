@@ -335,6 +335,32 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_set_plugin_param_mod",
+				Description: "Assign modulation routing source (LFO 1/2, Envelope 1/2, Velocity) and bipolar depth (-1.0 to 1.0) to a VST3 plugin parameter",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+						"param_index": map[string]interface{}{"type": "integer"},
+						"source":      map[string]interface{}{"type": "string"},
+						"depth":       map[string]interface{}{"type": "number"},
+					},
+					"required": []string{"plugin_name", "param_index", "source", "depth"},
+				},
+			},
+			{
+				Name:        "superdaw_get_plugin_param_mod",
+				Description: "Get modulation routing source and depth assigned to a VST3 plugin parameter",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+						"param_index": map[string]interface{}{"type": "integer"},
+					},
+					"required": []string{"plugin_name", "param_index"},
+				},
+			},
+			{
 				Name:        "superdaw_fire_scene",
 				Description: "Trigger a session scene (Ableton/Bitwig).",
 				InputSchema: map[string]interface{}{

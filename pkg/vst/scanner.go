@@ -35,18 +35,25 @@ type PluginMetadata struct {
 	DeepMeta   DeepMetadata    `json:"deep_meta"`
 }
 
-// ParamMetadata represents an exposed controllable plugin parameter with functional classification and scaling curves
+// ParamModulation defines an assigned modulation routing source and bipolar depth for a parameter
+type ParamModulation struct {
+	Source string  `json:"source"` // "None", "LFO 1", "LFO 2", "Envelope 1", "Envelope 2", "Velocity", "Aftertouch"
+	Depth  float32 `json:"depth"`  // Bipolar depth from -1.0 (-100%) to +1.0 (+100%)
+}
+
+// ParamMetadata represents an exposed controllable plugin parameter with functional classification, scaling curves, and modulation routing
 type ParamMetadata struct {
-	Name         string   `json:"name"`
-	Index        int      `json:"index"`
-	DefaultValue float32  `json:"default_value"`
-	MinValue     float32  `json:"min_value"`
-	MaxValue     float32  `json:"max_value"`
-	Unit         string   `json:"unit,omitempty"`
-	Category     string   `json:"category,omitempty"`   // Tone, Envelope, Mod, FX, Master
-	Curve        string   `json:"curve,omitempty"`      // linear, logarithmic, decibel, toggle
-	Step         float32  `json:"step,omitempty"`       // step resolution (e.g. 0.01, 1.0, 0.1)
-	SyncDivisions []string `json:"sync_divisions,omitempty"` // tempo-synced divisions (1/4, 1/8d, 1/16, etc.)
+	Name          string          `json:"name"`
+	Index         int             `json:"index"`
+	DefaultValue  float32         `json:"default_value"`
+	MinValue      float32         `json:"min_value"`
+	MaxValue      float32         `json:"max_value"`
+	Unit          string          `json:"unit,omitempty"`
+	Category      string          `json:"category,omitempty"`   // Tone, Envelope, Mod, FX, Master
+	Curve         string          `json:"curve,omitempty"`      // linear, logarithmic, decibel, toggle, exponential, scurve
+	Step          float32         `json:"step,omitempty"`       // step resolution (e.g. 0.01, 1.0, 0.1)
+	SyncDivisions []string        `json:"sync_divisions,omitempty"` // tempo-synced divisions (1/4, 1/8d, 1/16, etc.)
+	Modulation    ParamModulation `json:"modulation,omitempty"` // Real-time modulation routing & depth
 }
 
 // FormatDisplayValue returns a formatted human-readable string representation of a parameter value
@@ -479,4 +486,59 @@ func (s *Scanner) GetPluginParameters(name string) ([]ParamMetadata, bool) {
 		return nil, false
 	}
 	return m.Parameters, true
+}
+
+// SetParamModulation assigns a modulation routing source and bipolar depth to a parameter
+func (s *Scanner) SetParamModulation(pluginName string, paramIndex int, source string, depth float32) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	found := false
+	for i := range plugin.Parameters {
+		if plugin.Parameters[i].Index == paramIndex {
+			if depth < -1.0 {
+				depth = -1.0
+			} else if depth > 1.0 {
+				depth = 1.0
+			}
+			plugin.Parameters[i].Modulation = ParamModulation{
+				Source: source,
+				Depth:  depth,
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
+}
+
+// GetParamModulation returns the modulation settings for a parameter
+func (s *Scanner) GetParamModulation(pluginName string, paramIndex int) (ParamModulation, error) {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return ParamModulation{}, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	for _, p := range plugin.Parameters {
+		if p.Index == paramIndex {
+			return p.Modulation, nil
+		}
+	}
+
+	return ParamModulation{}, fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
 }
