@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v3.15.0] - 2026-11-08
+### Added
+- **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Fully integrated snapshot bank slot buttons (Slot A, Slot B, Slot C, Slot D) with visual active indicators and a continuous A ⟷ B morph slider into the Master Console Sound Design section in `pkg/ux/dashboard/ui.go`.
+- **Dynamic Cross-Parameter State Morphing**: Implemented real-time parameter interpolation logic (`morphBankParameters`) crossfading between Slot A and Slot B with live percentage readout and DAW automation dispatch.
+
 ## [v3.14.0] - 2026-11-08
 ### Added
 - **Mobile Touch Remote Fine-Nudge Controls**: Added tactile -0.05 and +0.05 step nudging buttons directly inside `mobile/src/screens/PluginScreen.tsx` for precise touch modulation without slider jumping.

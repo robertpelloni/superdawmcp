@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.14.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.15.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -527,6 +527,22 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 					<button class="btn btn-subtle" onclick="triggerMacroPreset('warmth')" data-tooltip="Increase saturation/drive and slight low boost">🔥 Warmth</button>
 					<button class="btn btn-subtle" onclick="triggerMacroPreset('space')" data-tooltip="Boost reverb wet mix and pre-delay">🌌 Space Out</button>
 					<button class="btn btn-subtle" onclick="triggerMacroPreset('punch')" data-tooltip="Fast attack, punchy decay and envelope depth">🥊 Snappy / Punch</button>
+				</div>
+
+				<!-- Continuous Preset Morphing & Snapshot Bank -->
+				<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color); font-size: 11px;">
+					<div style="display: flex; align-items: center; gap: 6px;">
+						<span style="color: var(--text-muted); font-weight: 700;">BANKS:</span>
+						<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" onclick="storeSnapshotBank('A')" data-tooltip="Save current parameter state to Snapshot Bank A">Slot A</button>
+						<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" onclick="storeSnapshotBank('B')" data-tooltip="Save current parameter state to Snapshot Bank B">Slot B</button>
+						<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" onclick="storeSnapshotBank('C')" data-tooltip="Save current parameter state to Snapshot Bank C">Slot C</button>
+						<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" onclick="storeSnapshotBank('D')" data-tooltip="Save current parameter state to Snapshot Bank D">Slot D</button>
+					</div>
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<span style="color: var(--text-muted); font-size: 10px;" data-tooltip="Continuous parameter interpolation between Bank A and Bank B">A ⟷ B Morph:</span>
+						<input type="range" id="morph-slider" class="param-slider" style="width: 100px;" min="0" max="1" step="0.01" value="0" oninput="morphBankParameters(this.value)">
+						<span id="morph-val" style="font-size: 10px; color: var(--primary); font-family: var(--font-mono); min-width: 30px;">0%</span>
+					</div>
 				</div>
 			</div>
 
@@ -695,6 +711,50 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		let abState = "A";
 		let snapshotA = {};
 		let snapshotB = {};
+		let snapshotBanks = { A: {}, B: {}, C: {}, D: {} };
+
+		function storeSnapshotBank(slot) {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			snapshotBanks[slot] = {};
+			(p.parameters || []).forEach(param => {
+				const slider = document.getElementById('slider-' + param.index);
+				if (slider) snapshotBanks[slot][param.name] = parseFloat(slider.value);
+			});
+			const btn = event?.target;
+			if (btn) {
+				const orig = btn.innerText;
+				btn.innerText = 'Saved!';
+				btn.style.color = 'var(--primary)';
+				setTimeout(() => { btn.innerText = orig; btn.style.color = ''; }, 1000);
+			}
+		}
+
+		function morphBankParameters(alpha) {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			const val = parseFloat(alpha);
+			const label = document.getElementById('morph-val');
+			if (label) label.innerText = Math.round(val * 100) + '%';
+
+			const bankA = snapshotBanks['A'];
+			const bankB = snapshotBanks['B'];
+			if (Object.keys(bankA).length === 0 || Object.keys(bankB).length === 0) return;
+
+			(p.parameters || []).forEach(param => {
+				const a = bankA[param.name];
+				const b = bankB[param.name];
+				if (a !== undefined && b !== undefined) {
+					const morphed = a + (b - a) * val;
+					const slider = document.getElementById('slider-' + param.index);
+					const numInput = document.getElementById('num-' + param.index);
+					if (slider) slider.value = morphed;
+					if (numInput) numInput.value = morphed.toFixed(2);
+					updateReadout(param.index, morphed, param.unit || '');
+					sendPluginParam(activePlugin, param.name, morphed);
+				}
+			});
+		}
 
 		const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 		const ws = new WebSocket(wsProtocol + '//' + window.location.host + '/ws');
