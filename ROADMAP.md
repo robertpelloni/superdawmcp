@@ -1,6 +1,7 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.9.0 - Active)
+## Current Milestone (v3.10.0 - Active)
+- [x] **Desktop System Tray Controller (`scripts/superdaw_tray.py`)**: Platform status monitor, port inspection (HTTP 8081, OSC 12001, TCP 12002), and graceful termination integration via `/api/quit`.
 - [x] **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Preset bank slots (A, B, C, D) and continuous parameter morph slider in Master Console UI.
 - [x] **Mobile Touch Remote VST3 & Preset Morphing Integration**: Mobile remote and React Native `PluginScreen` with snapshot slots, tactile +/- step buttons, and continuous morph slider.
 - [x] **Bidirectional Mathematical Curve Calibration**: High-precision `NormalizedToPhysical` and `PhysicalToNormalized` mapping for Logarithmic, Decibel ($10^{\text{dB}/20}$), S-Curve, and Linear responses.
@@ -11,7 +12,7 @@
 - [x] **Desktop / Process Governance**: Full server shutdown & quit endpoint (`/api/quit`) with responsive controls for system tray & dashboard management.
 - [x] **DAW Parity Hardening**: Unified interface implementation fixes across Logic Pro, Pro Tools, Ableton Live, Bitwig, FL Studio, REAPER, Ardour, and Cubase.
 
-## Upcoming Milestones (v3.10.0 - Future)
+## Upcoming Milestones (v3.11.0 - Future)
 - [ ] **Hardware System Tray Daemon**: Native desktop systray icon (macOS menu bar / Windows system tray / Linux AppIndicator) with background toggle and process manager.
 - [ ] **Native CGO VST3 Deep-Scanning Bridge**: Direct `libvst3` dynamic loading (`dlopen`/`LoadLibrary`) for direct parameter queries without host DAW bridging.
 - [ ] **Multi-User Realtime Collaborative Studios**: Operational WebRTC / WebSocket room synchronization for distributed jam sessions and shared parameter locking.

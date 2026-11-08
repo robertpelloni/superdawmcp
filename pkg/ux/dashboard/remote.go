@@ -8,7 +8,7 @@ import (
 // RegisterMobileRemote sets up a touch-friendly remote control interface on /remote
 func RegisterMobileRemote(mux *http.ServeMux) {
 	mux.HandleFunc("/remote", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `
+		fmt.Fprint(w, `
 			<!DOCTYPE html>
 			<html lang="en">
 				<head>
@@ -24,16 +24,16 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 						.card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 						.card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 12px; }
 						.transport-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-						.btn { width: 100%%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; text-align: center; }
+						.btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; text-align: center; }
 						.play { background: #10b981; color: #000; }
 						.stop { background: #ef4444; color: #fff; }
 						.macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 						.btn-macro { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 12px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-						.select-box { width: 100%%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #f8fafc; border-radius: 6px; font-size: 14px; margin-bottom: 12px; outline: none; }
+						.select-box { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #f8fafc; border-radius: 6px; font-size: 14px; margin-bottom: 12px; outline: none; }
 						.param-row { background: rgba(0,0,0,0.25); border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
 						.param-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-						.fader { width: 100%%; height: 36px; -webkit-appearance: none; background: #0f172a; border-radius: 18px; outline: none; }
-						.fader::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; background: #38bdf8; border-radius: 50%%; cursor: pointer; }
+						.fader { width: 100%; height: 36px; -webkit-appearance: none; background: #0f172a; border-radius: 18px; outline: none; }
+						.fader::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; background: #38bdf8; border-radius: 50%; cursor: pointer; }
 						.badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #334155; color: #94a3b8; }
 					</style>
 				</head>

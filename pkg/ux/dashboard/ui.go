@@ -6,7 +6,7 @@ import (
 )
 
 // renderUnifiedDashboard outputs the consolidated, single responsive dashboard page.
-// Escape %% properly for fmt.Fprintf to avoid fmt template substitution errors.
+// Unescaped literal % for fmt.Fprint for fmt.Fprintf to avoid fmt template substitution errors.
 func renderUnifiedDashboard(w http.ResponseWriter) {
 	fmt.Fprint(w, `<!DOCTYPE html>
 <html lang="en">
@@ -45,9 +45,9 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		[data-tooltip]::after {
 			content: attr(data-tooltip);
 			position: absolute;
-			bottom: 125%%;
-			left: 50%%;
-			transform: translateX(-50%%);
+			bottom: 125%;
+			left: 50%;
+			transform: translateX(-50%);
 			background: #000;
 			color: #fff;
 			padding: 6px 10px;
@@ -286,7 +286,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			-webkit-appearance: none;
 			width: 18px;
 			height: 18px;
-			border-radius: 50%%;
+			border-radius: 50%;
 			background: var(--primary);
 			cursor: pointer;
 			box-shadow: 0 0 6px rgba(0,255,136,0.6);
@@ -334,7 +334,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 
 		/* Timeline Arrangement */
 		#timeline {
-			width: 100%%;
+			width: 100%;
 			min-height: 160px;
 			background: #08090a;
 			border: 1px solid var(--border);
@@ -396,7 +396,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 
 		/* Blueprint graph */
 		#blueprint {
-			width: 100%%;
+			width: 100%;
 			min-height: 110px;
 			background: #08090a;
 			border: 1px dashed var(--border);
@@ -734,7 +734,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 					jobHtml += ' \
 						<div class="daw-row"> \
 							<span style="font-size: 12px; font-weight: 600;">' + j.prompt + '</span> \
-							<span class="badge">' + j.status + ' (' + Math.round((j.progress || 1)*100) + '%%)</span> \
+							<span class="badge">' + j.status + ' (' + Math.round((j.progress || 1)*100) + '%)</span> \
 						</div> \
 					';
 				});
@@ -883,7 +883,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			} else if (param.unit === "dB") {
 				return (num > 0 ? "+" : "") + num.toFixed(1) + " dB";
 			} else if (param.unit === "%") {
-				return (num * 100).toFixed(0) + "%%";
+				return (num * 100).toFixed(0) + "%";
 			} else if (param.unit === "ms") {
 				return num >= 1000 ? (num/1000).toFixed(2) + " s" : num.toFixed(1) + " ms";
 			} else if (param.unit === "Shape" || param.unit === "Wave") {

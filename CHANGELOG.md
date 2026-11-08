@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v3.10.0] - 2026-11-08
+### Added
+- **Desktop System Tray Controller (`scripts/superdaw_tray.py`)**: Implemented status inspection, port monitoring (HTTP 8081, OSC 12001, TCP 12002), and graceful shutdown integration via `/api/quit`.
+- **Studio Health Diagnostic Fix (`scripts/studio_health.py`)**: Fixed `get_studio_status` integration to properly report active DAW connections and transport statuses.
+
 ## [v3.9.0] - 2026-11-07
 ### Added
 - **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Added snapshot slot buttons (Slot A, Slot B, Slot C, Slot D) and continuous parameter interpolation morph slider in `pkg/ux/dashboard/ui.go`.
