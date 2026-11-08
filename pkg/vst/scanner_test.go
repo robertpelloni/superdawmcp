@@ -207,3 +207,27 @@ func TestParamMetadata_CurveConversionsAndSnapping(t *testing.T) {
 		t.Errorf("Expected -1.3 snapped to -1.0, got %f", snappedNeg)
 	}
 }
+
+func TestParamMetadata_ClampingAndReset(t *testing.T) {
+	p := ParamMetadata{
+		Name:         "Filter Cutoff",
+		DefaultValue: 0.55,
+		MinValue:     0.0,
+		MaxValue:     1.0,
+		IsBipolar:    false,
+		SmoothingMs:  8.0,
+		CanAutomate:  true,
+	}
+
+	if clamped := p.ClampValue(1.5); clamped != 1.0 {
+		t.Errorf("Expected 1.5 clamped to 1.0, got %f", clamped)
+	}
+
+	if clamped := p.ClampValue(-0.5); clamped != 0.0 {
+		t.Errorf("Expected -0.5 clamped to 0.0, got %f", clamped)
+	}
+
+	if def := p.ResetToDefault(); def != 0.55 {
+		t.Errorf("Expected default value 0.55, got %f", def)
+	}
+}

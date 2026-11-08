@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v3.16.0] - 2026-11-08
+### Added
+- **Fine-Grained Parameter Metadata & Polarity Badging**: Added `IsBipolar`, `SmoothingMs`, `CanAutomate`, and `IsReadOnly` fields to `ParamMetadata` with helper methods `ClampValue` and `ResetToDefault` in `pkg/vst/scanner.go`.
+- **Plugin Inspector Double-Click & Single Parameter Reset**: Added individual parameter reset buttons (`↺`) and double-click reset directly on parameter faders in Master Console (`pkg/ux/dashboard/ui.go`) and mobile remote (`pkg/ux/dashboard/remote.go`).
+- **Visual Polarity & Slew Rate Indicators**: Added visual `± Bipolar` / `+ Uni` and `~Smoothing` pills on each parameter card in the Master Console.
+
 ## [v3.15.0] - 2026-11-08
 ### Added
 - **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Fully integrated snapshot bank slot buttons (Slot A, Slot B, Slot C, Slot D) with visual active indicators and a continuous A ⟷ B morph slider into the Master Console Sound Design section in `pkg/ux/dashboard/ui.go`.

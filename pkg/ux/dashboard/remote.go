@@ -132,12 +132,19 @@ func RegisterMobileRemote(mux *http.ServeMux) {
 											<div style="display: flex; gap: 4px;"> \
 												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="stepMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', -0.05, \'' + (param.unit || '') + '\')">-0.05</button> \
 												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="stepMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', 0.05, \'' + (param.unit || '') + '\')">+0.05</button> \
+												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="resetMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', ' + val + ', \'' + (param.unit || '') + '\')">↺ Reset</button> \
 											</div> \
 										</div> \
 									</div> \
 								';
 							});
 							document.getElementById('mobile-param-list').innerHTML = html;
+						}
+
+						function resetMobileParam(pluginName, paramName, index, defVal, unit) {
+							const slider = document.querySelector('input.fader[oninput*="\'' + paramName + '\'"]');
+							if (slider) slider.value = defVal;
+							syncMobileParam(pluginName, paramName, defVal, index, unit);
 						}
 
 						function stepMobileParam(pluginName, paramName, index, delta, unit) {

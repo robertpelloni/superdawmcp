@@ -35,4 +35,5 @@
 - [x] Bidirectional Parameter Curve Conversion & Snapping (v3.13.0)
 - [x] Mobile Touch Remote Fine-Nudge Stepping (v3.14.0)
 - [x] Master Console Snapshot Bank Slots & Continuous Parameter Morphing (v3.15.0)
+- [x] VST3 Parameter Polarity, Smoothing, & Inspector Reset Controls (v3.16.0)
 - [ ] Multi-User Studio Jam Rooms
