@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v3.14.0] - 2026-11-08
+### Added
+- **Mobile Touch Remote Fine-Nudge Controls**: Added tactile -0.05 and +0.05 step nudging buttons directly inside `mobile/src/screens/PluginScreen.tsx` for precise touch modulation without slider jumping.
+- **Synchronized Mobile & Web Remote Stepping**: Unified stepping behavior across React Native and Web `/remote` interfaces.
+
 ## [v3.13.0] - 2026-11-08
 ### Added
 - **Bidirectional Parameter Curve Conversion & Snapping**: Implemented `NormalizedToPhysical`, `PhysicalToNormalized`, and `SnapToStep` methods on `ParamMetadata` in `pkg/vst/scanner.go` supporting Logarithmic, Decibel, Sigmoidal S-Curve, and Stepped snapping.

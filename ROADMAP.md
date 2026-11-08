@@ -1,6 +1,7 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.13.0 - Active)
+## Current Milestone (v3.14.0 - Active)
+- [x] **Mobile Touch Remote Fine-Nudge Stepping**: Added tactile -0.05 and +0.05 parameter adjustment buttons in `mobile/src/screens/PluginScreen.tsx`.
 - [x] **Bidirectional Parameter Curve Conversion & Snapping**: Precision normalized-to-physical and physical-to-normalized conversion across logarithmic, decibel, S-curve, and stepped snapping.
 - [x] **Curve Visualization & Badging**: Dedicated mathematical curve icons in Master Console parameter cards.
 - [x] **VST3 Parameter Modulation Routing & Automation Engine**: Bipolar depth scaling (-1.0 to +1.0) and modulation sources (LFO 1/2, Envelope 1/2, Velocity, Aftertouch).
@@ -20,7 +21,7 @@
 - [x] **Desktop / Process Governance**: Full server shutdown & quit endpoint (`/api/quit`) with responsive controls for system tray & dashboard management.
 - [x] **DAW Parity Hardening**: Unified interface implementation fixes across Logic Pro, Pro Tools, Ableton Live, Bitwig, FL Studio, REAPER, Ardour, and Cubase.
 
-## Upcoming Milestones (v3.14.0 - Future)
+## Upcoming Milestones (v3.15.0 - Future)
 - [ ] **Native CGO VST3 Deep-Scanning Bridge**: Direct `libvst3` dynamic loading (`dlopen`/`LoadLibrary`) for direct parameter queries without host DAW bridging.
 - [ ] **Multi-User Realtime Collaborative Studios**: Operational WebRTC / WebSocket room synchronization for distributed jam sessions and shared parameter locking.
 - [ ] **Expanded Mobile Remote**: Touch-screen clip launching grid and mixer fader banks in React Native.

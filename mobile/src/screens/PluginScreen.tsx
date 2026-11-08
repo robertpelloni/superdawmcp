@@ -108,9 +108,23 @@ export default function PluginScreen(): React.JSX.Element {
 						<View key={param.name} style={styles.paramBox}>
 							<View style={styles.paramHeader}>
 								<Text style={styles.paramName}>{param.name}</Text>
-								<Text style={styles.paramVal}>
-									{val.toFixed(2)} {param.unit}
-								</Text>
+								<View style={styles.nudgeRow}>
+									<TouchableOpacity
+										style={styles.nudgeBtn}
+										onPress={() => handleParamChange(param.name, Math.max(param.minValue, val - 0.05))}
+									>
+										<Text style={styles.nudgeBtnText}>-0.05</Text>
+									</TouchableOpacity>
+									<TouchableOpacity
+										style={styles.nudgeBtn}
+										onPress={() => handleParamChange(param.name, Math.min(param.maxValue, val + 0.05))}
+									>
+										<Text style={styles.nudgeBtnText}>+0.05</Text>
+									</TouchableOpacity>
+									<Text style={styles.paramVal}>
+										{val.toFixed(2)} {param.unit}
+									</Text>
+								</View>
 							</View>
 							<Slider
 								style={styles.slider}
@@ -227,5 +241,23 @@ const styles = StyleSheet.create({
 	slider: {
 		width: "100%",
 		height: 36,
+	},
+	nudgeRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+	},
+	nudgeBtn: {
+		backgroundColor: "#0f172a",
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+		borderRadius: 4,
+		borderWidth: 1,
+		borderColor: "#475569",
+	},
+	nudgeBtnText: {
+		color: "#cbd5e1",
+		fontSize: 10,
+		fontWeight: "600",
 	},
 });
