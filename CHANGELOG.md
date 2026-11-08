@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v3.17.0] - 2026-11-08
+### Added
+- **Mobile Touch Remote Snapshot Banks & Continuous Morphing**: Fully integrated snapshot banks (Slot A, Slot B, Slot C, Slot D) and real-time A ⟷ B morph slider (0-100%) in `mobile/src/screens/PluginScreen.tsx`.
+- **Mobile Precision Parameter Reset**: Added tactile individual parameter reset buttons (`↺`) to `mobile/src/screens/PluginScreen.tsx` restoring calibrated defaults.
+
 ## [v3.16.0] - 2026-11-08
 ### Added
 - **Fine-Grained Parameter Metadata & Polarity Badging**: Added `IsBipolar`, `SmoothingMs`, `CanAutomate`, and `IsReadOnly` fields to `ParamMetadata` with helper methods `ClampValue` and `ResetToDefault` in `pkg/vst/scanner.go`.

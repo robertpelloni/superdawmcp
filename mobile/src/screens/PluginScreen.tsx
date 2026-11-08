@@ -12,15 +12,17 @@ interface PluginParam {
 	maxValue: number;
 	unit: string;
 	category: string;
+	isBipolar?: boolean;
+	smoothingMs?: number;
 }
 
 const DEFAULT_PARAMS: PluginParam[] = [
-	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone" },
-	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone" },
-	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone" },
-	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env" },
-	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env" },
-	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX" },
+	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0 },
+	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0 },
+	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone", smoothingMs: 12.0 },
+	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0 },
+	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0 },
+	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0 },
 ];
 
 export default function PluginScreen(): React.JSX.Element {
@@ -34,6 +36,13 @@ export default function PluginScreen(): React.JSX.Element {
 		Release: 0.30,
 		"Reverb Mix": 0.35,
 	});
+	const [snapshotBanks, setSnapshotBanks] = useState<Record<string, Record<string, number>>>({
+		A: { "Filter Cutoff": 0.55, "Filter Resonance": 0.25, Drive: 0.20, Attack: 0.05, Release: 0.30, "Reverb Mix": 0.35 },
+		B: { "Filter Cutoff": 0.85, "Filter Resonance": 0.60, Drive: 0.50, Attack: 0.01, Release: 0.60, "Reverb Mix": 0.70 },
+		C: {},
+		D: {},
+	});
+	const [morphVal, setMorphVal] = useState(0.0);
 
 	const handleParamChange = useCallback(
 		(name: string, val: number) => {
@@ -43,6 +52,39 @@ export default function PluginScreen(): React.JSX.Element {
 			}
 		},
 		[activePlugin, setPluginParam],
+	);
+
+	const handleResetParam = useCallback(
+		(name: string, defVal: number) => {
+			handleParamChange(name, defVal);
+		},
+		[handleParamChange],
+	);
+
+	const saveSnapshot = useCallback(
+		(slot: string) => {
+			setSnapshotBanks((prev) => ({ ...prev, [slot]: { ...paramValues } }));
+		},
+		[paramValues],
+	);
+
+	const handleMorph = useCallback(
+		(alpha: number) => {
+			setMorphVal(alpha);
+			const bankA = snapshotBanks.A;
+			const bankB = snapshotBanks.B;
+			if (!bankA || !bankB || Object.keys(bankA).length === 0 || Object.keys(bankB).length === 0) return;
+
+			DEFAULT_PARAMS.forEach((param) => {
+				const a = bankA[param.name];
+				const b = bankB[param.name];
+				if (a !== undefined && b !== undefined) {
+					const morphed = a + (b - a) * alpha;
+					handleParamChange(param.name, morphed);
+				}
+			});
+		},
+		[snapshotBanks, handleParamChange],
 	);
 
 	const triggerMacro = useCallback(
@@ -98,6 +140,35 @@ export default function PluginScreen(): React.JSX.Element {
 						<Text style={styles.macroBtnText}>🥊 Punch</Text>
 					</TouchableOpacity>
 				</View>
+
+				{/* Snapshot Banks & Continuous Morphing */}
+				<View style={styles.morphHeader}>
+					<Text style={styles.morphLabel}>BANKS: </Text>
+					{["A", "B", "C", "D"].map((slot) => (
+						<TouchableOpacity
+							key={slot}
+							style={styles.bankBtn}
+							onPress={() => saveSnapshot(slot)}
+						>
+							<Text style={styles.bankBtnText}>Slot {slot}</Text>
+						</TouchableOpacity>
+					))}
+				</View>
+				<View style={styles.morphSliderRow}>
+					<Text style={styles.morphLabel}>A ⟷ B Morph ({Math.round(morphVal * 100)}%)</Text>
+					<Slider
+						style={styles.morphSlider}
+						minimumValue={0.0}
+						maximumValue={1.0}
+						step={0.01}
+						value={morphVal}
+						onValueChange={handleMorph}
+						disabled={!connected}
+						minimumTrackTintColor="#10b981"
+						maximumTrackTintColor="#334155"
+						thumbTintColor="#10b981"
+					/>
+				</View>
 			</View>
 
 			<View style={styles.section}>
@@ -120,6 +191,12 @@ export default function PluginScreen(): React.JSX.Element {
 										onPress={() => handleParamChange(param.name, Math.min(param.maxValue, val + 0.05))}
 									>
 										<Text style={styles.nudgeBtnText}>+0.05</Text>
+									</TouchableOpacity>
+									<TouchableOpacity
+										style={styles.resetBtn}
+										onPress={() => handleResetParam(param.name, param.defaultValue)}
+									>
+										<Text style={styles.resetBtnText}>↺</Text>
 									</TouchableOpacity>
 									<Text style={styles.paramVal}>
 										{val.toFixed(2)} {param.unit}
@@ -259,5 +336,52 @@ const styles = StyleSheet.create({
 		color: "#cbd5e1",
 		fontSize: 10,
 		fontWeight: "600",
+	},
+	resetBtn: {
+		backgroundColor: "#0f172a",
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+		borderRadius: 4,
+		borderWidth: 1,
+		borderColor: "#475569",
+	},
+	resetBtnText: {
+		color: "#38bdf8",
+		fontSize: 11,
+		fontWeight: "700",
+	},
+	morphHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		marginTop: 12,
+		paddingTop: 8,
+		borderTopWidth: 1,
+		borderTopColor: "#334155",
+	},
+	morphLabel: {
+		color: "#94a3b8",
+		fontSize: 11,
+		fontWeight: "700",
+	},
+	bankBtn: {
+		backgroundColor: "#0f172a",
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		borderRadius: 4,
+		borderWidth: 1,
+		borderColor: "#475569",
+	},
+	bankBtnText: {
+		color: "#cbd5e1",
+		fontSize: 10,
+		fontWeight: "600",
+	},
+	morphSliderRow: {
+		marginTop: 8,
+	},
+	morphSlider: {
+		width: "100%",
+		height: 30,
 	},
 });
