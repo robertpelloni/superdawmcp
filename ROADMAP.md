@@ -1,6 +1,7 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.17.0 - Active)
+## Current Milestone (v3.18.0 - Active)
+- [x] **Visual Parameter Transfer Curve Sparklines**: Added `GenerateCurvePoints` to `ParamMetadata` in `pkg/vst/scanner.go` with real-time `<canvas>` sparkline curve graphs across parameter cards in `pkg/ux/dashboard/ui.go`.
 - [x] **Mobile Touch Remote Snapshot Banks & Continuous Morphing**: Fully integrated snapshot banks (Slot A, Slot B, Slot C, Slot D) and real-time A ⟷ B morph slider (0-100%) in `mobile/src/screens/PluginScreen.tsx`.
 - [x] **Mobile Precision Parameter Reset**: Added tactile individual parameter reset buttons (`↺`) to `mobile/src/screens/PluginScreen.tsx` restoring calibrated defaults.
 - [x] **VST3 Parameter Polarity, Slew Rate & Precision Default Reset**: Added `IsBipolar`, `SmoothingMs`, `CanAutomate`, and `IsReadOnly` metadata flags with `ClampValue` and `ResetToDefault` methods in `pkg/vst/scanner.go`.
@@ -26,7 +27,7 @@
 - [x] **Desktop / Process Governance**: Full server shutdown & quit endpoint (`/api/quit`) with responsive controls for system tray & dashboard management.
 - [x] **DAW Parity Hardening**: Unified interface implementation fixes across Logic Pro, Pro Tools, Ableton Live, Bitwig, FL Studio, REAPER, Ardour, and Cubase.
 
-## Upcoming Milestones (v3.18.0 - Future)
+## Upcoming Milestones (v3.19.0 - Future)
 - [ ] **Native CGO VST3 Deep-Scanning Bridge**: Direct `libvst3` dynamic loading (`dlopen`/`LoadLibrary`) for direct parameter queries without host DAW bridging.
 - [ ] **Multi-User Realtime Collaborative Studios**: Operational WebRTC / WebSocket room synchronization for distributed jam sessions and shared parameter locking.
 - [ ] **Expanded Mobile Remote**: Touch-screen clip launching grid and mixer fader banks in React Native.

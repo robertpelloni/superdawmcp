@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.16.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.18.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -1008,6 +1008,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + stepVal + '" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')" ondblclick="resetSingleParam(' + param.index + ')" title="Double click to reset to default"> \
 							<input type="number" id="num-' + param.index + '" class="param-input" value="' + (Number.isInteger(stepVal) ? parseInt(val) : parseFloat(val).toFixed(2)) + '" step="' + stepVal + '" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
 							<span id="display-readout-' + param.index + '" style="font-size: 11px; color: var(--accent-blue); min-width: 50px; text-align: right;">' + formatReadout(param, val) + '</span> \
+							<canvas id="curve-sparkline-' + param.index + '" width="28" height="18" style="background: #0f172a; border-radius: 3px; border: 1px solid var(--border);" title="Transfer response curve"></canvas> \
 						</div> \
 						<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding-top: 4px; border-top: 1px dashed rgba(255,255,255,0.06); font-size: 11px;"> \
 							<div style="display: flex; align-items: center; gap: 6px;"> \
@@ -1031,6 +1032,34 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				';
 			});
 			document.getElementById('plugin-params').innerHTML = html || '<p style="color: var(--text-muted); padding: 15px;">No matching parameters.</p>';
+			// Render curve sparklines
+			(p.parameters || []).forEach(param => {
+				const canvas = document.getElementById('curve-sparkline-' + param.index);
+				if (!canvas) return;
+				const ctx = canvas.getContext('2d');
+				if (!ctx) return;
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.strokeStyle = '#00ff88';
+				ctx.lineWidth = 1.5;
+				ctx.beginPath();
+				const pts = 14;
+				for (let i = 0; i < pts; i++) {
+					const norm = i / (pts - 1);
+					let yNorm = norm;
+					if (param.curve === 'logarithmic') {
+						yNorm = Math.pow(norm, 2.5);
+					} else if (param.curve === 'decibel') {
+						yNorm = Math.pow(norm, 1.8);
+					} else if (param.curve === 'scurve') {
+						yNorm = norm * norm * (3 - 2 * norm);
+					}
+					const x = norm * (canvas.width - 4) + 2;
+					const y = (1.0 - yNorm) * (canvas.height - 4) + 2;
+					if (i === 0) ctx.moveTo(x, y);
+					else ctx.lineTo(x, y);
+				}
+				ctx.stroke();
+			});
 		}
 
 		function formatReadout(param, val) {

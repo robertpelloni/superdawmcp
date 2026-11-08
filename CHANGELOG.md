@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [v3.18.0] - 2026-11-08
+### Added
+- **Visual Parameter Transfer Curve Sparklines**: Added `GenerateCurvePoints` to `ParamMetadata` in `pkg/vst/scanner.go` computing normalized response coordinates across curves (logarithmic, decibel, S-curve, linear).
+- **Master Console Mini Curve Canvases**: Added dynamic response curve sparklines on each parameter card in `pkg/ux/dashboard/ui.go` providing immediate visual feedback of parameter response characteristics.
+
 ## [v3.17.0] - 2026-11-08
 ### Added
 - **Mobile Touch Remote Snapshot Banks & Continuous Morphing**: Fully integrated snapshot banks (Slot A, Slot B, Slot C, Slot D) and real-time A ⟷ B morph slider (0-100%) in `mobile/src/screens/PluginScreen.tsx`.

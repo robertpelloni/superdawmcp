@@ -76,6 +76,34 @@ func (p *ParamMetadata) ResetToDefault() float32 {
 	return p.ClampValue(p.DefaultValue)
 }
 
+// GenerateCurvePoints samples the parameter transfer curve at regular normalized intervals
+func (p *ParamMetadata) GenerateCurvePoints(points int) []float64 {
+	if points <= 1 {
+		points = 16
+	}
+	result := make([]float64, points)
+	minVal := float64(p.MinValue)
+	maxVal := float64(p.MaxValue)
+	span := maxVal - minVal
+	if span <= 0 {
+		span = 1.0
+	}
+
+	for i := 0; i < points; i++ {
+		norm := float32(i) / float32(points-1)
+		phys := p.NormalizedToPhysical(norm)
+		// Scale to 0.0 - 1.0 for normalized sparkline rendering
+		rel := (phys - minVal) / span
+		if rel < 0.0 {
+			rel = 0.0
+		} else if rel > 1.0 {
+			rel = 1.0
+		}
+		result[i] = math.Round(rel*1000.0) / 1000.0
+	}
+	return result
+}
+
 // NormalizedToPhysical converts a 0.0-1.0 normalized DAW fader float into physical unit value
 func (p *ParamMetadata) NormalizedToPhysical(norm float32) float64 {
 	if norm < 0.0 {

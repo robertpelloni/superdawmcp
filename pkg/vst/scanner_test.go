@@ -231,3 +231,29 @@ func TestParamMetadata_ClampingAndReset(t *testing.T) {
 		t.Errorf("Expected default value 0.55, got %f", def)
 	}
 }
+
+func TestParamMetadata_GenerateCurvePoints(t *testing.T) {
+	p := ParamMetadata{
+		Name:     "Cutoff",
+		MinValue: 20.0,
+		MaxValue: 20000.0,
+		Curve:    "logarithmic",
+	}
+
+	pts := p.GenerateCurvePoints(10)
+	if len(pts) != 10 {
+		t.Fatalf("Expected 10 curve points, got %d", len(pts))
+	}
+	if pts[0] != 0.0 {
+		t.Errorf("Expected first normalized curve point to be 0.0, got %f", pts[0])
+	}
+	if pts[9] != 1.0 {
+		t.Errorf("Expected last normalized curve point to be 1.0, got %f", pts[9])
+	}
+	// Check strictly monotonic increasing for logarithmic frequency response
+	for i := 1; i < len(pts); i++ {
+		if pts[i] <= pts[i-1] {
+			t.Errorf("Expected strictly increasing points at %d: %f <= %f", i, pts[i], pts[i-1])
+		}
+	}
+}
