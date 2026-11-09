@@ -336,3 +336,67 @@ func TestScanner_ParamLockAndBatchUpdate(t *testing.T) {
 		t.Errorf("Expected param 0 to be applied after unlocking, got applied=%+v", applied2)
 	}
 }
+
+func TestScanner_ParamFavoritesAndTagging(t *testing.T) {
+	cachePath := "/tmp/test_vst3_fav_cache.json"
+	os.Remove(cachePath)
+	defer os.Remove(cachePath)
+
+	scanner := NewScanner(cachePath)
+	err := scanner.ScanDirectories(nil)
+	if err != nil {
+		t.Fatalf("ScanDirectories failed: %v", err)
+	}
+
+	pluginName := "Surge XT"
+	// Check initial favorites
+	favs, err := scanner.GetFavoriteParams(pluginName)
+	if err != nil {
+		t.Fatalf("GetFavoriteParams failed: %v", err)
+	}
+	if len(favs) == 0 {
+		t.Fatalf("Expected default favorite parameters, got 0")
+	}
+
+	// Toggle parameter 0 (Master Volume) from favorite (true) to false
+	err = scanner.SetParamFavorite(pluginName, 0, false)
+	if err != nil {
+		t.Fatalf("SetParamFavorite to false failed: %v", err)
+	}
+
+	meta, ok := scanner.GetPluginMetadata(pluginName)
+	if !ok {
+		t.Fatalf("Failed to retrieve metadata for %s", pluginName)
+	}
+	if meta.Parameters[0].IsFavorite {
+		t.Errorf("Expected parameter 0 IsFavorite to be false, got true")
+	}
+
+	// Add custom semantic tag
+	err = scanner.AddParamTag(pluginName, 0, "LeadSynth")
+	if err != nil {
+		t.Fatalf("AddParamTag failed: %v", err)
+	}
+
+	meta, _ = scanner.GetPluginMetadata(pluginName)
+	foundTag := false
+	for _, tg := range meta.Parameters[0].Tags {
+		if tg == "LeadSynth" {
+			foundTag = true
+			break
+		}
+	}
+	if !foundTag {
+		t.Errorf("Expected 'LeadSynth' tag in parameter 0 tags: %+v", meta.Parameters[0].Tags)
+	}
+
+	// Test persistence across new scanner instance loading same cache
+	scanner2 := NewScanner(cachePath)
+	meta2, ok := scanner2.GetPluginMetadata(pluginName)
+	if !ok {
+		t.Fatalf("Failed to retrieve metadata from cache reload")
+	}
+	if meta2.Parameters[0].IsFavorite {
+		t.Errorf("Expected parameter 0 IsFavorite to persist as false across reload")
+	}
+}

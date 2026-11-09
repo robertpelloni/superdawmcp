@@ -59,6 +59,8 @@ type ParamMetadata struct {
 	CanAutomate   bool            `json:"can_automate"`             // Whether host DAW track automation is permitted
 	IsReadOnly    bool            `json:"is_read_only,omitempty"`   // Metering / diagnostic read-only flag
 	IsLocked      bool            `json:"is_locked,omitempty"`      // Safeguard lock: protects parameter against batch update, morph, reset & randomize
+	IsFavorite    bool            `json:"is_favorite,omitempty"`    // High-priority starred parameter for instant access & favorited filter views
+	Tags          []string        `json:"tags,omitempty"`           // Custom semantic categorization tags (e.g. "Lead", "Bass", "Timbre")
 }
 
 // ClampValue bounds the value strictly within MinValue and MaxValue
@@ -398,25 +400,25 @@ func GenerateTargetedParameters(name, category string) []ParamMetadata {
 
 	if strings.Contains(catLower, "synth") || strings.Contains(catLower, "instrument") {
 		return []ParamMetadata{
-			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true},
-			{Name: "Osc 1 Waveform", Index: 1, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Shape", Category: "Filter/Tone", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true},
-			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone", Curve: "linear", Step: 1.0, IsBipolar: true, SmoothingMs: 0.0, CanAutomate: true},
-			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone", Curve: "linear", Step: 0.01, IsBipolar: false, SmoothingMs: 10.0, CanAutomate: true},
-			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true},
-			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005, SmoothingMs: 8.0, CanAutomate: true},
-			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true},
-			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 12.0, CanAutomate: true},
-			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true},
-			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true},
-			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, SmoothingMs: 5.0, CanAutomate: true},
-			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true},
-			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, IsBipolar: true, SmoothingMs: 10.0, CanAutomate: true},
-			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 10.0, CanAutomate: true},
-			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true},
-			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true},
-			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true},
-			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true},
-			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 15.0, CanAutomate: true},
+			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Gain", "Master"}},
+			{Name: "Osc 1 Waveform", Index: 1, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Shape", Category: "Filter/Tone", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Osc", "Timbre"}},
+			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone", Curve: "linear", Step: 1.0, IsBipolar: true, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Pitch", "Tuning"}},
+			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone", Curve: "linear", Step: 0.01, IsBipolar: false, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Pitch", "Width"}},
+			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Bass", "Sub"}},
+			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005, SmoothingMs: 8.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Filter", "Tone"}},
+			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Filter", "Resonance"}},
+			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 12.0, CanAutomate: true, Tags: []string{"Distortion", "Drive"}},
+			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
+			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
+			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
+			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
+			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, IsBipolar: true, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Filter"}},
+			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Rate"}},
+			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Depth"}},
+			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Mod", "Shape"}},
+			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"FX", "Chorus"}},
+			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Space", "FX"}},
+			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"Space", "Echo"}},
 		}
 	} else if strings.Contains(catLower, "dynamics") || strings.Contains(catLower, "comp") {
 		return []ParamMetadata{
@@ -772,4 +774,93 @@ func (s *Scanner) BatchUpdateParams(pluginName string, updates map[int]float32) 
 	s.cache[pluginName] = plugin
 	s.saveCache()
 	return applied, nil
+}
+
+// SetParamFavorite toggles the favorite status of a parameter.
+func (s *Scanner) SetParamFavorite(pluginName string, paramIndex int, favorite bool) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	found := false
+	for i := range plugin.Parameters {
+		if plugin.Parameters[i].Index == paramIndex {
+			plugin.Parameters[i].IsFavorite = favorite
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
+}
+
+// AddParamTag appends a custom semantic tag to a parameter if not already present.
+func (s *Scanner) AddParamTag(pluginName string, paramIndex int, tag string) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	tag = strings.TrimSpace(tag)
+	if tag == "" {
+		return fmt.Errorf("tag cannot be empty")
+	}
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	found := false
+	for i := range plugin.Parameters {
+		if plugin.Parameters[i].Index == paramIndex {
+			exists := false
+			for _, t := range plugin.Parameters[i].Tags {
+				if strings.EqualFold(t, tag) {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				plugin.Parameters[i].Tags = append(plugin.Parameters[i].Tags, tag)
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
+}
+
+// GetFavoriteParams retrieves all parameters marked as favorite for the given plugin.
+func (s *Scanner) GetFavoriteParams(pluginName string) ([]ParamMetadata, error) {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	var favs []ParamMetadata
+	for _, p := range plugin.Parameters {
+		if p.IsFavorite {
+			favs = append(favs, p)
+		}
+	}
+	return favs, nil
 }

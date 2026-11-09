@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.19.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.20.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -550,6 +550,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<div class="inspector-toolbar">
 				<div class="filter-tabs">
 					<button class="btn-tab active" onclick="setParamFilter('all', this)">All</button>
+					<button class="btn-tab" onclick="setParamFilter('favorites', this)" data-tooltip="Show only starred favorite parameters">⭐ Favorites</button>
 					<button class="btn-tab" onclick="setParamFilter('Filter/Tone', this)">Filter/Tone</button>
 					<button class="btn-tab" onclick="setParamFilter('Envelopes', this)">Envelopes</button>
 					<button class="btn-tab" onclick="setParamFilter('Mod/LFO', this)">Mod/LFO</button>
@@ -961,10 +962,14 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 
 			let html = '';
 			(p.parameters || []).forEach(param => {
-				if (activeCategoryFilter !== 'all' && param.category && param.category !== activeCategoryFilter) {
+				if (activeCategoryFilter === 'favorites' && !param.is_favorite) {
 					return;
 				}
-				if (search && !param.name.toLowerCase().includes(search) && !(param.category || '').toLowerCase().includes(search)) {
+				if (activeCategoryFilter !== 'all' && activeCategoryFilter !== 'favorites' && param.category && param.category !== activeCategoryFilter) {
+					return;
+				}
+				const tagMatch = (param.tags || []).some(t => t.toLowerCase().includes(search));
+				if (search && !param.name.toLowerCase().includes(search) && !(param.category || '').toLowerCase().includes(search) && !tagMatch) {
 					return;
 				}
 
@@ -991,10 +996,19 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				const polarityBadge = param.is_bipolar ? '<span class="badge" style="font-size: 9px; color: #a855f7; border-color: rgba(168,85,247,0.3);" data-tooltip="Bipolar parameter centered around zero">± Bipolar</span>' : '<span class="badge" style="font-size: 9px;" data-tooltip="Unipolar parameter">+ Uni</span>';
 				const smoothBadge = param.smoothing_ms > 0 ? '<span class="badge" style="font-size: 9px; color: var(--secondary);" data-tooltip="Internal parameter slew rate smoothing">~' + param.smoothing_ms + 'ms</span>' : '';
 
+				let tagsHtml = '';
+				if (param.tags && param.tags.length > 0) {
+					tagsHtml = param.tags.map(t => '<span class="badge" style="font-size: 8px; padding: 1px 4px; background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.3); color: var(--secondary);">' + t + '</span>').join(' ');
+				}
+
 				html += ' \
 					<div class="param-box"> \
 						<div class="param-header"> \
-							<span>' + param.name + '<small style="color: var(--text-muted); font-size: 10px;">' + unitLabel + '</small></span> \
+							<div style="display: flex; align-items: center; gap: 6px;"> \
+								<button class="btn btn-subtle fav-btn" style="padding: 0; background: none; border: none; font-size: 13px; cursor: pointer;" onclick="toggleParamFavorite(' + param.index + ')" data-tooltip="' + (param.is_favorite ? "Starred Favorite - Click to unfavorite" : "Mark as Favorite") + '">' + (param.is_favorite ? '⭐' : '☆') + '</button> \
+								<span>' + param.name + '<small style="color: var(--text-muted); font-size: 10px;">' + unitLabel + '</small></span> \
+								' + tagsHtml + ' \
+							</div> \
 							<div style="display: flex; gap: 4px; align-items: center;"> \
 								' + syncDivisionsHtml + ' \
 								' + polarityBadge + ' \
@@ -1078,6 +1092,15 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				return shapes[parseInt(num)] || "Shape " + num;
 			}
 			return num.toFixed(2) + (param.unit ? " " + param.unit : "");
+		}
+
+		function toggleParamFavorite(idx) {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			const param = (p.parameters || []).find(x => x.index === idx);
+			if (!param) return;
+			param.is_favorite = !param.is_favorite;
+			renderParameters();
 		}
 
 		function toggleParamLock(idx) {

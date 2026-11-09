@@ -14,20 +14,27 @@ interface PluginParam {
 	category: string;
 	isBipolar?: boolean;
 	smoothingMs?: number;
+	isFavorite?: boolean;
+	tags?: string[];
 }
 
 const DEFAULT_PARAMS: PluginParam[] = [
-	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0 },
-	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0 },
-	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone", smoothingMs: 12.0 },
-	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0 },
-	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0 },
-	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0 },
+	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0, isFavorite: true, tags: ["Filter", "Tone"] },
+	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0, tags: ["Filter", "Resonance"] },
+	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone", smoothingMs: 12.0, tags: ["Distortion", "Drive"] },
+	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"] },
+	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"] },
+	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0, isFavorite: true, tags: ["Space", "FX"] },
 ];
 
 export default function PluginScreen(): React.JSX.Element {
 	const { connected, setPluginParam } = useMcp();
 	const [activePlugin, setActivePlugin] = useState("Surge XT");
+	const [favorites, setFavorites] = useState<Record<string, boolean>>({
+		"Filter Cutoff": true,
+		"Reverb Mix": true,
+	});
+	const [onlyFavorites, setOnlyFavorites] = useState(false);
 	const [paramValues, setParamValues] = useState<Record<string, number>>({
 		"Filter Cutoff": 0.55,
 		"Filter Resonance": 0.25,
@@ -59,6 +66,13 @@ export default function PluginScreen(): React.JSX.Element {
 			handleParamChange(name, defVal);
 		},
 		[handleParamChange],
+	);
+
+	const toggleFavorite = useCallback(
+		(name: string) => {
+			setFavorites((prev) => ({ ...prev, [name]: !prev[name] }));
+		},
+		[],
 	);
 
 	const saveSnapshot = useCallback(
@@ -172,13 +186,27 @@ export default function PluginScreen(): React.JSX.Element {
 			</View>
 
 			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>Controllable Parameters</Text>
-				{DEFAULT_PARAMS.map((param) => {
+				<View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+					<Text style={styles.sectionTitle}>Controllable Parameters</Text>
+					<TouchableOpacity
+						style={[styles.bankBtn, onlyFavorites && { backgroundColor: "#f59e0b" }]}
+						onPress={() => setOnlyFavorites((prev) => !prev)}
+					>
+						<Text style={[styles.bankBtnText, onlyFavorites && { color: "#000", fontWeight: "700" }]}>⭐ Favorites</Text>
+					</TouchableOpacity>
+				</View>
+				{DEFAULT_PARAMS.filter((param) => (onlyFavorites ? !!favorites[param.name] : true)).map((param) => {
 					const val = paramValues[param.name] ?? param.defaultValue;
+					const isFav = !!favorites[param.name];
 					return (
 						<View key={param.name} style={styles.paramBox}>
 							<View style={styles.paramHeader}>
-								<Text style={styles.paramName}>{param.name}</Text>
+								<View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+									<TouchableOpacity onPress={() => toggleFavorite(param.name)}>
+										<Text style={{ fontSize: 13 }}>{isFav ? "⭐" : "☆"}</Text>
+									</TouchableOpacity>
+									<Text style={styles.paramName}>{param.name}</Text>
+								</View>
 								<View style={styles.nudgeRow}>
 									<TouchableOpacity
 										style={styles.nudgeBtn}

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.20.0] - 2026-11-08
+### Added
+- **VST3 Parameter Tagging & Favorites Engine**: Added `IsFavorite` boolean flag and `Tags []string` to `ParamMetadata` in `pkg/vst/scanner.go`, accompanied by `SetParamFavorite`, `AddParamTag`, and `GetFavoriteParams` methods on `*Scanner`. Automatically seeds standard semantic tags (`Gain`, `Master`, `Filter`, `Tone`, `Pitch`, `Tuning`, `Mod`, `Time`, `Space`, `FX`) and default favorites for fast access.
+- **Master Console Favorites Filter & Tag Pill Badges**: Integrated a dedicated `⭐ Favorites` filter tab in the Plugin Inspector toolbar in `pkg/ux/dashboard/ui.go`. Parameters display interactive favorite star toggle buttons (`⭐`/`☆`) and semantic tag pills next to their names. Parameter search matches custom tag names.
+- **Mobile Touch Remote Favorites Filtering**: Added `isFavorite` and `tags` support to `mobile/src/screens/PluginScreen.tsx` with a tactile `⭐ Favorites` pill toggle button and interactive star toggles on touch parameter cards.
+- **Tagging & Favorites Test Suite**: Added `TestScanner_ParamFavoritesAndTagging` to `pkg/vst/scanner_test.go` verifying favorite toggling, tag appending, and persistent disk cache serialization across scanner instances.
+
 ## [v3.19.0] - 2026-11-08
 ### Added
 - **Parameter Lock Engine & Batch Update Safeguards**: Added `IsLocked` flag to `ParamMetadata`, alongside `SetParamLock`, `GetParamLock`, and `BatchUpdateParams` methods on `*Scanner` in `pkg/vst/scanner.go`. `BatchUpdateParams` guarantees that locked parameters remain invariant while simultaneously updating unlocked parameters within min/max boundaries.
