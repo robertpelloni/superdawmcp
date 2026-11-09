@@ -40,4 +40,5 @@
 - [x] Parameter Transfer Curve Sparkline Canvases (v3.18.0)
 - [x] VST3 Parameter Lock Safeguards & Atomic Batch Parameter Updates (v3.19.0)
 - [x] VST3 Parameter Tagging, Favorites Engine & Inspector Filter (v3.20.0)
+- [x] VST3 Macro Parameter Modulation Link & Mapping Matrix (v3.21.0)
 - [ ] Multi-User Studio Jam Rooms

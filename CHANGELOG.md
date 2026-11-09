@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.21.0] - 2026-11-08
+### Added
+- **VST3 Macro Parameter Modulation Link & Mapping Matrix**: Extended `ParamMetadata` with `MacroAssignments map[string]float32` in `pkg/vst/scanner.go`, accompanied by `AssignParamMacro` (weight clamping `[-1.0, 1.0]`, dynamic unassignment on `0.0`) and `GetMacroParams` methods on `*Scanner`. Automatically seeds standard macro modulation links: Cutoff (`brighten`: 1.0), Resonance (`brighten`: 0.3), Drive (`warmth`: 0.85), Attack (`punch`: -0.8), Decay (`punch`: 0.6), Filter Env Amount (`punch`: 0.75), Reverb Mix (`space`: 1.0), and Delay Mix (`space`: 0.6).
+- **Master Console Macro Link Visual Badges & Dynamic Modulation**: In `pkg/ux/dashboard/ui.go`, parameter cards now render distinct macro link badges (e.g. `✨ brighten (+100%)`, `✨ brighten (+30%)`, `🔥 warmth (+85%)`, `🥊 punch (-80%)`). Sound design macro triggers (`✨ BRIGHTEN`, `🔥 WARMTH`, `🌌 SPACE OUT`, `🥊 SNAPPY / PUNCH`) dynamically discover weighted parameter targets and apply calibrated proportional delta modulation.
+- **Mobile Touch Remote Macro Modulation Links**: Updated `mobile/src/screens/PluginScreen.tsx` with `macroAssignments` representation and weighted multi-parameter scaling for touch macro control.
+- **Macro Modulation Link Test Suite**: Added `TestScanner_MacroAssignments` in `pkg/vst/scanner_test.go` verifying initial preset weights, query filtering, custom assignment updates, zero-weight cleanup, and persistent cache disk serialization.
+
 ## [v3.20.0] - 2026-11-08
 ### Added
 - **VST3 Parameter Tagging & Favorites Engine**: Added `IsFavorite` boolean flag and `Tags []string` to `ParamMetadata` in `pkg/vst/scanner.go`, accompanied by `SetParamFavorite`, `AddParamTag`, and `GetFavoriteParams` methods on `*Scanner`. Automatically seeds standard semantic tags (`Gain`, `Master`, `Filter`, `Tone`, `Pitch`, `Tuning`, `Mod`, `Time`, `Space`, `FX`) and default favorites for fast access.

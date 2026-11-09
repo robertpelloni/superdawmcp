@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.20.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.21.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -1001,13 +1001,25 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 					tagsHtml = param.tags.map(t => '<span class="badge" style="font-size: 8px; padding: 1px 4px; background: rgba(56,189,248,0.1); border-color: rgba(56,189,248,0.3); color: var(--secondary);">' + t + '</span>').join(' ');
 				}
 
+				let macroBadgesHtml = '';
+				if (param.macro_assignments) {
+					Object.entries(param.macro_assignments).forEach(([mId, w]) => {
+						const icon = mId === 'brighten' ? '✨' : mId === 'warmth' ? '🔥' : mId === 'space' ? '🌌' : mId === 'punch' ? '🥊' : '🎛️';
+						const sign = w > 0 ? '+' : '';
+						macroBadgesHtml += '<span class="badge" style="font-size: 8px; padding: 1px 4px; background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;" data-tooltip="Modulated by ' + mId + ' macro (' + sign + (w*100).toFixed(0) + '%% weight)">' + icon + ' ' + mId + ' (' + sign + (w*100).toFixed(0) + '%)</span> ';
+					});
+				}
+
 				html += ' \
 					<div class="param-box"> \
 						<div class="param-header"> \
-							<div style="display: flex; align-items: center; gap: 6px;"> \
-								<button class="btn btn-subtle fav-btn" style="padding: 0; background: none; border: none; font-size: 13px; cursor: pointer;" onclick="toggleParamFavorite(' + param.index + ')" data-tooltip="' + (param.is_favorite ? "Starred Favorite - Click to unfavorite" : "Mark as Favorite") + '">' + (param.is_favorite ? '⭐' : '☆') + '</button> \
-								<span>' + param.name + '<small style="color: var(--text-muted); font-size: 10px;">' + unitLabel + '</small></span> \
-								' + tagsHtml + ' \
+							<div style="display: flex; flex-direction: column; gap: 2px;"> \
+								<div style="display: flex; align-items: center; gap: 6px;"> \
+									<button class="btn btn-subtle fav-btn" style="padding: 0; background: none; border: none; font-size: 13px; cursor: pointer;" onclick="toggleParamFavorite(' + param.index + ')" data-tooltip="' + (param.is_favorite ? "Starred Favorite - Click to unfavorite" : "Mark as Favorite") + '">' + (param.is_favorite ? '⭐' : '☆') + '</button> \
+									<span>' + param.name + '<small style="color: var(--text-muted); font-size: 10px;">' + unitLabel + '</small></span> \
+									' + tagsHtml + ' \
+								</div> \
+								' + (macroBadgesHtml ? '<div>' + macroBadgesHtml + '</div>' : '') + ' \
 							</div> \
 							<div style="display: flex; gap: 4px; align-items: center;"> \
 								' + syncDivisionsHtml + ' \

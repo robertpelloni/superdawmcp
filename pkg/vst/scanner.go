@@ -59,8 +59,9 @@ type ParamMetadata struct {
 	CanAutomate   bool            `json:"can_automate"`             // Whether host DAW track automation is permitted
 	IsReadOnly    bool            `json:"is_read_only,omitempty"`   // Metering / diagnostic read-only flag
 	IsLocked      bool            `json:"is_locked,omitempty"`      // Safeguard lock: protects parameter against batch update, morph, reset & randomize
-	IsFavorite    bool            `json:"is_favorite,omitempty"`    // User starred favorite parameter for quick access
-	Tags          []string        `json:"tags,omitempty"`           // Custom or semantic tags (e.g. "Lead", "Filter", "Tone", "Gain", "FX")
+	IsFavorite    bool               `json:"is_favorite,omitempty"`    // User starred favorite parameter for quick access
+	Tags          []string           `json:"tags,omitempty"`           // Custom or semantic tags (e.g. "Lead", "Filter", "Tone", "Gain", "FX")
+	MacroAssignments map[string]float32 `json:"macro_assignments,omitempty"` // Macro modulation weights (macro ID -> bipolar weight -1.0 to 1.0)
 }
 
 // ClampValue bounds the value strictly within MinValue and MaxValue
@@ -405,20 +406,20 @@ func GenerateTargetedParameters(name, category string) []ParamMetadata {
 			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone", Curve: "linear", Step: 1.0, IsBipolar: true, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Pitch", "Tuning"}},
 			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone", Curve: "linear", Step: 0.01, IsBipolar: false, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Pitch", "Width"}},
 			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Bass", "Sub"}},
-			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005, SmoothingMs: 8.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Filter", "Tone"}},
-			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Filter", "Resonance"}},
-			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 12.0, CanAutomate: true, Tags: []string{"Distortion", "Drive"}},
-			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
-			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
+			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005, SmoothingMs: 8.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Filter", "Tone"}, MacroAssignments: map[string]float32{"brighten": 1.0}},
+			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Filter", "Resonance"}, MacroAssignments: map[string]float32{"brighten": 0.3}},
+			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 12.0, CanAutomate: true, Tags: []string{"Distortion", "Drive"}, MacroAssignments: map[string]float32{"warmth": 0.85}},
+			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MacroAssignments: map[string]float32{"punch": -0.8}},
+			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MacroAssignments: map[string]float32{"punch": 0.6}},
 			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
 			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
-			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, IsBipolar: true, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Filter"}},
+			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, IsBipolar: true, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Filter"}, MacroAssignments: map[string]float32{"punch": 0.75}},
 			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Rate"}},
 			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Depth"}},
 			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Mod", "Shape"}},
 			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"FX", "Chorus"}},
-			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Space", "FX"}},
-			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"Space", "Echo"}},
+			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Space", "FX"}, MacroAssignments: map[string]float32{"space": 1.0}},
+			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"Space", "Echo"}, MacroAssignments: map[string]float32{"space": 0.6}},
 		}
 	} else if strings.Contains(catLower, "dynamics") || strings.Contains(catLower, "comp") {
 		return []ParamMetadata{
@@ -863,4 +864,72 @@ func (s *Scanner) GetFavoriteParams(pluginName string) ([]ParamMetadata, error) 
 		}
 	}
 	return favs, nil
+}
+
+// AssignParamMacro maps a macro identifier ("brighten", "warmth", "space", "punch", etc.) to a parameter with a bipolar weight (-1.0 to 1.0).
+// If weight is 0.0, the macro assignment is removed.
+func (s *Scanner) AssignParamMacro(pluginName string, paramIndex int, macro string, weight float32) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	macro = strings.ToLower(strings.TrimSpace(macro))
+	if macro == "" {
+		return fmt.Errorf("macro identifier cannot be empty")
+	}
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	found := false
+	for i := range plugin.Parameters {
+		if plugin.Parameters[i].Index == paramIndex {
+			if plugin.Parameters[i].MacroAssignments == nil {
+				plugin.Parameters[i].MacroAssignments = make(map[string]float32)
+			}
+			if weight == 0.0 {
+				delete(plugin.Parameters[i].MacroAssignments, macro)
+			} else {
+				if weight < -1.0 {
+					weight = -1.0
+				} else if weight > 1.0 {
+					weight = 1.0
+				}
+				plugin.Parameters[i].MacroAssignments[macro] = weight
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
+}
+
+// GetMacroParams retrieves all parameters that have a non-zero assignment to the specified macro.
+func (s *Scanner) GetMacroParams(pluginName string, macro string) ([]ParamMetadata, error) {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+
+	macro = strings.ToLower(strings.TrimSpace(macro))
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	var results []ParamMetadata
+	for _, p := range plugin.Parameters {
+		if p.MacroAssignments != nil {
+			if weight, exists := p.MacroAssignments[macro]; exists && weight != 0.0 {
+				results = append(results, p)
+			}
+		}
+	}
+	return results, nil
 }

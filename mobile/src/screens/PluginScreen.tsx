@@ -16,15 +16,16 @@ interface PluginParam {
 	smoothingMs?: number;
 	isFavorite?: boolean;
 	tags?: string[];
+	macroAssignments?: Record<string, number>;
 }
 
 const DEFAULT_PARAMS: PluginParam[] = [
-	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0, isFavorite: true, tags: ["Filter", "Tone"] },
-	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0, tags: ["Filter", "Resonance"] },
-	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone", smoothingMs: 12.0, tags: ["Distortion", "Drive"] },
-	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"] },
-	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"] },
-	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0, isFavorite: true, tags: ["Space", "FX"] },
+	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0, isFavorite: true, tags: ["Filter", "Tone"], macroAssignments: { brighten: 1.0 } },
+	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0, tags: ["Filter", "Resonance"], macroAssignments: { brighten: 0.3 } },
+	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone", smoothingMs: 12.0, tags: ["Distortion", "Drive"], macroAssignments: { warmth: 0.85 } },
+	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"], macroAssignments: { punch: -0.8 } },
+	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"], macroAssignments: { punch: 0.6 } },
+	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0, isFavorite: true, tags: ["Space", "FX"], macroAssignments: { space: 1.0 } },
 ];
 
 export default function PluginScreen(): React.JSX.Element {
@@ -103,18 +104,27 @@ export default function PluginScreen(): React.JSX.Element {
 
 	const triggerMacro = useCallback(
 		(type: string) => {
-			if (type === "brighten") {
-				handleParamChange("Filter Cutoff", 0.90);
-			} else if (type === "warmth") {
-				handleParamChange("Drive", 0.70);
-			} else if (type === "space") {
-				handleParamChange("Reverb Mix", 0.75);
-			} else if (type === "punch") {
-				handleParamChange("Attack", 0.01);
-				handleParamChange("Release", 0.40);
-			}
+			DEFAULT_PARAMS.forEach((param) => {
+				const curVal = paramValues[param.name] ?? param.defaultValue;
+				if (param.macroAssignments && param.macroAssignments[type] !== undefined) {
+					const weight = param.macroAssignments[type];
+					const delta = (param.maxValue - param.minValue) * 0.35 * weight;
+					const targetVal = Math.min(param.maxValue, Math.max(param.minValue, curVal + delta));
+					handleParamChange(param.name, targetVal);
+				} else {
+					if (type === "brighten" && param.name.includes("Cutoff")) {
+						handleParamChange(param.name, 0.90);
+					} else if (type === "warmth" && param.name.includes("Drive")) {
+						handleParamChange(param.name, 0.70);
+					} else if (type === "space" && param.name.includes("Reverb")) {
+						handleParamChange(param.name, 0.75);
+					} else if (type === "punch" && param.name.includes("Attack")) {
+						handleParamChange(param.name, 0.01);
+					}
+				}
+			});
 		},
-		[handleParamChange],
+		[handleParamChange, paramValues],
 	);
 
 	return (

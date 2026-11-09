@@ -400,3 +400,83 @@ func TestScanner_ParamFavoritesAndTagging(t *testing.T) {
 		t.Errorf("Expected parameter 0 IsFavorite to persist as false across reload")
 	}
 }
+
+func TestScanner_MacroAssignments(t *testing.T) {
+	cachePath := "/tmp/test_vst3_macro_cache.json"
+	os.Remove(cachePath)
+	defer os.Remove(cachePath)
+
+	scanner := NewScanner(cachePath)
+	err := scanner.ScanDirectories(nil)
+	if err != nil {
+		t.Fatalf("ScanDirectories failed: %v", err)
+	}
+
+	pluginName := "Surge XT"
+
+	// 1. Verify default seeded macro assignments (Filter Cutoff should have 'brighten': 1.0)
+	meta, ok := scanner.GetPluginMetadata(pluginName)
+	if !ok {
+		t.Fatalf("Failed to retrieve metadata for %s", pluginName)
+	}
+
+	foundCutoff := false
+	for _, p := range meta.Parameters {
+		if p.Name == "Filter Cutoff" {
+			foundCutoff = true
+			if p.MacroAssignments == nil || p.MacroAssignments["brighten"] != 1.0 {
+				t.Errorf("Expected Cutoff to have 'brighten': 1.0, got: %+v", p.MacroAssignments)
+			}
+		}
+	}
+	if !foundCutoff {
+		t.Fatalf("Filter Cutoff parameter not found in %s", pluginName)
+	}
+
+	// 2. Query parameters assigned to 'brighten' macro
+	brightenParams, err := scanner.GetMacroParams(pluginName, "brighten")
+	if err != nil {
+		t.Fatalf("GetMacroParams failed: %v", err)
+	}
+	if len(brightenParams) < 2 { // Cutoff (1.0) and Resonance (0.3)
+		t.Errorf("Expected at least 2 brighten params, got %d", len(brightenParams))
+	}
+
+	// 3. Assign a custom macro weight with clamping
+	// Param 0 (Master Volume) -> assign 'warmth' with weight 1.5 (should clamp to 1.0)
+	err = scanner.AssignParamMacro(pluginName, 0, "warmth", 1.5)
+	if err != nil {
+		t.Fatalf("AssignParamMacro failed: %v", err)
+	}
+
+	meta, _ = scanner.GetPluginMetadata(pluginName)
+	if meta.Parameters[0].MacroAssignments["warmth"] != 1.0 {
+		t.Errorf("Expected clamped weight 1.0 for warmth, got %f", meta.Parameters[0].MacroAssignments["warmth"])
+	}
+
+	// 4. Delete macro assignment with weight 0
+	err = scanner.AssignParamMacro(pluginName, 0, "warmth", 0.0)
+	if err != nil {
+		t.Fatalf("AssignParamMacro delete failed: %v", err)
+	}
+
+	meta, _ = scanner.GetPluginMetadata(pluginName)
+	if _, exists := meta.Parameters[0].MacroAssignments["warmth"]; exists {
+		t.Errorf("Expected warmth macro to be removed from parameter 0 assignments")
+	}
+
+	// 5. Test persistence across scanner instances
+	err = scanner.AssignParamMacro(pluginName, 0, "punch", 0.75)
+	if err != nil {
+		t.Fatalf("AssignParamMacro failed: %v", err)
+	}
+
+	scanner2 := NewScanner(cachePath)
+	meta2, ok := scanner2.GetPluginMetadata(pluginName)
+	if !ok {
+		t.Fatalf("Failed to reload cache")
+	}
+	if meta2.Parameters[0].MacroAssignments["punch"] != 0.75 {
+		t.Errorf("Expected punch macro weight 0.75 to persist across cache reload, got %f", meta2.Parameters[0].MacroAssignments["punch"])
+	}
+}
