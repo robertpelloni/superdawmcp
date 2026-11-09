@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.19.0] - 2026-11-08
+### Added
+- **Parameter Lock Engine & Batch Update Safeguards**: Added `IsLocked` flag to `ParamMetadata`, alongside `SetParamLock`, `GetParamLock`, and `BatchUpdateParams` methods on `*Scanner` in `pkg/vst/scanner.go`. `BatchUpdateParams` guarantees that locked parameters remain invariant while simultaneously updating unlocked parameters within min/max boundaries.
+- **Master Console Parameter Lock UX**: Integrated tactile lock toggle buttons (`🔒`/`🔓`) on each parameter card in `pkg/ux/dashboard/ui.go`. When locked, controls display a protective badge and sliders/inputs are disabled. Guarded macros, randomize, reset, and A/B morphing from modifying locked parameters.
+- **Mobile Touch Remote Parameter Locking**: Added parameter lock toggles to `mobile/src/screens/PluginScreen.tsx` with disabled states and safeguard checks preventing touch changes from modifying locked parameters.
+- **Comprehensive Unit Testing**: Added `TestScanner_ParamLockAndBatchUpdate` in `pkg/vst/scanner_test.go` covering lock toggling, batch update rejection for locked values, parameter clamping, and unlock validation.
+
 ## [v3.18.0] - 2026-11-08
 ### Added
 - **Visual Parameter Transfer Curve Sparklines**: Added `GenerateCurvePoints` to `ParamMetadata` in `pkg/vst/scanner.go` computing normalized response coordinates across curves (logarithmic, decibel, S-curve, linear).

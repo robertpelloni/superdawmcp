@@ -58,6 +58,7 @@ type ParamMetadata struct {
 	SmoothingMs   float32         `json:"smoothing_ms,omitempty"`   // Parameter slew rate / smoothing time in milliseconds (e.g. 5.0ms - 20.0ms)
 	CanAutomate   bool            `json:"can_automate"`             // Whether host DAW track automation is permitted
 	IsReadOnly    bool            `json:"is_read_only,omitempty"`   // Metering / diagnostic read-only flag
+	IsLocked      bool            `json:"is_locked,omitempty"`      // Safeguard lock: protects parameter against batch update, morph, reset & randomize
 }
 
 // ClampValue bounds the value strictly within MinValue and MaxValue
@@ -688,4 +689,87 @@ func (s *Scanner) GetParamModulation(pluginName string, paramIndex int) (ParamMo
 	}
 
 	return ParamModulation{}, fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+}
+
+// SetParamLock sets the safeguard lock state for a parameter.
+// When locked, batch updates, randomizations, and morphing will skip mutating this parameter.
+func (s *Scanner) SetParamLock(pluginName string, paramIndex int, locked bool) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	found := false
+	for i := range plugin.Parameters {
+		if plugin.Parameters[i].Index == paramIndex {
+			plugin.Parameters[i].IsLocked = locked
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
+}
+
+// GetParamLock returns whether the specified parameter is locked against mutation.
+func (s *Scanner) GetParamLock(pluginName string, paramIndex int) (bool, error) {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return false, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	for _, p := range plugin.Parameters {
+		if p.Index == paramIndex {
+			return p.IsLocked, nil
+		}
+	}
+
+	return false, fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+}
+
+// BatchUpdateParams safely updates multiple parameters at once, strictly bypassing any locked parameters.
+// Returns a map of parameter index -> final applied value, and an error if the plugin was not found.
+func (s *Scanner) BatchUpdateParams(pluginName string, updates map[int]float32) (map[int]float32, error) {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	applied := make(map[int]float32)
+	for i := range plugin.Parameters {
+		idx := plugin.Parameters[i].Index
+		newVal, exists := updates[idx]
+		if !exists {
+			continue
+		}
+
+		// Safeguard: do not modify locked parameters
+		if plugin.Parameters[i].IsLocked {
+			continue
+		}
+
+		// Apply bounded clamp
+		clamped := plugin.Parameters[i].ClampValue(newVal)
+		plugin.Parameters[i].DefaultValue = clamped
+		applied[idx] = clamped
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return applied, nil
 }

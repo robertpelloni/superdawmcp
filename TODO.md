@@ -38,4 +38,5 @@
 - [x] VST3 Parameter Polarity, Smoothing, & Inspector Reset Controls (v3.16.0)
 - [x] Mobile Remote Snapshot Banks & Continuous Morphing (v3.17.0)
 - [x] Parameter Transfer Curve Sparkline Canvases (v3.18.0)
+- [x] VST3 Parameter Lock Safeguards & Atomic Batch Parameter Updates (v3.19.0)
 - [ ] Multi-User Studio Jam Rooms

@@ -11,3 +11,4 @@ SuperDAW is designed to be the definitive universal interface between AI agents 
 - **Zero-Friction Discovery**: Users and agents can inspect available VST3 plugins, their parameter ranges, units, and presets without opening third-party plugin windows.
 - **High-Value Hierarchy**: The UI elevates high-frequency operational controls (Transport, Plugin Inspector, Mixer) while keeping deeper topological routing and neural stem workflows immediately accessible.
 - **Contextual Tooltips**: Every control is self-documenting via interactive tooltip markers explaining parameter behavior, ranges, and underlying driver protocols.
+- **Defensive Sound Design & Non-Destructive Morphing**: Intelligent parameter lock safeguards prevent accidental overwriting of sensitive tuning and volume settings during broad macro adjustments, randomizations, and cross-snapshot morphing.

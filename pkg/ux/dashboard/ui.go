@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.18.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.19.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -999,14 +999,15 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 								' + syncDivisionsHtml + ' \
 								' + polarityBadge + ' \
 								' + smoothBadge + ' \
+								<button class="btn btn-subtle lock-btn" style="padding: 2px 5px; font-size: 10px; opacity: ' + (param.is_locked ? '1' : '0.6') + ';" id="lock-btn-' + param.index + '" onclick="toggleParamLock(' + param.index + ')" data-tooltip="' + (param.is_locked ? "Parameter Locked - Protected against batch, macro, randomize and morph" : "Parameter Unlocked - Click to lock and safeguard parameter") + '">' + (param.is_locked ? '🔒' : '🔓') + '</button> \
 								<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" id="midi-learn-' + param.index + '" onclick="toggleMidiLearn(' + param.index + ', \'' + param.name + '\')" data-tooltip="Map physical MIDI CC controller to this parameter">🎹 Learn</button> \
 								<button class="btn btn-subtle" style="padding: 2px 5px; font-size: 10px;" onclick="resetSingleParam(' + param.index + ')" data-tooltip="Reset this parameter to calibrated default value (' + (param.default_value !== undefined ? param.default_value : 0.5) + ')">↺</button> \
 								<span class="badge" style="font-size: 10px;">' + (param.category || 'General') + curveLabel + '</span> \
 							</div> \
 						</div> \
-						<div class="param-slider-row"> \
-							<input type="range" id="slider-' + param.index + '" class="param-slider" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + stepVal + '" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')" ondblclick="resetSingleParam(' + param.index + ')" title="Double click to reset to default"> \
-							<input type="number" id="num-' + param.index + '" class="param-input" value="' + (Number.isInteger(stepVal) ? parseInt(val) : parseFloat(val).toFixed(2)) + '" step="' + stepVal + '" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+						<div class="param-slider-row" style="' + (param.is_locked ? 'opacity: 0.65;' : '') + '"> \
+							<input type="range" id="slider-' + param.index + '" class="param-slider" ' + (param.is_locked ? 'disabled ' : '') + 'min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + stepVal + '" value="' + val + '" oninput="syncParamSlider(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')" ondblclick="resetSingleParam(' + param.index + ')" title="' + (param.is_locked ? 'Locked: unlock to modify' : 'Double click to reset to default') + '"> \
+							<input type="number" id="num-' + param.index + '" class="param-input" ' + (param.is_locked ? 'disabled ' : '') + 'value="' + (Number.isInteger(stepVal) ? parseInt(val) : parseFloat(val).toFixed(2)) + '" step="' + stepVal + '" onchange="syncParamInput(\'' + activePlugin + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
 							<span id="display-readout-' + param.index + '" style="font-size: 11px; color: var(--accent-blue); min-width: 50px; text-align: right;">' + formatReadout(param, val) + '</span> \
 							<canvas id="curve-sparkline-' + param.index + '" width="28" height="18" style="background: #0f172a; border-radius: 3px; border: 1px solid var(--border);" title="Transfer response curve"></canvas> \
 						</div> \
@@ -1079,11 +1080,20 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			return num.toFixed(2) + (param.unit ? " " + param.unit : "");
 		}
 
-		function resetSingleParam(idx) {
+		function toggleParamLock(idx) {
 			if (!activePlugin || !cachedPlugins[activePlugin]) return;
 			const p = cachedPlugins[activePlugin];
 			const param = (p.parameters || []).find(x => x.index === idx);
 			if (!param) return;
+			param.is_locked = !param.is_locked;
+			renderParameters();
+		}
+
+		function resetSingleParam(idx) {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			const param = (p.parameters || []).find(x => x.index === idx);
+			if (!param || param.is_locked) return;
 			const defVal = param.default_value !== undefined ? param.default_value : 0.5;
 			const slider = document.getElementById('slider-' + idx);
 			const numInput = document.getElementById('num-' + idx);
@@ -1184,6 +1194,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			}
 			const p = cachedPlugins[activePlugin];
 			(p.parameters || []).forEach(param => {
+				if (param.is_locked) return;
 				let newVal = null;
 				const pName = param.name.toLowerCase();
 				if (macroType === 'brighten' && (pName.includes('cutoff') || pName.includes('high cut') || pName.includes('tone'))) {
@@ -1212,6 +1223,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			if (!activePlugin || !cachedPlugins[activePlugin]) return;
 			const p = cachedPlugins[activePlugin];
 			(p.parameters || []).forEach(param => {
+				if (param.is_locked) return;
 				const defVal = param.default_value !== undefined ? param.default_value : 0.5;
 				const slider = document.getElementById('slider-' + param.index);
 				const numInput = document.getElementById('num-' + param.index);
@@ -1225,7 +1237,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			if (!activePlugin || !cachedPlugins[activePlugin]) return;
 			const p = cachedPlugins[activePlugin];
 			(p.parameters || []).forEach(param => {
-				if (param.category === "Master") return; // Keep master volume stable
+				if (param.is_locked || param.category === "Master") return; // Keep master volume & locked parameters stable
 				const min = param.min_value !== undefined ? param.min_value : 0;
 				const max = param.max_value !== undefined ? param.max_value : 1;
 				let rnd = min + Math.random() * (max - min);

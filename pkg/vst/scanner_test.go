@@ -257,3 +257,82 @@ func TestParamMetadata_GenerateCurvePoints(t *testing.T) {
 		}
 	}
 }
+
+func TestScanner_ParamLockAndBatchUpdate(t *testing.T) {
+	cachePath := "/tmp/test_vst3_lock_cache.json"
+	os.Remove(cachePath)
+	defer os.Remove(cachePath)
+
+	scanner := NewScanner(cachePath)
+	err := scanner.ScanDirectories(nil)
+	if err != nil {
+		t.Fatalf("ScanDirectories failed: %v", err)
+	}
+
+	pluginName := "Surge XT"
+	// Verify initial lock status is false
+	locked, err := scanner.GetParamLock(pluginName, 0)
+	if err != nil {
+		t.Fatalf("GetParamLock failed: %v", err)
+	}
+	if locked {
+		t.Errorf("Expected initial lock to be false, got true")
+	}
+
+	// Lock parameter 0 (Master Volume)
+	err = scanner.SetParamLock(pluginName, 0, true)
+	if err != nil {
+		t.Fatalf("SetParamLock true failed: %v", err)
+	}
+
+	locked, err = scanner.GetParamLock(pluginName, 0)
+	if err != nil || !locked {
+		t.Errorf("Expected parameter 0 to be locked, got locked=%v, err=%v", locked, err)
+	}
+
+	// Batch update parameters 0 (locked) and 1 (unlocked)
+	origVal0 := float32(0.80)
+	updates := map[int]float32{
+		0: 0.15, // Should be skipped because parameter 0 is locked
+		1: 0.90, // Should be applied because parameter 1 is unlocked
+	}
+
+	applied, err := scanner.BatchUpdateParams(pluginName, updates)
+	if err != nil {
+		t.Fatalf("BatchUpdateParams failed: %v", err)
+	}
+
+	if _, exists := applied[0]; exists {
+		t.Errorf("Expected locked param 0 to not be in applied map")
+	}
+	if applied[1] != 0.90 {
+		t.Errorf("Expected param 1 to be applied with 0.90, got %+v", applied)
+	}
+
+	// Verify metadata reflects unchanged param 0 and updated param 1
+	meta, ok := scanner.GetPluginMetadata(pluginName)
+	if !ok {
+		t.Fatalf("Failed to retrieve metadata for %s", pluginName)
+	}
+	if meta.Parameters[0].DefaultValue != origVal0 {
+		t.Errorf("Locked parameter 0 default value changed from %f to %f!", origVal0, meta.Parameters[0].DefaultValue)
+	}
+	if meta.Parameters[1].DefaultValue != 0.90 {
+		t.Errorf("Unlocked parameter 1 default value was not updated, got %f", meta.Parameters[1].DefaultValue)
+	}
+
+	// Unlock parameter 0
+	err = scanner.SetParamLock(pluginName, 0, false)
+	if err != nil {
+		t.Fatalf("SetParamLock false failed: %v", err)
+	}
+
+	// Re-attempt batch update now that parameter 0 is unlocked
+	applied2, err := scanner.BatchUpdateParams(pluginName, map[int]float32{0: 0.45})
+	if err != nil {
+		t.Fatalf("BatchUpdateParams after unlock failed: %v", err)
+	}
+	if applied2[0] != 0.45 {
+		t.Errorf("Expected param 0 to be applied after unlocking, got applied=%+v", applied2)
+	}
+}
