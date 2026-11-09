@@ -59,8 +59,8 @@ type ParamMetadata struct {
 	CanAutomate   bool            `json:"can_automate"`             // Whether host DAW track automation is permitted
 	IsReadOnly    bool            `json:"is_read_only,omitempty"`   // Metering / diagnostic read-only flag
 	IsLocked      bool            `json:"is_locked,omitempty"`      // Safeguard lock: protects parameter against batch update, morph, reset & randomize
-	IsFavorite    bool            `json:"is_favorite,omitempty"`    // High-priority starred parameter for instant access & favorited filter views
-	Tags          []string        `json:"tags,omitempty"`           // Custom semantic categorization tags (e.g. "Lead", "Bass", "Timbre")
+	IsFavorite    bool            `json:"is_favorite,omitempty"`    // User starred favorite parameter for quick access
+	Tags          []string        `json:"tags,omitempty"`           // Custom or semantic tags (e.g. "Lead", "Filter", "Tone", "Gain", "FX")
 }
 
 // ClampValue bounds the value strictly within MinValue and MaxValue
