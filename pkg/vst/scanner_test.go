@@ -480,3 +480,81 @@ func TestScanner_MacroAssignments(t *testing.T) {
 		t.Errorf("Expected punch macro weight 0.75 to persist across cache reload, got %f", meta2.Parameters[0].MacroAssignments["punch"])
 	}
 }
+
+func TestScanner_MidiCCMapping(t *testing.T) {
+	cachePath := "/tmp/test_vst3_midicc_cache.json"
+	os.Remove(cachePath)
+	defer os.Remove(cachePath)
+
+	scanner := NewScanner(cachePath)
+	err := scanner.ScanDirectories(nil)
+	if err != nil {
+		t.Fatalf("ScanDirectories failed: %v", err)
+	}
+
+	pluginName := "Surge XT"
+
+	// 1. Verify default seeded MIDI CC mappings (Filter Cutoff should be mapped to CC 74)
+	param, err := scanner.GetParamByMidiCC(pluginName, 74)
+	if err != nil {
+		t.Fatalf("GetParamByMidiCC for CC 74 failed: %v", err)
+	}
+	if param.Name != "Filter Cutoff" {
+		t.Errorf("Expected Filter Cutoff on CC 74, got %s", param.Name)
+	}
+
+	// 2. Assign MIDI CC to another parameter and verify conflict unmapping
+	// Param 0 (Master Volume) is initially CC -1; map it to CC 74 (should steal from Filter Cutoff)
+	err = scanner.AssignParamMidiCC(pluginName, 0, 74)
+	if err != nil {
+		t.Fatalf("AssignParamMidiCC failed: %v", err)
+	}
+
+	param0, err := scanner.GetParamByMidiCC(pluginName, 74)
+	if err != nil {
+		t.Fatalf("GetParamByMidiCC after reassignment failed: %v", err)
+	}
+	if param0.Name != "Master Volume" {
+		t.Errorf("Expected Master Volume to own CC 74 now, got %s", param0.Name)
+	}
+
+	// Verify Filter Cutoff (param 5) was unmapped
+	meta, ok := scanner.GetPluginMetadata(pluginName)
+	if !ok {
+		t.Fatalf("Failed to retrieve metadata")
+	}
+	if meta.Parameters[5].MidiCC != -1 {
+		t.Errorf("Expected parameter 5 (Filter Cutoff) MidiCC to be -1, got %d", meta.Parameters[5].MidiCC)
+	}
+
+	// 3. Unmap CC explicitly by passing -1
+	err = scanner.AssignParamMidiCC(pluginName, 0, -1)
+	if err != nil {
+		t.Fatalf("Unmap CC failed: %v", err)
+	}
+	_, err = scanner.GetParamByMidiCC(pluginName, 74)
+	if err == nil {
+		t.Errorf("Expected error looking up CC 74 after unmapping, got nil")
+	}
+
+	// 4. Test bounds validation
+	err = scanner.AssignParamMidiCC(pluginName, 0, 128)
+	if err == nil {
+		t.Errorf("Expected error assigning CC 128 (out of 0-127 bounds), got nil")
+	}
+
+	// 5. Test persistence across reload
+	err = scanner.AssignParamMidiCC(pluginName, 1, 80)
+	if err != nil {
+		t.Fatalf("Assign CC 80 failed: %v", err)
+	}
+
+	scanner2 := NewScanner(cachePath)
+	p80, err := scanner2.GetParamByMidiCC(pluginName, 80)
+	if err != nil {
+		t.Fatalf("Failed to retrieve CC 80 after cache reload: %v", err)
+	}
+	if p80.Name != "Osc 1 Waveform" {
+		t.Errorf("Expected Osc 1 Waveform on CC 80 across reload, got %s", p80.Name)
+	}
+}

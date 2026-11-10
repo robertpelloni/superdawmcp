@@ -17,15 +17,16 @@ interface PluginParam {
 	isFavorite?: boolean;
 	tags?: string[];
 	macroAssignments?: Record<string, number>;
+	midiCc?: number;
 }
 
 const DEFAULT_PARAMS: PluginParam[] = [
-	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0, isFavorite: true, tags: ["Filter", "Tone"], macroAssignments: { brighten: 1.0 } },
-	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0, tags: ["Filter", "Resonance"], macroAssignments: { brighten: 0.3 } },
+	{ name: "Filter Cutoff", index: 0, defaultValue: 0.55, minValue: 0.0, maxValue: 1.0, unit: "Hz", category: "Tone", smoothingMs: 8.0, isFavorite: true, tags: ["Filter", "Tone"], macroAssignments: { brighten: 1.0 }, midiCc: 74 },
+	{ name: "Filter Resonance", index: 1, defaultValue: 0.25, minValue: 0.0, maxValue: 1.0, unit: "%", category: "Tone", smoothingMs: 10.0, tags: ["Filter", "Resonance"], macroAssignments: { brighten: 0.3 }, midiCc: 71 },
 	{ name: "Drive", index: 2, defaultValue: 0.20, minValue: 0.0, maxValue: 1.0, unit: "dB", category: "Tone", smoothingMs: 12.0, tags: ["Distortion", "Drive"], macroAssignments: { warmth: 0.85 } },
-	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"], macroAssignments: { punch: -0.8 } },
-	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"], macroAssignments: { punch: 0.6 } },
-	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0, isFavorite: true, tags: ["Space", "FX"], macroAssignments: { space: 1.0 } },
+	{ name: "Attack", index: 3, defaultValue: 0.05, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"], macroAssignments: { punch: -0.8 }, midiCc: 73 },
+	{ name: "Release", index: 4, defaultValue: 0.30, minValue: 0.0, maxValue: 1.0, unit: "ms", category: "Env", smoothingMs: 5.0, tags: ["Envelope", "Dynamics"], macroAssignments: { punch: 0.6 }, midiCc: 72 },
+	{ name: "Reverb Mix", index: 5, defaultValue: 0.35, minValue: 0.0, maxValue: 1.0, unit: "%", category: "FX", smoothingMs: 15.0, isFavorite: true, tags: ["Space", "FX"], macroAssignments: { space: 1.0 }, midiCc: 91 },
 ];
 
 export default function PluginScreen(): React.JSX.Element {
@@ -215,6 +216,11 @@ export default function PluginScreen(): React.JSX.Element {
 									<TouchableOpacity onPress={() => toggleFavorite(param.name)}>
 										<Text style={{ fontSize: 13 }}>{isFav ? "⭐" : "☆"}</Text>
 									</TouchableOpacity>
+									{param.midiCc !== undefined && param.midiCc >= 0 && (
+										<View style={{ backgroundColor: "#581c87", paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3 }}>
+											<Text style={{ color: "#d8b4fe", fontSize: 9, fontWeight: "700" }}>CC {param.midiCc}</Text>
+										</View>
+									)}
 									<Text style={styles.paramName}>{param.name}</Text>
 								</View>
 								<View style={styles.nudgeRow}>

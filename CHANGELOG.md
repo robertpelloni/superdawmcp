@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [v3.22.0] - 2026-11-08
+### Added
+- **VST3 Parameter MIDI Continuous Controller (CC) Mapping Engine**: Extended `ParamMetadata` with `MidiCC int` in `pkg/vst/scanner.go` (-1 if unassigned, 0-127 when mapped). Implemented `AssignParamMidiCC(pluginName, paramIndex, cc)` with strict bounds validation and automatic conflict resolution (unmapping conflicting parameters), alongside `GetParamByMidiCC(pluginName, cc)` for direct hardware controller lookups.
+- **Pre-Calibrated MIDI CC Synthesizer & FX Mappings**: Automatically mapped standard synth parameters to canonical MIDI CC numbers: Master Volume (CC 7), Filter Cutoff (CC 74), Filter Resonance (CC 71), Amp Attack (CC 73), Amp Decay (CC 75), Amp Release (CC 72), LFO 1 Depth (CC 1 Modulation), FX Chorus Depth (CC 93), and FX Reverb Mix (CC 91).
+- **Master Console MIDI CC Badges & MIDI Learn Interaction**: Parameter cards in `pkg/ux/dashboard/ui.go` now prominently display cyan-tinted `🎛️ CC <number>` badges next to macro modulations and polarity pills. The interactive `🎹 LEARN` button prompts users for custom CC assignment and triggers dynamic conflict resolution.
+- **Mobile Touch Remote MIDI CC Indicators**: Updated `mobile/src/screens/PluginScreen.tsx` with `midiCc?: number` in `PluginParam` model and rendered purple `CC <number>` pill badges directly beside parameter titles for immediate touch visibility.
+- **Comprehensive MIDI CC Mapping Test Suite**: Added `TestScanner_MidiCCMapping` in `pkg/vst/scanner_test.go` verifying default mapping seeding, conflict resolution, custom assignment, unmapping (-1), boundary rejection (>127), and persistence across cache reloads.
+
 ## [v3.21.0] - 2026-11-08
 ### Added
 - **VST3 Macro Parameter Modulation Link & Mapping Matrix**: Extended `ParamMetadata` with `MacroAssignments map[string]float32` in `pkg/vst/scanner.go`, accompanied by `AssignParamMacro` (weight clamping `[-1.0, 1.0]`, dynamic unassignment on `0.0`) and `GetMacroParams` methods on `*Scanner`. Automatically seeds standard macro modulation links: Cutoff (`brighten`: 1.0), Resonance (`brighten`: 0.3), Drive (`warmth`: 0.85), Attack (`punch`: -0.8), Decay (`punch`: 0.6), Filter Env Amount (`punch`: 0.75), Reverb Mix (`space`: 1.0), and Delay Mix (`space`: 0.6).

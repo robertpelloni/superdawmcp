@@ -62,6 +62,7 @@ type ParamMetadata struct {
 	IsFavorite    bool               `json:"is_favorite,omitempty"`    // User starred favorite parameter for quick access
 	Tags          []string           `json:"tags,omitempty"`           // Custom or semantic tags (e.g. "Lead", "Filter", "Tone", "Gain", "FX")
 	MacroAssignments map[string]float32 `json:"macro_assignments,omitempty"` // Macro modulation weights (macro ID -> bipolar weight -1.0 to 1.0)
+	MidiCC        int                `json:"midi_cc"`                  // MIDI Continuous Controller assignment (-1 if unassigned, 0-127 when mapped)
 }
 
 // ClampValue bounds the value strictly within MinValue and MaxValue
@@ -401,25 +402,25 @@ func GenerateTargetedParameters(name, category string) []ParamMetadata {
 
 	if strings.Contains(catLower, "synth") || strings.Contains(catLower, "instrument") {
 		return []ParamMetadata{
-			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Gain", "Master"}},
-			{Name: "Osc 1 Waveform", Index: 1, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Shape", Category: "Filter/Tone", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Osc", "Timbre"}},
-			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone", Curve: "linear", Step: 1.0, IsBipolar: true, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Pitch", "Tuning"}},
-			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone", Curve: "linear", Step: 0.01, IsBipolar: false, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Pitch", "Width"}},
-			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Bass", "Sub"}},
-			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005, SmoothingMs: 8.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Filter", "Tone"}, MacroAssignments: map[string]float32{"brighten": 1.0}},
-			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Filter", "Resonance"}, MacroAssignments: map[string]float32{"brighten": 0.3}},
-			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 12.0, CanAutomate: true, Tags: []string{"Distortion", "Drive"}, MacroAssignments: map[string]float32{"warmth": 0.85}},
-			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MacroAssignments: map[string]float32{"punch": -0.8}},
-			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MacroAssignments: map[string]float32{"punch": 0.6}},
-			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
-			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}},
-			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, IsBipolar: true, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Filter"}, MacroAssignments: map[string]float32{"punch": 0.75}},
-			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Rate"}},
-			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Depth"}},
-			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Mod", "Shape"}},
-			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"FX", "Chorus"}},
-			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Space", "FX"}, MacroAssignments: map[string]float32{"space": 1.0}},
-			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"Space", "Echo"}, MacroAssignments: map[string]float32{"space": 0.6}},
+			{Name: "Master Volume", Index: 0, DefaultValue: 0.8, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Master", Curve: "decibel", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Gain", "Master"}, MidiCC: 7},
+			{Name: "Osc 1 Waveform", Index: 1, DefaultValue: 0.0, MinValue: 0.0, MaxValue: 4.0, Unit: "Shape", Category: "Filter/Tone", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Osc", "Timbre"}, MidiCC: -1},
+			{Name: "Osc 1 Octave", Index: 2, DefaultValue: 0.0, MinValue: -2.0, MaxValue: 2.0, Unit: "Oct", Category: "Filter/Tone", Curve: "linear", Step: 1.0, IsBipolar: true, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Pitch", "Tuning"}, MidiCC: -1},
+			{Name: "Osc 2 Detune", Index: 3, DefaultValue: 0.12, MinValue: 0.0, MaxValue: 1.0, Unit: "Cent", Category: "Filter/Tone", Curve: "linear", Step: 0.01, IsBipolar: false, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Pitch", "Width"}, MidiCC: -1},
+			{Name: "Sub Osc Level", Index: 4, DefaultValue: 0.5, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Bass", "Sub"}, MidiCC: -1},
+			{Name: "Filter Cutoff", Index: 5, DefaultValue: 0.55, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Filter/Tone", Curve: "logarithmic", Step: 0.005, SmoothingMs: 8.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Filter", "Tone"}, MacroAssignments: map[string]float32{"brighten": 1.0}, MidiCC: 74},
+			{Name: "Filter Resonance", Index: 6, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Filter", "Resonance"}, MacroAssignments: map[string]float32{"brighten": 0.3}, MidiCC: 71},
+			{Name: "Drive / Saturation", Index: 7, DefaultValue: 0.15, MinValue: 0.0, MaxValue: 1.0, Unit: "dB", Category: "Filter/Tone", Curve: "linear", Step: 0.01, SmoothingMs: 12.0, CanAutomate: true, Tags: []string{"Distortion", "Drive"}, MacroAssignments: map[string]float32{"warmth": 0.85}, MidiCC: -1},
+			{Name: "Amp Attack", Index: 8, DefaultValue: 0.05, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MacroAssignments: map[string]float32{"punch": -0.8}, MidiCC: 73},
+			{Name: "Amp Decay", Index: 9, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MacroAssignments: map[string]float32{"punch": 0.6}, MidiCC: 75},
+			{Name: "Amp Sustain", Index: 10, DefaultValue: 0.75, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MidiCC: -1},
+			{Name: "Amp Release", Index: 11, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "ms", Category: "Envelopes", Curve: "logarithmic", Step: 0.005, SmoothingMs: 5.0, CanAutomate: true, Tags: []string{"Envelope", "Dynamics"}, MidiCC: 72},
+			{Name: "Filter Env Amount", Index: 12, DefaultValue: 0.60, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Envelopes", Curve: "linear", Step: 0.01, IsBipolar: true, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Filter"}, MacroAssignments: map[string]float32{"punch": 0.75}, MidiCC: -1},
+			{Name: "LFO 1 Rate", Index: 13, DefaultValue: 0.35, MinValue: 0.0, MaxValue: 1.0, Unit: "Hz", Category: "Mod/LFO", Curve: "logarithmic", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Rate"}, MidiCC: -1},
+			{Name: "LFO 1 Depth", Index: 14, DefaultValue: 0.40, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "Mod/LFO", Curve: "linear", Step: 0.01, SmoothingMs: 10.0, CanAutomate: true, Tags: []string{"Mod", "Depth"}, MidiCC: 1},
+			{Name: "LFO 2 Shape", Index: 15, DefaultValue: 1.0, MinValue: 0.0, MaxValue: 5.0, Unit: "Wave", Category: "Mod/LFO", Curve: "linear", Step: 1.0, SmoothingMs: 0.0, CanAutomate: true, Tags: []string{"Mod", "Shape"}, MidiCC: -1},
+			{Name: "FX Chorus Depth", Index: 16, DefaultValue: 0.30, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"FX", "Chorus"}, MidiCC: 93},
+			{Name: "FX Reverb Mix", Index: 17, DefaultValue: 0.25, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SmoothingMs: 15.0, CanAutomate: true, IsFavorite: true, Tags: []string{"Space", "FX"}, MacroAssignments: map[string]float32{"space": 1.0}, MidiCC: 91},
+			{Name: "FX Delay Mix", Index: 18, DefaultValue: 0.20, MinValue: 0.0, MaxValue: 1.0, Unit: "%", Category: "FX/Mix", Curve: "linear", Step: 0.01, SyncDivisions: divisions, SmoothingMs: 15.0, CanAutomate: true, Tags: []string{"Space", "Echo"}, MacroAssignments: map[string]float32{"space": 0.6}, MidiCC: -1},
 		}
 	} else if strings.Contains(catLower, "dynamics") || strings.Contains(catLower, "comp") {
 		return []ParamMetadata{
@@ -932,4 +933,67 @@ func (s *Scanner) GetMacroParams(pluginName string, macro string) ([]ParamMetada
 		}
 	}
 	return results, nil
+}
+
+// AssignParamMidiCC maps a MIDI Continuous Controller (CC 0-127) to a parameter, or unmaps it if cc < 0.
+// If another parameter on the same plugin was previously mapped to this CC, it is unmapped to prevent conflicts.
+func (s *Scanner) AssignParamMidiCC(pluginName string, paramIndex int, cc int) error {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	if cc > 127 {
+		return fmt.Errorf("invalid MIDI CC %d: must be between 0 and 127 (or -1 to unmap)", cc)
+	}
+	if cc < 0 {
+		cc = -1
+	}
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	found := false
+	for i := range plugin.Parameters {
+		// Conflict resolution: unassign any other parameter previously assigned to this CC
+		if cc >= 0 && plugin.Parameters[i].MidiCC == cc && plugin.Parameters[i].Index != paramIndex {
+			plugin.Parameters[i].MidiCC = -1
+		}
+		if plugin.Parameters[i].Index == paramIndex {
+			plugin.Parameters[i].MidiCC = cc
+			found = true
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("parameter index %d not found on plugin %s", paramIndex, pluginName)
+	}
+
+	s.cache[pluginName] = plugin
+	s.saveCache()
+	return nil
+}
+
+// GetParamByMidiCC looks up which parameter is bound to a specific MIDI CC number on the plugin.
+func (s *Scanner) GetParamByMidiCC(pluginName string, cc int) (*ParamMetadata, error) {
+	s.cacheLock.RLock()
+	defer s.cacheLock.RUnlock()
+
+	if cc < 0 || cc > 127 {
+		return nil, fmt.Errorf("invalid MIDI CC %d: must be between 0 and 127", cc)
+	}
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	for _, p := range plugin.Parameters {
+		if p.MidiCC == cc {
+			cpy := p
+			return &cpy, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no parameter mapped to MIDI CC %d on plugin %s", cc, pluginName)
 }

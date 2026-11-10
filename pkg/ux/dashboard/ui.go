@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.21.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.22.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -1025,6 +1025,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 								' + syncDivisionsHtml + ' \
 								' + polarityBadge + ' \
 								' + smoothBadge + ' \
+								' + (param.midi_cc !== undefined && param.midi_cc >= 0 ? '<span class="badge" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.5); color: #c084fc; font-size: 9px; padding: 1px 4px;" data-tooltip="Assigned to MIDI CC ' + param.midi_cc + '">🎛️ CC ' + param.midi_cc + '</span>' : '') + ' \
 								<button class="btn btn-subtle lock-btn" style="padding: 2px 5px; font-size: 10px; opacity: ' + (param.is_locked ? '1' : '0.6') + ';" id="lock-btn-' + param.index + '" onclick="toggleParamLock(' + param.index + ')" data-tooltip="' + (param.is_locked ? "Parameter Locked - Protected against batch, macro, randomize and morph" : "Parameter Unlocked - Click to lock and safeguard parameter") + '">' + (param.is_locked ? '🔒' : '🔓') + '</button> \
 								<button class="btn btn-subtle" style="padding: 2px 6px; font-size: 10px;" id="midi-learn-' + param.index + '" onclick="toggleMidiLearn(' + param.index + ', \'' + param.name + '\')" data-tooltip="Map physical MIDI CC controller to this parameter">🎹 Learn</button> \
 								<button class="btn btn-subtle" style="padding: 2px 5px; font-size: 10px;" onclick="resetSingleParam(' + param.index + ')" data-tooltip="Reset this parameter to calibrated default value (' + (param.default_value !== undefined ? param.default_value : 0.5) + ')">↺</button> \
@@ -1180,6 +1181,8 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		let activeMidiLearnIndex = null;
 		function toggleMidiLearn(index, name) {
 			const btn = document.getElementById('midi-learn-' + index);
+			const paramList = (activePlugin && cachedPlugins[activePlugin] && cachedPlugins[activePlugin].parameters) || [];
+			const p = paramList.find(item => item.index === index);
 			if (activeMidiLearnIndex === index) {
 				activeMidiLearnIndex = null;
 				if (btn) { btn.innerText = '🎹 Learn'; btn.style.background = ''; }
@@ -1190,6 +1193,26 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				}
 				activeMidiLearnIndex = index;
 				if (btn) { btn.innerText = 'Listening...'; btn.style.background = '#f59e0b'; }
+				setTimeout(() => {
+					if (activeMidiLearnIndex === index) {
+						const currentCC = (p && p.midi_cc !== undefined) ? p.midi_cc : -1;
+						const assigned = prompt('Map MIDI CC (0-127, or enter -1 to unassign) for ' + name + ':', currentCC >= 0 ? currentCC : '74');
+						if (assigned !== null) {
+							const ccNum = parseInt(assigned, 10);
+							if (!isNaN(ccNum) && ccNum >= -1 && ccNum <= 127) {
+								if (p) {
+									if (ccNum >= 0) {
+										paramList.forEach(o => { if (o.index !== index && o.midi_cc === ccNum) o.midi_cc = -1; });
+									}
+									p.midi_cc = ccNum;
+								}
+								renderParameters();
+							}
+						}
+						activeMidiLearnIndex = null;
+						if (btn) { btn.innerText = '🎹 Learn'; btn.style.background = ''; }
+					}
+				}, 100);
 			}
 		}
 

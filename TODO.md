@@ -41,4 +41,5 @@
 - [x] VST3 Parameter Lock Safeguards & Atomic Batch Parameter Updates (v3.19.0)
 - [x] VST3 Parameter Tagging, Favorites Engine & Inspector Filter (v3.20.0)
 - [x] VST3 Macro Parameter Modulation Link & Mapping Matrix (v3.21.0)
+- [x] VST3 Parameter MIDI CC Mapping Engine, Badges & Hardware Routing (v3.22.0)
 - [ ] Multi-User Studio Jam Rooms
