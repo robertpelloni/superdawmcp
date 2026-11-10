@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.24.0] - 2026-11-08
+### Added
+- **VST3 Parameter Direct Randomizer & Mutation Engine**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` featuring constrained mutation delta scaling (`mutationAmount` 0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only protection, and automatic recording onto the undo history stack for reversible sound design.
+- **Master Studio Console Mutation & Randomization Controls**: Updated header badge to `v3.24.0 Active` in `pkg/ux/dashboard/ui.go`. Added interactive `🧬 Mutate` (±25% range) and `🎲 Randomize` buttons in the Sound Design Macro toolbar, wired to client-side history recording and DAW parameter synchronization.
+- **Mobile Touch Remote Mutation Controls**: Added `🧬 Mutate` and `🎲 Rnd` touch buttons to the Sound Design Macros header in `mobile/src/screens/PluginScreen.tsx`.
+- **Randomizer & Mutator Unit Tests**: Added `TestScanner_RandomizeAndMutateParams` in `pkg/vst/scanner_test.go` verifying parameter lock safeguards, boundary clamping, step resolution, and undo stack integration.
+
 ## [v3.23.0] - 2026-11-08
 ### Added
 - **VST3 Parameter History Stack & Undo/Redo Engine**: Implemented `ParamChangeRecord`, `RecordParamChange`, `UndoParamChange`, `RedoParamChange`, and `GetParamHistory` in `pkg/vst/scanner.go` with thread safety and cache synchronization.

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 // DeepMetadata stores lower-level binary, bus, and architecture inspection data
@@ -1102,4 +1104,91 @@ func (s *Scanner) GetParamHistory() []ParamChangeRecord {
 	copied := make([]ParamChangeRecord, len(s.undoStack))
 	copy(copied, s.undoStack)
 	return copied
+}
+
+// RandomizeParams generates controlled randomized parameter values or subtle mutations on a plugin.
+// - mutationAmount: 0.0 to 1.0 (1.0 = total random distribution between MinValue and MaxValue, 0.25 = ±25% mutation jitter).
+// - onlyUnlocked: If true, strictly skips any parameter with IsLocked == true.
+// - Skips read-only parameters (IsReadOnly == true) and non-automatable parameters if specified.
+// - Automatically records each modified parameter into the undo stack for instant rollback.
+func (s *Scanner) RandomizeParams(pluginName string, mutationAmount float32, onlyUnlocked bool) ([]ParamChangeRecord, error) {
+	s.cacheLock.Lock()
+	defer s.cacheLock.Unlock()
+
+	plugin, ok := s.cache[pluginName]
+	if !ok {
+		return nil, fmt.Errorf("plugin %s not found in cache", pluginName)
+	}
+
+	if mutationAmount <= 0.0 {
+		mutationAmount = 1.0
+	} else if mutationAmount > 1.0 {
+		mutationAmount = 1.0
+	}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var changes []ParamChangeRecord
+
+	for i := range plugin.Parameters {
+		param := &plugin.Parameters[i]
+
+		// Safeguard 1: Respect parameter lock
+		if onlyUnlocked && param.IsLocked {
+			continue
+		}
+
+		// Safeguard 2: Skip read-only parameters
+		if param.IsReadOnly {
+			continue
+		}
+
+		oldVal := param.DefaultValue
+		span := param.MaxValue - param.MinValue
+		if span <= 0 {
+			continue
+		}
+
+		var targetVal float32
+		if mutationAmount >= 0.99 {
+			// Total uniform random across span
+			targetVal = param.MinValue + r.Float32()*span
+		} else {
+			// Constrained mutation delta jitter around current value
+			delta := (r.Float32()*2.0 - 1.0) * span * (mutationAmount * 0.5)
+			targetVal = oldVal + delta
+		}
+
+		// Apply step snapping and bounds clamping
+		snappedVal := param.SnapToStep(targetVal)
+		clampedVal := param.ClampValue(snappedVal)
+
+		if clampedVal != oldVal {
+			param.DefaultValue = clampedVal
+
+			rec := ParamChangeRecord{
+				Timestamp:  time.Now().Unix(),
+				PluginName: pluginName,
+				ParamIndex: param.Index,
+				ParamName:  param.Name,
+				OldValue:   oldVal,
+				NewValue:   clampedVal,
+			}
+			changes = append(changes, rec)
+		}
+	}
+
+	if len(changes) > 0 {
+		s.cache[pluginName] = plugin
+		s.saveCache()
+
+		// Record changes onto undo stack
+		s.historyLock.Lock()
+		for _, c := range changes {
+			s.undoStack = append(s.undoStack, c)
+		}
+		s.redoStack = s.redoStack[:0] // Invalidate redo stack on new action
+		s.historyLock.Unlock()
+	}
+
+	return changes, nil
 }

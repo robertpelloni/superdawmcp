@@ -1,9 +1,12 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.23.0 - Active)
-- [x] **VST3 Parameter History Stack & Undo/Redo Engine**: Implemented `ParamChangeRecord`, `RecordParamChange`, `UndoParamChange`, `RedoParamChange`, and `GetParamHistory` in `pkg/vst/scanner.go` with thread safety and cache synchronization.
-- [x] **Master Console Undo/Redo Controls**: Added tactile `↶ Undo` and `↷ Redo` buttons to the Sound Design Macro toolbar in `pkg/ux/dashboard/ui.go` with state tracking and parameter restoring.
-- [x] **Mobile Touch Remote Undo/Redo Controls**: Added tactile `↶ Undo` and `↷ Redo` buttons in `mobile/src/screens/PluginScreen.tsx` for touch parameter rollback.
+## Current Milestone (v3.24.0 - Active)
+- [x] **VST3 Parameter Direct Randomizer & Mutation Engine**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` with constrained mutation delta scaling (0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only skipping, and undo history integration.
+- [x] **Master Console Mutation & Randomization Controls**: Updated header badge to `v3.24.0 Active`, added interactive `🧬 Mutate` (±25% range) and `🎲 Randomize` buttons in the Sound Design Macro toolbar, wired with instant client-side undo history recording.
+- [x] **Mobile Touch Remote Mutation Controls**: Added `🧬 Mutate` and `🎲 Rnd` touch buttons to the Sound Design Macros header in `mobile/src/screens/PluginScreen.tsx`.
+- [x] **VST3 Parameter History Stack & Undo/Redo Engine (v3.23.0)**: Implemented `ParamChangeRecord`, `RecordParamChange`, `UndoParamChange`, `RedoParamChange`, and `GetParamHistory` in `pkg/vst/scanner.go` with thread safety and cache synchronization.
+- [x] **Master Console Undo/Redo Controls (v3.23.0)**: Added tactile `↶ Undo` and `↷ Redo` buttons to the Sound Design Macro toolbar in `pkg/ux/dashboard/ui.go` with state tracking and parameter restoring.
+- [x] **Mobile Touch Remote Undo/Redo Controls (v3.23.0)**: Added tactile `↶ Undo` and `↷ Redo` buttons in `mobile/src/screens/PluginScreen.tsx` for touch parameter rollback.
 - [x] **VST3 Parameter MIDI Continuous Controller (CC) Mapping Engine (v3.22.0)**: Extended `ParamMetadata` with `MidiCC int` in `pkg/vst/scanner.go` (-1 if unassigned, 0-127 when mapped). Implemented `AssignParamMidiCC(pluginName, paramIndex, cc)` with strict bounds validation and automatic conflict resolution (unmapping conflicting parameters), alongside `GetParamByMidiCC(pluginName, cc)` for direct hardware controller lookups.
 - [x] **Pre-Calibrated MIDI CC Synthesizer & FX Mappings (v3.22.0)**: Automatically mapped standard synth parameters to canonical MIDI CC numbers: Master Volume (CC 7), Filter Cutoff (CC 74), Filter Resonance (CC 71), Amp Attack (CC 73), Amp Decay (CC 75), Amp Release (CC 72), LFO 1 Depth (CC 1 Modulation), FX Chorus Depth (CC 93), and FX Reverb Mix (CC 91).
 - [x] **Master Console MIDI CC Badges & MIDI Learn Interaction (v3.22.0)**: Parameter cards in `pkg/ux/dashboard/ui.go` now prominently display cyan-tinted `🎛️ CC <number>` badges next to macro modulations and polarity pills. The interactive `🎹 LEARN` button prompts users for custom CC assignment and triggers dynamic conflict resolution.

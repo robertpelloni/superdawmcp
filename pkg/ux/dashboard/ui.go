@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.23.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.24.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -520,7 +520,8 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="undoParamHistory()" data-tooltip="Revert last parameter change">↶ Undo</button>
 						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="redoParamHistory()" data-tooltip="Re-apply undone parameter change">↷ Redo</button>
 						<button id="btn-ab" class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="toggleABComparison()" data-tooltip="Switch between snapshot A and snapshot B">⚖️ State: <span id="ab-label">A</span></button>
-						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="randomizeParameters()" data-tooltip="Controlled musical parameter randomization (±25% range)">🎲 Randomize</button>
+						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="mutateParameters(0.25)" data-tooltip="Controlled subtle parameter mutation (±25% range, preserves locks & undoable)">🧬 Mutate</button>
+						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="randomizeParameters()" data-tooltip="Full parameter randomization (preserves locks & undoable)">🎲 Randomize</button>
 						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="resetParametersToDefault()" data-tooltip="Reset all parameters to factory defaults">↺ Reset</button>
 					</div>
 				</div>
@@ -1327,11 +1328,42 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			});
 		}
 
+		function mutateParameters(amount) {
+			if (!activePlugin || !cachedPlugins[activePlugin]) return;
+			const p = cachedPlugins[activePlugin];
+			(p.parameters || []).forEach(param => {
+				if (param.is_locked || param.category === "Master" || param.is_read_only) return;
+				const slider = document.getElementById('slider-' + param.index);
+				const curVal = slider ? parseFloat(slider.value) : (param.default_value || 0.5);
+				const min = param.min_value !== undefined ? param.min_value : 0;
+				const max = param.max_value !== undefined ? param.max_value : 1;
+				const span = max - min;
+				if (span <= 0) return;
+
+				const delta = (Math.random() * 2.0 - 1.0) * span * (amount * 0.5);
+				let target = Math.min(max, Math.max(min, curVal + delta));
+				if (param.step && Number.isInteger(param.step)) {
+					target = Math.round(target);
+				} else {
+					target = Math.round(target * 100) / 100;
+				}
+
+				recordHistoryEntry(param.name, param.index, curVal, target);
+				const numInput = document.getElementById('num-' + param.index);
+				if (slider) slider.value = target;
+				if (numInput) numInput.value = target.toFixed(2);
+				updateReadout(param.index, target, param.unit || '');
+				sendPluginParam(activePlugin, param.name, target);
+			});
+		}
+
 		function randomizeParameters() {
 			if (!activePlugin || !cachedPlugins[activePlugin]) return;
 			const p = cachedPlugins[activePlugin];
 			(p.parameters || []).forEach(param => {
-				if (param.is_locked || param.category === "Master") return; // Keep master volume & locked parameters stable
+				if (param.is_locked || param.category === "Master" || param.is_read_only) return; // Keep master volume & locked parameters stable
+				const slider = document.getElementById('slider-' + param.index);
+				const curVal = slider ? parseFloat(slider.value) : (param.default_value || 0.5);
 				const min = param.min_value !== undefined ? param.min_value : 0;
 				const max = param.max_value !== undefined ? param.max_value : 1;
 				let rnd = min + Math.random() * (max - min);
@@ -1340,10 +1372,11 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				} else {
 					rnd = Math.round(rnd * 100) / 100;
 				}
-				const slider = document.getElementById('slider-' + param.index);
+				recordHistoryEntry(param.name, param.index, curVal, rnd);
 				const numInput = document.getElementById('num-' + param.index);
 				if (slider) slider.value = rnd;
 				if (numInput) numInput.value = rnd.toFixed(2);
+				updateReadout(param.index, rnd, param.unit || '');
 				sendPluginParam(activePlugin, param.name, rnd);
 			});
 		}

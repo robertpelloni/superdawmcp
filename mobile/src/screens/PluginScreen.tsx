@@ -169,6 +169,31 @@ export default function PluginScreen(): React.JSX.Element {
 						>
 							<Text style={styles.bankBtnText}>↷ Redo</Text>
 						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.bankBtn}
+							onPress={() => {
+								DEFAULT_PARAMS.forEach((param) => {
+									const cur = paramValues[param.name] ?? param.defaultValue;
+									const span = param.maxValue - param.minValue;
+									const delta = (Math.random() * 2.0 - 1.0) * span * 0.125;
+									const mutated = Math.min(param.maxValue, Math.max(param.minValue, cur + delta));
+									handleParamChange(param.name, mutated);
+								});
+							}}
+						>
+							<Text style={styles.bankBtnText}>🧬 Mutate</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.bankBtn}
+							onPress={() => {
+								DEFAULT_PARAMS.forEach((param) => {
+									const rnd = param.minValue + Math.random() * (param.maxValue - param.minValue);
+									handleParamChange(param.name, rnd);
+								});
+							}}
+						>
+							<Text style={styles.bankBtnText}>🎲 Rnd</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
 				<View style={styles.macroRow}>

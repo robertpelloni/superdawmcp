@@ -630,3 +630,73 @@ func TestScanner_MidiCCMapping(t *testing.T) {
 		t.Errorf("Expected Osc 1 Waveform on CC 80 across reload, got %s", p80.Name)
 	}
 }
+
+func TestScanner_RandomizeAndMutateParams(t *testing.T) {
+	tmpDir := t.TempDir()
+	cachePath := filepath.Join(tmpDir, "vst_rnd_cache.json")
+	s := NewScanner(cachePath)
+	_ = s.ScanDirectories([]string{})
+
+	pluginName := "Surge XT"
+
+	// 1. Lock parameter 0 (Master Volume)
+	_ = s.SetParamLock(pluginName, 0, true)
+	origMeta, _ := s.GetPluginMetadata(pluginName)
+	origParam0Val := origMeta.Parameters[0].DefaultValue
+
+	// 2. Run RandomizeParams with onlyUnlocked = true
+	changes, err := s.RandomizeParams(pluginName, 1.0, true)
+	if err != nil {
+		t.Fatalf("RandomizeParams failed: %v", err)
+	}
+	if len(changes) == 0 {
+		t.Fatalf("Expected parameter changes from randomization, got 0")
+	}
+
+	// Verify locked parameter 0 was NOT changed
+	for _, c := range changes {
+		if c.ParamIndex == 0 {
+			t.Fatalf("Locked parameter 0 was modified by RandomizeParams!")
+		}
+	}
+	metaAfter, _ := s.GetPluginMetadata(pluginName)
+	if metaAfter.Parameters[0].DefaultValue != origParam0Val {
+		t.Fatalf("Parameter 0 value changed despite lock: orig=%f, current=%f", origParam0Val, metaAfter.Parameters[0].DefaultValue)
+	}
+
+	// Verify changes were recorded onto undo stack
+	undoHistory := s.GetParamHistory()
+	if len(undoHistory) < len(changes) {
+		t.Fatalf("Expected undo history to contain at least %d items, got %d", len(changes), len(undoHistory))
+	}
+
+	// 3. Test undoing the last change
+	lastChange := changes[len(changes)-1]
+	undone, err := s.UndoParamChange()
+	if err != nil {
+		t.Fatalf("UndoParamChange failed: %v", err)
+	}
+	if undone.ParamIndex != lastChange.ParamIndex || undone.OldValue != lastChange.OldValue {
+		t.Fatalf("Unexpected undone change record: expected %+v, got %+v", lastChange, undone)
+	}
+
+	// 4. Test controlled mutation (mutationAmount = 0.25)
+	mutationChanges, err := s.RandomizeParams(pluginName, 0.25, true)
+	if err != nil {
+		t.Fatalf("Mutation failed: %v", err)
+	}
+	for _, c := range mutationChanges {
+		// Verify values stayed strictly within bounds [0.0, 1.0] or specified min/max
+		pMeta, _ := s.GetPluginParameters(pluginName)
+		var p ParamMetadata
+		for _, item := range pMeta {
+			if item.Index == c.ParamIndex {
+				p = item
+				break
+			}
+		}
+		if c.NewValue < p.MinValue || c.NewValue > p.MaxValue {
+			t.Errorf("Mutated value %f out of bounds [%f, %f] for %s", c.NewValue, p.MinValue, p.MaxValue, p.Name)
+		}
+	}
+}
