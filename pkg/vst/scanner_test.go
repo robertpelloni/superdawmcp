@@ -2,6 +2,7 @@ package vst
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -205,6 +206,77 @@ func TestParamMetadata_CurveConversionsAndSnapping(t *testing.T) {
 	snappedNeg := stepParam.SnapToStep(-1.3)
 	if snappedNeg != -1.0 {
 		t.Errorf("Expected -1.3 snapped to -1.0, got %f", snappedNeg)
+	}
+}
+
+func TestScanner_ParamUndoRedoHistory(t *testing.T) {
+	tmpDir := t.TempDir()
+	cachePath := filepath.Join(tmpDir, "vst_cache.json")
+	s := NewScanner(cachePath)
+	_ = s.ScanDirectories([]string{})
+
+	// Initially empty undo stack
+	_, err := s.UndoParamChange()
+	if err == nil {
+		t.Fatalf("expected error on empty undo stack")
+	}
+
+	// Initially empty redo stack
+	_, err = s.RedoParamChange()
+	if err == nil {
+		t.Fatalf("expected error on empty redo stack")
+	}
+
+	// Record a mutation on Surge XT Cutoff (index 5)
+	s.RecordParamChange("Surge XT", 5, "Filter Cutoff", 0.55, 0.85)
+	history := s.GetParamHistory()
+	if len(history) != 1 {
+		t.Fatalf("expected 1 history record, got %d", len(history))
+	}
+	if history[0].OldValue != 0.55 || history[0].NewValue != 0.85 {
+		t.Fatalf("unexpected history values: %+v", history[0])
+	}
+
+	// Perform Undo
+	rec, err := s.UndoParamChange()
+	if err != nil {
+		t.Fatalf("unexpected undo error: %v", err)
+	}
+	if rec.OldValue != 0.55 {
+		t.Fatalf("expected undone old value 0.55, got %f", rec.OldValue)
+	}
+
+	// Verify plugin parameter cache reflects OldValue
+	params, _ := s.GetPluginParameters("Surge XT")
+	var cutoff ParamMetadata
+	for _, p := range params {
+		if p.Index == 5 {
+			cutoff = p
+			break
+		}
+	}
+	if cutoff.DefaultValue != 0.55 {
+		t.Fatalf("expected parameter value in cache to be restored to 0.55, got %f", cutoff.DefaultValue)
+	}
+
+	// Perform Redo
+	recRedo, err := s.RedoParamChange()
+	if err != nil {
+		t.Fatalf("unexpected redo error: %v", err)
+	}
+	if recRedo.NewValue != 0.85 {
+		t.Fatalf("expected redone new value 0.85, got %f", recRedo.NewValue)
+	}
+
+	params, _ = s.GetPluginParameters("Surge XT")
+	for _, p := range params {
+		if p.Index == 5 {
+			cutoff = p
+			break
+		}
+	}
+	if cutoff.DefaultValue != 0.85 {
+		t.Fatalf("expected parameter value in cache to be redone to 0.85, got %f", cutoff.DefaultValue)
 	}
 }
 

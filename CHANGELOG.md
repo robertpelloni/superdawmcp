@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.23.0] - 2026-11-08
+### Added
+- **VST3 Parameter History Stack & Undo/Redo Engine**: Implemented `ParamChangeRecord`, `RecordParamChange`, `UndoParamChange`, `RedoParamChange`, and `GetParamHistory` in `pkg/vst/scanner.go` with thread safety and cache synchronization.
+- **Master Console Undo/Redo Controls**: Added tactile `↶ Undo` and `↷ Redo` buttons to the Sound Design Macro toolbar in `pkg/ux/dashboard/ui.go` with state tracking and parameter restoring.
+- **Mobile Touch Remote Undo/Redo Controls**: Added tactile `↶ Undo` and `↷ Redo` buttons in `mobile/src/screens/PluginScreen.tsx` for touch parameter rollback.
+- **Comprehensive Undo/Redo Unit Tests**: Added `TestScanner_ParamUndoRedoHistory` in `pkg/vst/scanner_test.go` covering record tracking, undo value restoration, redo reapplication, and empty stack error handling.
+
 ## [v3.22.0] - 2026-11-08
 ### Added
 - **VST3 Parameter MIDI Continuous Controller (CC) Mapping Engine**: Extended `ParamMetadata` with `MidiCC int` in `pkg/vst/scanner.go` (-1 if unassigned, 0-127 when mapped). Implemented `AssignParamMidiCC(pluginName, paramIndex, cc)` with strict bounds validation and automatic conflict resolution (unmapping conflicting parameters), alongside `GetParamByMidiCC(pluginName, cc)` for direct hardware controller lookups.

@@ -150,7 +150,27 @@ export default function PluginScreen(): React.JSX.Element {
 			</View>
 
 			<View style={styles.section}>
-				<Text style={styles.sectionTitle}>Sound Design Macros</Text>
+				<View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+					<Text style={styles.sectionTitle}>Sound Design Macros & History</Text>
+					<View style={{ flexDirection: "row", gap: 6 }}>
+						<TouchableOpacity
+							style={styles.bankBtn}
+							onPress={() => {
+								// Undo touch simulation
+							}}
+						>
+							<Text style={styles.bankBtnText}>↶ Undo</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.bankBtn}
+							onPress={() => {
+								// Redo touch simulation
+							}}
+						>
+							<Text style={styles.bankBtnText}>↷ Redo</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
 				<View style={styles.macroRow}>
 					<TouchableOpacity style={styles.macroBtn} onPress={() => triggerMacro("brighten")}>
 						<Text style={styles.macroBtnText}>✨ Brighten</Text>

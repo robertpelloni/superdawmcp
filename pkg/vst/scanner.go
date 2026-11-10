@@ -249,11 +249,24 @@ func (p *ParamMetadata) FormatDisplayValue(val float32) string {
 	}
 }
 
+// ParamChangeRecord tracks a single parameter mutation for history tracking and rollback
+type ParamChangeRecord struct {
+	Timestamp   int64   `json:"timestamp"`
+	PluginName  string  `json:"plugin_name"`
+	ParamIndex  int     `json:"param_index"`
+	ParamName   string  `json:"param_name"`
+	OldValue    float32 `json:"old_value"`
+	NewValue    float32 `json:"new_value"`
+}
+
 // Scanner manages discovery, caching, and introspection of VST3 plugins
 type Scanner struct {
-	cache     map[string]PluginMetadata
-	cacheLock sync.RWMutex
-	cachePath string
+	cache       map[string]PluginMetadata
+	cacheLock   sync.RWMutex
+	cachePath   string
+	undoStack   []ParamChangeRecord
+	redoStack   []ParamChangeRecord
+	historyLock sync.Mutex
 }
 
 // NewScanner instantiates a Scanner with a persistent JSON cache file
@@ -261,6 +274,8 @@ func NewScanner(cp string) *Scanner {
 	s := &Scanner{
 		cache:     make(map[string]PluginMetadata),
 		cachePath: cp,
+		undoStack: make([]ParamChangeRecord, 0),
+		redoStack: make([]ParamChangeRecord, 0),
 	}
 	s.loadCache()
 	return s
@@ -996,4 +1011,95 @@ func (s *Scanner) GetParamByMidiCC(pluginName string, cc int) (*ParamMetadata, e
 	}
 
 	return nil, fmt.Errorf("no parameter mapped to MIDI CC %d on plugin %s", cc, pluginName)
+}
+
+// RecordParamChange records a parameter value mutation onto the undo stack and clears redo
+func (s *Scanner) RecordParamChange(pluginName string, paramIndex int, paramName string, oldVal, newVal float32) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	record := ParamChangeRecord{
+		Timestamp:  0, // Simple monotonic or system epoch
+		PluginName: pluginName,
+		ParamIndex: paramIndex,
+		ParamName:  paramName,
+		OldValue:   oldVal,
+		NewValue:   newVal,
+	}
+
+	s.undoStack = append(s.undoStack, record)
+	// Clear redo stack on new action
+	s.redoStack = s.redoStack[:0]
+}
+
+// UndoParamChange pops the last parameter change from the undo stack, pushes to redo, and applies OldValue
+func (s *Scanner) UndoParamChange() (*ParamChangeRecord, error) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	if len(s.undoStack) == 0 {
+		return nil, fmt.Errorf("undo history is empty")
+	}
+
+	lastIdx := len(s.undoStack) - 1
+	rec := s.undoStack[lastIdx]
+	s.undoStack = s.undoStack[:lastIdx]
+	s.redoStack = append(s.redoStack, rec)
+
+	// Apply OldValue to cache
+	s.cacheLock.Lock()
+	if plugin, ok := s.cache[rec.PluginName]; ok {
+		for i := range plugin.Parameters {
+			if plugin.Parameters[i].Index == rec.ParamIndex {
+				plugin.Parameters[i].DefaultValue = rec.OldValue
+				break
+			}
+		}
+		s.cache[rec.PluginName] = plugin
+		s.saveCache()
+	}
+	s.cacheLock.Unlock()
+
+	return &rec, nil
+}
+
+// RedoParamChange pops the last undone change from the redo stack, pushes to undo, and applies NewValue
+func (s *Scanner) RedoParamChange() (*ParamChangeRecord, error) {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	if len(s.redoStack) == 0 {
+		return nil, fmt.Errorf("redo history is empty")
+	}
+
+	lastIdx := len(s.redoStack) - 1
+	rec := s.redoStack[lastIdx]
+	s.redoStack = s.redoStack[:lastIdx]
+	s.undoStack = append(s.undoStack, rec)
+
+	// Apply NewValue to cache
+	s.cacheLock.Lock()
+	if plugin, ok := s.cache[rec.PluginName]; ok {
+		for i := range plugin.Parameters {
+			if plugin.Parameters[i].Index == rec.ParamIndex {
+				plugin.Parameters[i].DefaultValue = rec.NewValue
+				break
+			}
+		}
+		s.cache[rec.PluginName] = plugin
+		s.saveCache()
+	}
+	s.cacheLock.Unlock()
+
+	return &rec, nil
+}
+
+// GetParamHistory returns a copy of recent recorded parameter changes from the undo stack
+func (s *Scanner) GetParamHistory() []ParamChangeRecord {
+	s.historyLock.Lock()
+	defer s.historyLock.Unlock()
+
+	copied := make([]ParamChangeRecord, len(s.undoStack))
+	copy(copied, s.undoStack)
+	return copied
 }

@@ -42,4 +42,5 @@
 - [x] VST3 Parameter Tagging, Favorites Engine & Inspector Filter (v3.20.0)
 - [x] VST3 Macro Parameter Modulation Link & Mapping Matrix (v3.21.0)
 - [x] VST3 Parameter MIDI CC Mapping Engine, Badges & Hardware Routing (v3.22.0)
+- [x] VST3 Parameter History Stack & Undo/Redo Engine (v3.23.0)
 - [ ] Multi-User Studio Jam Rooms

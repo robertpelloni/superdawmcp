@@ -430,7 +430,7 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 			<p>Unified Multi-DAW Orchestration, VST3 Discovery & Neural Stem Engine</p>
 		</div>
 		<div class="header-actions">
-			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.22.0 Active</span>
+			<span class="badge badge-success" data-tooltip="Active daemon instance version">v3.23.0 Active</span>
 			<button class="btn btn-primary" onclick="callMcp('superdaw_save_session', {})" data-tooltip="Save studio session state (routing, clips, patches) to JSON">💾 Save Session</button>
 			<button class="btn btn-secondary" onclick="callMcp('superdaw_load_session', {})" data-tooltip="Restore studio state from saved JSON file">📂 Load Session</button>
 			<a href="/remote" target="_blank" class="btn btn-subtle" data-tooltip="Open dedicated touch-optimized remote control for mobile/tablet">📱 Mobile Remote</a>
@@ -517,6 +517,8 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 				<div style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between;">
 					<span>Sound Design Macro Controls & State</span>
 					<div style="display: flex; gap: 6px;">
+						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="undoParamHistory()" data-tooltip="Revert last parameter change">↶ Undo</button>
+						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="redoParamHistory()" data-tooltip="Re-apply undone parameter change">↷ Redo</button>
 						<button id="btn-ab" class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="toggleABComparison()" data-tooltip="Switch between snapshot A and snapshot B">⚖️ State: <span id="ab-label">A</span></button>
 						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="randomizeParameters()" data-tooltip="Controlled musical parameter randomization (±25% range)">🎲 Randomize</button>
 						<button class="btn btn-subtle" style="padding: 2px 8px; font-size: 10px;" onclick="resetParametersToDefault()" data-tooltip="Reset all parameters to factory defaults">↺ Reset</button>
@@ -713,6 +715,38 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		let snapshotA = {};
 		let snapshotB = {};
 		let snapshotBanks = { A: {}, B: {}, C: {}, D: {} };
+		let clientHistory = [];
+		let clientRedo = [];
+
+		function recordHistoryEntry(paramName, paramIndex, oldVal, newVal) {
+			if (oldVal === newVal) return;
+			clientHistory.push({ plugin: activePlugin, name: paramName, index: paramIndex, oldVal, newVal });
+			clientRedo = [];
+		}
+
+		function undoParamHistory() {
+			if (clientHistory.length === 0) return;
+			const last = clientHistory.pop();
+			clientRedo.push(last);
+			const slider = document.getElementById('slider-' + last.index);
+			const numInput = document.getElementById('num-' + last.index);
+			if (slider) slider.value = last.oldVal;
+			if (numInput) numInput.value = last.oldVal.toFixed(2);
+			updateReadout(last.index, last.oldVal, '');
+			sendPluginParam(last.plugin, last.name, last.oldVal);
+		}
+
+		function redoParamHistory() {
+			if (clientRedo.length === 0) return;
+			const next = clientRedo.pop();
+			clientHistory.push(next);
+			const slider = document.getElementById('slider-' + next.index);
+			const numInput = document.getElementById('num-' + next.index);
+			if (slider) slider.value = next.newVal;
+			if (numInput) numInput.value = next.newVal.toFixed(2);
+			updateReadout(next.index, next.newVal, '');
+			sendPluginParam(next.plugin, next.name, next.newVal);
+		}
 
 		function storeSnapshotBank(slot) {
 			if (!activePlugin || !cachedPlugins[activePlugin]) return;
@@ -1142,6 +1176,8 @@ func renderUnifiedDashboard(w http.ResponseWriter) {
 		function syncParamSlider(pluginName, paramName, value, index, unit) {
 			const numVal = parseFloat(value);
 			const numInput = document.getElementById('num-' + index);
+			const prevVal = numInput ? parseFloat(numInput.value) : numVal;
+			recordHistoryEntry(paramName, index, prevVal, numVal);
 			if (numInput) numInput.value = numVal.toFixed(2);
 			updateReadout(index, numVal, unit);
 			sendPluginParam(pluginName, paramName, numVal);
