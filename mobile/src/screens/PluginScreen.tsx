@@ -130,7 +130,12 @@ export default function PluginScreen(): React.JSX.Element {
 
 	return (
 		<ScrollView style={styles.container}>
-			<Text style={styles.title}>Plugin Touch Remote</Text>
+			<View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+				<Text style={styles.title}>Plugin Touch Remote</Text>
+				<View style={{ backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10b981", borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+					<Text style={{ color: "#10b981", fontSize: 10, fontWeight: "700" }}>👥 Jam Sync</Text>
+				</View>
+			</View>
 
 			<View style={styles.section}>
 				<Text style={styles.sectionTitle}>Active VST3 Plugin</Text>

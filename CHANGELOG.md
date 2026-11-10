@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.25.0] - 2026-11-08
+### Added
+- **Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine**: Implemented `CollabHub` in `pkg/engine/collab.go` managing multi-peer registration, non-blocking parameter event fan-out, and Last-Write-Wins (LWW) timestamp conflict resolution.
+- **Master Studio Console Studio Jam Indicator**: Added prominent `👥 Studio Jam: 1 Peer` live collaboration badge to the Master Header in `pkg/ux/dashboard/ui.go` with contextual tooltips and version upgrade to `v3.25.0 Active`.
+- **Mobile Touch Remote Jam Sync Indicator**: Added `👥 Jam Sync` badge directly inside the header of `mobile/src/screens/PluginScreen.tsx`.
+- **Comprehensive Collab Unit Testing**: Added `TestCollabHub_PeerLifecycle` and `TestCollabHub_BroadcastAndLWW` in `pkg/engine/collab_test.go` verifying peer joins/leaves, broadcast distribution, and timestamp-based conflict rejection.
+
 ## [v3.24.0] - 2026-11-08
 ### Added
 - **VST3 Parameter Direct Randomizer & Mutation Engine**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` featuring constrained mutation delta scaling (`mutationAmount` 0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only protection, and automatic recording onto the undo history stack for reversible sound design.

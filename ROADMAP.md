@@ -1,9 +1,12 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.24.0 - Active)
-- [x] **VST3 Parameter Direct Randomizer & Mutation Engine**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` with constrained mutation delta scaling (0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only skipping, and undo history integration.
-- [x] **Master Console Mutation & Randomization Controls**: Updated header badge to `v3.24.0 Active`, added interactive `🧬 Mutate` (±25% range) and `🎲 Randomize` buttons in the Sound Design Macro toolbar, wired with instant client-side undo history recording.
-- [x] **Mobile Touch Remote Mutation Controls**: Added `🧬 Mutate` and `🎲 Rnd` touch buttons to the Sound Design Macros header in `mobile/src/screens/PluginScreen.tsx`.
+## Current Milestone (v3.25.0 - Active)
+- [x] **Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine**: Implemented `CollabHub` in `pkg/engine/collab.go` with peer registration, non-blocking fan-out event broadcasting, and Last-Write-Wins (LWW) timestamp conflict resolution.
+- [x] **Master Studio Console Studio Jam Indicator**: Added prominent `👥 Studio Jam: 1 Peer` live collaboration badge to the Master Header in `pkg/ux/dashboard/ui.go` with contextual tooltips and version upgrade to `v3.25.0 Active`.
+- [x] **Mobile Touch Remote Jam Sync Indicator**: Added `👥 Jam Sync` badge directly inside the header of `mobile/src/screens/PluginScreen.tsx`.
+- [x] **VST3 Parameter Direct Randomizer & Mutation Engine (v3.24.0)**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` with constrained mutation delta scaling (0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only skipping, and undo history integration.
+- [x] **Master Console Mutation & Randomization Controls (v3.24.0)**: Updated header badge to `v3.24.0 Active`, added interactive `🧬 Mutate` (±25% range) and `🎲 Randomize` buttons in the Sound Design Macro toolbar, wired with instant client-side undo history recording.
+- [x] **Mobile Touch Remote Mutation Controls (v3.24.0)**: Added `🧬 Mutate` and `🎲 Rnd` touch buttons to the Sound Design Macros header in `mobile/src/screens/PluginScreen.tsx`.
 - [x] **VST3 Parameter History Stack & Undo/Redo Engine (v3.23.0)**: Implemented `ParamChangeRecord`, `RecordParamChange`, `UndoParamChange`, `RedoParamChange`, and `GetParamHistory` in `pkg/vst/scanner.go` with thread safety and cache synchronization.
 - [x] **Master Console Undo/Redo Controls (v3.23.0)**: Added tactile `↶ Undo` and `↷ Redo` buttons to the Sound Design Macro toolbar in `pkg/ux/dashboard/ui.go` with state tracking and parameter restoring.
 - [x] **Mobile Touch Remote Undo/Redo Controls (v3.23.0)**: Added tactile `↶ Undo` and `↷ Redo` buttons in `mobile/src/screens/PluginScreen.tsx` for touch parameter rollback.
