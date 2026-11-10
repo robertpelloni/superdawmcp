@@ -1,9 +1,11 @@
 # SuperDAW-MCP ROADMAP
 
-## Current Milestone (v3.25.0 - Active)
-- [x] **Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine**: Implemented `CollabHub` in `pkg/engine/collab.go` with peer registration, non-blocking fan-out event broadcasting, and Last-Write-Wins (LWW) timestamp conflict resolution.
-- [x] **Master Studio Console Studio Jam Indicator**: Added prominent `👥 Studio Jam: 1 Peer` live collaboration badge to the Master Header in `pkg/ux/dashboard/ui.go` with contextual tooltips and version upgrade to `v3.25.0 Active`.
-- [x] **Mobile Touch Remote Jam Sync Indicator**: Added `👥 Jam Sync` badge directly inside the header of `mobile/src/screens/PluginScreen.tsx`.
+## Current Milestone (v3.26.0 - Active)
+- [x] **Automated Dependency Grooming & Module Hygiene**: Cleaned and reconciled `go.mod` and `go.sum` via `go mod tidy` ensuring zero extraneous dependencies or mismatched checksums.
+- [x] **Master Studio Console Version Governance Sync**: Bumped and aligned runtime dashboard badge in `pkg/ux/dashboard/ui.go` and `VERSION.md` to `v3.26.0 Active`.
+- [x] **Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine (v3.25.0)**: Implemented `CollabHub` in `pkg/engine/collab.go` with peer registration, non-blocking fan-out event broadcasting, and Last-Write-Wins (LWW) timestamp conflict resolution.
+- [x] **Master Studio Console Studio Jam Indicator (v3.25.0)**: Added prominent `👥 Studio Jam: 1 Peer` live collaboration badge to the Master Header in `pkg/ux/dashboard/ui.go` with contextual tooltips.
+- [x] **Mobile Touch Remote Jam Sync Indicator (v3.25.0)**: Added `👥 Jam Sync` badge directly inside the header of `mobile/src/screens/PluginScreen.tsx`.
 - [x] **VST3 Parameter Direct Randomizer & Mutation Engine (v3.24.0)**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` with constrained mutation delta scaling (0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only skipping, and undo history integration.
 - [x] **Master Console Mutation & Randomization Controls (v3.24.0)**: Updated header badge to `v3.24.0 Active`, added interactive `🧬 Mutate` (±25% range) and `🎲 Randomize` buttons in the Sound Design Macro toolbar, wired with instant client-side undo history recording.
 - [x] **Mobile Touch Remote Mutation Controls (v3.24.0)**: Added `🧬 Mutate` and `🎲 Rnd` touch buttons to the Sound Design Macros header in `mobile/src/screens/PluginScreen.tsx`.

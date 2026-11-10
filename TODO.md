@@ -45,4 +45,5 @@
 - [x] VST3 Parameter History Stack & Undo/Redo Engine (v3.23.0)
 - [x] VST3 Parameter Direct Randomizer & Mutation Engine (v3.24.0)
 - [x] Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine (v3.25.0)
+- [x] Automated Dependency Grooming & Module Hygiene Sync (v3.26.0)
 - [ ] Distributed multi-instance session clustering

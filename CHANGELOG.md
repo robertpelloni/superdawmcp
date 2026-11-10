@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [v3.26.0] - 2026-11-08
+### Added
+- **Automated Dependency Grooming & Module Hygiene**: Cleaned and reconciled `go.mod` and `go.sum` via `go mod tidy` ensuring zero extraneous dependencies or mismatched checksums.
+- **Master Studio Console Version Governance Sync**: Bumped and aligned runtime dashboard badge in `pkg/ux/dashboard/ui.go` and `VERSION.md` to `v3.26.0 Active`.
+- **Integrated Multi-Package Test Suite Validation**: Re-verified multi-package test suites across `pkg/engine` (CollabHub LWW sync, Link bridge clock phase calculations), `pkg/vst` (parameter lock, undo/redo history, mutation/randomization, MIDI CC mappings, macro assignments), and `tests/compatibility` with 100% pass rates.
+- **Workspace Sanitization & Governance Documentation**: Pruned dangling temporary test artifacts, updated `ROADMAP.md`, `TODO.md`, `MEMORY.md`, and `HANDOFF.md` to capture multi-user collaborative synchronization and randomized sound design parameter engines.
+
 ## [v3.25.0] - 2026-11-08
 ### Added
 - **Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine**: Implemented `CollabHub` in `pkg/engine/collab.go` managing multi-peer registration, non-blocking parameter event fan-out, and Last-Write-Wins (LWW) timestamp conflict resolution.
