@@ -1,51 +1,171 @@
-# Changelog
+# CHANGELOG
 
-## [3.1.0] - 2024-11-21
+## [v3.26.0] - 2026-11-08
 ### Added
-- **Plugin Inspector:** Integrated a new UI component in the Web Dashboard for real-time VST3 parameter control.
-- **Enhanced VST3 Heuristics:** Expanded automated parameter discovery in `pkg/vst/scanner.go` for LFO, Filters, and effects.
-- **Improved Versioning:** Centralized versioning synchronized across VERSION.md and Dashboard.
+- **Automated Dependency Grooming & Module Hygiene**: Cleaned and reconciled `go.mod` and `go.sum` via `go mod tidy` ensuring zero extraneous dependencies or mismatched checksums.
+- **Master Studio Console Version Governance Sync**: Bumped and aligned runtime dashboard badge in `pkg/ux/dashboard/ui.go` and `VERSION.md` to `v3.26.0 Active`.
+- **Integrated Multi-Package Test Suite Validation**: Re-verified multi-package test suites across `pkg/engine` (CollabHub LWW sync, Link bridge clock phase calculations), `pkg/vst` (parameter lock, undo/redo history, mutation/randomization, MIDI CC mappings, macro assignments), and `tests/compatibility` with 100% pass rates.
+- **Workspace Sanitization & Governance Documentation**: Pruned dangling temporary test artifacts, updated `ROADMAP.md`, `TODO.md`, `MEMORY.md`, and `HANDOFF.md` to capture multi-user collaborative synchronization and randomized sound design parameter engines.
 
-## [3.0.0] - 2024-11-21
+## [v3.25.0] - 2026-11-08
 ### Added
-- **Multi-Instance Connection Manager:** Core engine now supports concurrent connections to multiple instances of the same DAW (e.g., `reaper-1`, `reaper-2`).
-- **Heterogeneous DAW Registry:** Dynamic registration and routing for all 8 supported engines.
-- **Enhanced Bidirectional Telemetry:** Standardized state feedback (`/superdaw/state/*`) across REAPER, Logic Pro, and FL Studio agents.
-- **Specialized SDK Adapters:** High-level Python and TypeScript classes for idiomatic DAW control (`AbletonLive`, `Reaper`, etc.).
-- **V3.0.0 Refactor:** Major internal reorganization to decouple driver state from global orchestration.
+- **Multi-User Studio Jam Parameter Sync Hub & Realtime Collab Engine**: Implemented `CollabHub` in `pkg/engine/collab.go` managing multi-peer registration, non-blocking parameter event fan-out, and Last-Write-Wins (LWW) timestamp conflict resolution.
+- **Master Studio Console Studio Jam Indicator**: Added prominent `👥 Studio Jam: 1 Peer` live collaboration badge to the Master Header in `pkg/ux/dashboard/ui.go` with contextual tooltips and version upgrade to `v3.25.0 Active`.
+- **Mobile Touch Remote Jam Sync Indicator**: Added `👥 Jam Sync` badge directly inside the header of `mobile/src/screens/PluginScreen.tsx`.
+- **Comprehensive Collab Unit Testing**: Added `TestCollabHub_PeerLifecycle` and `TestCollabHub_BroadcastAndLWW` in `pkg/engine/collab_test.go` verifying peer joins/leaves, broadcast distribution, and timestamp-based conflict rejection.
 
-## [2.9.0] - 2024-11-21
-### Synchronized
-- **Executive Protocol:** Performed full upstream sync and recursive submodule sanitization.
-- **Branch Reconciliation:** Merged all upstream progress into main and aligned feature tracking.
-- **Documentation Sync:** Updated Roadmap and TODO based on the latest architectural audit.
-
-## [2.8.0] - 2024-11-21
+## [v3.24.0] - 2026-11-08
 ### Added
-- **Logic Pro OSC Feedback:** Real-time state tracking for playing and tempo via port 12101 listener.
-- **Python DAW Subclasses:** New specialized classes (AbletonLive, LogicPro, Reaper, etc.) for intuitive SDK usage.
-- **Robust Installer:** OS-aware native agent installation script with Windows/macOS path handling.
-- **Enhanced Memory & Documentation:** Synthesized architectural learnings and protocol parity reports.
+- **VST3 Parameter Direct Randomizer & Mutation Engine**: Implemented `RandomizeParams` in `pkg/vst/scanner.go` featuring constrained mutation delta scaling (`mutationAmount` 0.0 to 1.0), lock preservation (`onlyUnlocked`), read-only protection, and automatic recording onto the undo history stack for reversible sound design.
+- **Master Studio Console Mutation & Randomization Controls**: Updated header badge to `v3.24.0 Active` in `pkg/ux/dashboard/ui.go`. Added interactive `🧬 Mutate` (±25% range) and `🎲 Randomize` buttons in the Sound Design Macro toolbar, wired to client-side history recording and DAW parameter synchronization.
+- **Mobile Touch Remote Mutation Controls**: Added `🧬 Mutate` and `🎲 Rnd` touch buttons to the Sound Design Macros header in `mobile/src/screens/PluginScreen.tsx`.
+- **Randomizer & Mutator Unit Tests**: Added `TestScanner_RandomizeAndMutateParams` in `pkg/vst/scanner_test.go` verifying parameter lock safeguards, boundary clamping, step resolution, and undo stack integration.
 
-## [2.7.0] - 2024-11-21
+## [v3.23.0] - 2026-11-08
 ### Added
-- **TCP MCP Gateway:** Standalone network access on port 12002 for remote control without subprocess constraints.
-- **Remote Python SDK:** Support for TCP socket transport in 'SuperDAWClient'.
-- **Production Sequence Logic:** Automated multi-DAW orchestration example.
-- **MIDI CC Automation:** Universal support for sending MIDI Control Change messages across engines.
+- **VST3 Parameter History Stack & Undo/Redo Engine**: Implemented `ParamChangeRecord`, `RecordParamChange`, `UndoParamChange`, `RedoParamChange`, and `GetParamHistory` in `pkg/vst/scanner.go` with thread safety and cache synchronization.
+- **Master Console Undo/Redo Controls**: Added tactile `↶ Undo` and `↷ Redo` buttons to the Sound Design Macro toolbar in `pkg/ux/dashboard/ui.go` with state tracking and parameter restoring.
+- **Mobile Touch Remote Undo/Redo Controls**: Added tactile `↶ Undo` and `↷ Redo` buttons in `mobile/src/screens/PluginScreen.tsx` for touch parameter rollback.
+- **Comprehensive Undo/Redo Unit Tests**: Added `TestScanner_ParamUndoRedoHistory` in `pkg/vst/scanner_test.go` covering record tracking, undo value restoration, redo reapplication, and empty stack error handling.
 
-## [2.5.0] - 2024-11-21
+## [v3.22.0] - 2026-11-08
 ### Added
-- **Universal Feature Analysis:** Integrated 30+ architectural reference repositories to establish a comprehensive feature blueprint (see FEATURES.md).
-- **Deep VST Discovery:** Enhanced VST scanner with name-based parameter discovery heuristics and preset metadata extraction.
-- **Pro Tools Integration:** Added native OSC driver and CLI adapter for Avid Pro Tools.
-- **Universal Studio CLI:** New 'scripts/universal_adapter.py' for studio-wide command execution across all active DAWs.
-- **Extended Toolset:** Implemented 'superdaw_set_plugin_parameter', 'superdaw_fire_scene', and full bidirectional monitoring.
+- **VST3 Parameter MIDI Continuous Controller (CC) Mapping Engine**: Extended `ParamMetadata` with `MidiCC int` in `pkg/vst/scanner.go` (-1 if unassigned, 0-127 when mapped). Implemented `AssignParamMidiCC(pluginName, paramIndex, cc)` with strict bounds validation and automatic conflict resolution (unmapping conflicting parameters), alongside `GetParamByMidiCC(pluginName, cc)` for direct hardware controller lookups.
+- **Pre-Calibrated MIDI CC Synthesizer & FX Mappings**: Automatically mapped standard synth parameters to canonical MIDI CC numbers: Master Volume (CC 7), Filter Cutoff (CC 74), Filter Resonance (CC 71), Amp Attack (CC 73), Amp Decay (CC 75), Amp Release (CC 72), LFO 1 Depth (CC 1 Modulation), FX Chorus Depth (CC 93), and FX Reverb Mix (CC 91).
+- **Master Console MIDI CC Badges & MIDI Learn Interaction**: Parameter cards in `pkg/ux/dashboard/ui.go` now prominently display cyan-tinted `🎛️ CC <number>` badges next to macro modulations and polarity pills. The interactive `🎹 LEARN` button prompts users for custom CC assignment and triggers dynamic conflict resolution.
+- **Mobile Touch Remote MIDI CC Indicators**: Updated `mobile/src/screens/PluginScreen.tsx` with `midiCc?: number` in `PluginParam` model and rendered purple `CC <number>` pill badges directly beside parameter titles for immediate touch visibility.
+- **Comprehensive MIDI CC Mapping Test Suite**: Added `TestScanner_MidiCCMapping` in `pkg/vst/scanner_test.go` verifying default mapping seeding, conflict resolution, custom assignment, unmapping (-1), boundary rejection (>127), and persistence across cache reloads.
 
-## [2.4.0] - 2024-11-21
+## [v3.21.0] - 2026-11-08
 ### Added
-- Arrangement Discovery: Real-time track/clip layout broadcasting for Ableton and REAPER.
-- JACK Audio Routing: Native system-level audio patching backend.
-- Global OSC Gateway: Unified OSC input listener on port 12001.
-- Enhanced Web Dashboard: Arrangement View, Virtual MIDI Keyboard, and Studio Blueprint visualization.
-- Multi-Language SDKs: Added clients for Ruby, Rust, TS, Sonic Pi.
+- **VST3 Macro Parameter Modulation Link & Mapping Matrix**: Extended `ParamMetadata` with `MacroAssignments map[string]float32` in `pkg/vst/scanner.go`, accompanied by `AssignParamMacro` (weight clamping `[-1.0, 1.0]`, dynamic unassignment on `0.0`) and `GetMacroParams` methods on `*Scanner`. Automatically seeds standard macro modulation links: Cutoff (`brighten`: 1.0), Resonance (`brighten`: 0.3), Drive (`warmth`: 0.85), Attack (`punch`: -0.8), Decay (`punch`: 0.6), Filter Env Amount (`punch`: 0.75), Reverb Mix (`space`: 1.0), and Delay Mix (`space`: 0.6).
+- **Master Console Macro Link Visual Badges & Dynamic Modulation**: In `pkg/ux/dashboard/ui.go`, parameter cards now render distinct macro link badges (e.g. `✨ brighten (+100%)`, `✨ brighten (+30%)`, `🔥 warmth (+85%)`, `🥊 punch (-80%)`). Sound design macro triggers (`✨ BRIGHTEN`, `🔥 WARMTH`, `🌌 SPACE OUT`, `🥊 SNAPPY / PUNCH`) dynamically discover weighted parameter targets and apply calibrated proportional delta modulation.
+- **Mobile Touch Remote Macro Modulation Links**: Updated `mobile/src/screens/PluginScreen.tsx` with `macroAssignments` representation and weighted multi-parameter scaling for touch macro control.
+- **Macro Modulation Link Test Suite**: Added `TestScanner_MacroAssignments` in `pkg/vst/scanner_test.go` verifying initial preset weights, query filtering, custom assignment updates, zero-weight cleanup, and persistent cache disk serialization.
+
+## [v3.20.0] - 2026-11-08
+### Added
+- **VST3 Parameter Tagging & Favorites Engine**: Added `IsFavorite` boolean flag and `Tags []string` to `ParamMetadata` in `pkg/vst/scanner.go`, accompanied by `SetParamFavorite`, `AddParamTag`, and `GetFavoriteParams` methods on `*Scanner`. Automatically seeds standard semantic tags (`Gain`, `Master`, `Filter`, `Tone`, `Pitch`, `Tuning`, `Mod`, `Time`, `Space`, `FX`) and default favorites for fast access.
+- **Master Console Favorites Filter & Tag Pill Badges**: Integrated a dedicated `⭐ Favorites` filter tab in the Plugin Inspector toolbar in `pkg/ux/dashboard/ui.go`. Parameters display interactive favorite star toggle buttons (`⭐`/`☆`) and semantic tag pills next to their names. Parameter search matches custom tag names.
+- **Mobile Touch Remote Favorites Filtering**: Added `isFavorite` and `tags` support to `mobile/src/screens/PluginScreen.tsx` with a tactile `⭐ Favorites` pill toggle button and interactive star toggles on touch parameter cards.
+- **Tagging & Favorites Test Suite**: Added `TestScanner_ParamFavoritesAndTagging` to `pkg/vst/scanner_test.go` verifying favorite toggling, tag appending, and persistent disk cache serialization across scanner instances.
+
+## [v3.19.0] - 2026-11-08
+### Added
+- **Parameter Lock Engine & Batch Update Safeguards**: Added `IsLocked` flag to `ParamMetadata`, alongside `SetParamLock`, `GetParamLock`, and `BatchUpdateParams` methods on `*Scanner` in `pkg/vst/scanner.go`. `BatchUpdateParams` guarantees that locked parameters remain invariant while simultaneously updating unlocked parameters within min/max boundaries.
+- **Master Console Parameter Lock UX**: Integrated tactile lock toggle buttons (`🔒`/`🔓`) on each parameter card in `pkg/ux/dashboard/ui.go`. When locked, controls display a protective badge and sliders/inputs are disabled. Guarded macros, randomize, reset, and A/B morphing from modifying locked parameters.
+- **Mobile Touch Remote Parameter Locking**: Added parameter lock toggles to `mobile/src/screens/PluginScreen.tsx` with disabled states and safeguard checks preventing touch changes from modifying locked parameters.
+- **Comprehensive Unit Testing**: Added `TestScanner_ParamLockAndBatchUpdate` in `pkg/vst/scanner_test.go` covering lock toggling, batch update rejection for locked values, parameter clamping, and unlock validation.
+
+## [v3.18.0] - 2026-11-08
+### Added
+- **Visual Parameter Transfer Curve Sparklines**: Added `GenerateCurvePoints` to `ParamMetadata` in `pkg/vst/scanner.go` computing normalized response coordinates across curves (logarithmic, decibel, S-curve, linear).
+- **Master Console Mini Curve Canvases**: Added dynamic response curve sparklines on each parameter card in `pkg/ux/dashboard/ui.go` providing immediate visual feedback of parameter response characteristics.
+
+## [v3.17.0] - 2026-11-08
+### Added
+- **Mobile Touch Remote Snapshot Banks & Continuous Morphing**: Fully integrated snapshot banks (Slot A, Slot B, Slot C, Slot D) and real-time A ⟷ B morph slider (0-100%) in `mobile/src/screens/PluginScreen.tsx`.
+- **Mobile Precision Parameter Reset**: Added tactile individual parameter reset buttons (`↺`) to `mobile/src/screens/PluginScreen.tsx` restoring calibrated defaults.
+
+## [v3.16.0] - 2026-11-08
+### Added
+- **Fine-Grained Parameter Metadata & Polarity Badging**: Added `IsBipolar`, `SmoothingMs`, `CanAutomate`, and `IsReadOnly` fields to `ParamMetadata` with helper methods `ClampValue` and `ResetToDefault` in `pkg/vst/scanner.go`.
+- **Plugin Inspector Double-Click & Single Parameter Reset**: Added individual parameter reset buttons (`↺`) and double-click reset directly on parameter faders in Master Console (`pkg/ux/dashboard/ui.go`) and mobile remote (`pkg/ux/dashboard/remote.go`).
+- **Visual Polarity & Slew Rate Indicators**: Added visual `± Bipolar` / `+ Uni` and `~Smoothing` pills on each parameter card in the Master Console.
+
+## [v3.15.0] - 2026-11-08
+### Added
+- **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Fully integrated snapshot bank slot buttons (Slot A, Slot B, Slot C, Slot D) with visual active indicators and a continuous A ⟷ B morph slider into the Master Console Sound Design section in `pkg/ux/dashboard/ui.go`.
+- **Dynamic Cross-Parameter State Morphing**: Implemented real-time parameter interpolation logic (`morphBankParameters`) crossfading between Slot A and Slot B with live percentage readout and DAW automation dispatch.
+
+## [v3.14.0] - 2026-11-08
+### Added
+- **Mobile Touch Remote Fine-Nudge Controls**: Added tactile -0.05 and +0.05 step nudging buttons directly inside `mobile/src/screens/PluginScreen.tsx` for precise touch modulation without slider jumping.
+- **Synchronized Mobile & Web Remote Stepping**: Unified stepping behavior across React Native and Web `/remote` interfaces.
+
+## [v3.13.0] - 2026-11-08
+### Added
+- **Bidirectional Parameter Curve Conversion & Snapping**: Implemented `NormalizedToPhysical`, `PhysicalToNormalized`, and `SnapToStep` methods on `ParamMetadata` in `pkg/vst/scanner.go` supporting Logarithmic, Decibel, Sigmoidal S-Curve, and Stepped snapping.
+- **Enhanced Curve Visualization**: Added distinct mathematical curve icons (📐 logarithmic, 🔊 decibel, 〰️ scurve, 📈 linear) and interactive badges in the Master Console Plugin Inspector (`pkg/ux/dashboard/ui.go`).
+- **Comprehensive Curve Test Suite**: Added `TestParamMetadata_CurveConversionsAndSnapping` in `pkg/vst/scanner_test.go` verifying round-trip fidelity and boundary clamping.
+
+## [v3.12.0] - 2026-11-08
+### Added
+- **VST3 Parameter Modulation Routing & Automation Engine**: Implemented `SetParamModulation` and `GetParamModulation` in `pkg/vst/scanner.go` supporting LFO 1/2, Envelope 1/2, Velocity, and Aftertouch modulation sources with bipolar depth scaling (-100% to +100%).
+- **MCP Modulation Protocol Tools**: Registered `superdaw_set_plugin_param_mod` and `superdaw_get_plugin_param_mod` MCP tools for programmatic AI modulation patching.
+- **Enhanced Master Console & Mobile Inspector Controls**: Integrated interactive modulation source dropdowns and bipolar depth sliders directly beneath each parameter card on the Master Console (`pkg/ux/dashboard/ui.go`) and mobile remote (`pkg/ux/dashboard/remote.go`).
+
+## [v3.11.0] - 2026-11-08
+### Added
+- **Universal Link Synchronization & Studio Clock**: Expanded `LinkBridge` in `pkg/engine/link.go` with synchronized tempo ramping, quantization phase alignment, beat calculation, and peer monitoring.
+- **MCP Link Protocol Tools**: Registered `superdaw_link_sync` and `superdaw_link_status` in protocol schemas and MCP message dispatch loop.
+- **Master Console Universal Link Clock HUD**: Integrated real-time beat counter, 4/4 bar phase readout, tempo pulse LED, and bidirectional tempo sync into `pkg/ux/dashboard/ui.go`.
+
+## [v3.10.0] - 2026-11-08
+### Added
+- **Desktop System Tray Controller (`scripts/superdaw_tray.py`)**: Implemented status inspection, port monitoring (HTTP 8081, OSC 12001, TCP 12002), and graceful shutdown integration via `/api/quit`.
+- **Studio Health Diagnostic Fix (`scripts/studio_health.py`)**: Fixed `get_studio_status` integration to properly report active DAW connections and transport statuses.
+
+## [v3.9.0] - 2026-11-07
+### Added
+- **Unified Master Console Preset Snapshot Banks & Continuous Morphing**: Added snapshot slot buttons (Slot A, Slot B, Slot C, Slot D) and continuous parameter interpolation morph slider in `pkg/ux/dashboard/ui.go`.
+- **Touch Mobile Remote Preset Morphing Integration**: Fully wired React Native `mobile/src/screens/PluginScreen.tsx` with snapshot slots A/B/C/D, continuous morph slider, and tactile step buttons.
+- **Robust Stdio Mode Detection**: Added command-line flag awareness (`--headless`/`--daemon`) in `cmd/superdaw/main.go` to support automated testing while guaranteeing background server persistence.
+
+## [v3.8.0] - 2026-11-07
+### Added
+- **Bidirectional Mathematical Curve Engine**: Implemented `NormalizedToPhysical` and `PhysicalToNormalized` across Logarithmic, Decibel, and S-Curves.
+- **Preset State Snapshots Engine**: Added `PresetManager` with snapshot bank slots (A, B, C, D) and continuous state morphing.
+
+## [v3.7.0] - 2026-11-07
+### Added
+- **Consolidated Unified Dashboard Page**: Merged separate subpages into a high-visibility, single responsive command console with priority-ranked cards and tooltips.
+
+## [v3.6.0] - 2026-11-06
+### Added
+- **Human-Readable Parameter Readout & Display Value Formatting**: Added `FormatDisplayValue` in `pkg/vst/scanner.go` formatting raw parameter floats into musical frequencies ("kHz/Hz"), decibel gains ("dB"), percentages, envelope time units ("ms/s"), and waveform shape names.
+- **Dynamic Display Readout & MIDI Learn in Plugin Inspector**: Live formatted value readouts next to parameter inputs, interactive MIDI Learn simulation buttons for hardware CC controller mapping, and tempo-synced musical division pickers (1/4, 1/8d, 1/16, etc.).
+
+## [v3.5.0] - 2026-11-06
+### Added
+- **Touch Mobile Remote VST3 Touch Inspector**: Added touch-friendly plugin selector, macro buttons (Brighten, Warmth, Space Out, Punch), and live parameter faders on the `/remote` endpoint (`pkg/ux/dashboard/remote.go`).
+- **React Native Mobile Plugin Inspector Screen**: Implemented `mobile/src/screens/PluginScreen.tsx` with VST3 parameter modulation sliders, macro buttons, and wired `setPluginParam` in `mobile/src/hooks/useMcp.ts` and `mobile/App.tsx`.
+- **Daemon Background Persistence**: Refined daemon standard input handling to prevent premature exit on EOF and sustain background HTTP, OSC, and TCP gateway operations.
+
+## [v3.4.0] - 2026-11-06
+### Added
+- **Enhanced VST3 Parameter Mapping Accuracy**: Added logarithmic, decibel, and linear response curve classifications and precision step resolutions (`Step`, `Curve`) across synths, dynamics processors (compressors, limiters), and filters.
+- **Plugin Inspector Sound Design & State Tools**: Added A/B Comparison state toggling (storing and toggling parameter snapshots A vs B), controlled musical parameter randomization (`±25%` safe margin), and factory default reset.
+- **Dynamic Step & Curve Labels**: Parameter sliders now dynamically adapt their step resolution and display parameter curve types (e.g. logarithmic frequency, dB gain) alongside unit badges.
+
+## [v3.3.0] - 2026-11-06
+### Added
+- **Refined VST3 Discovery & Sound Design Macro Controls**: Expanded VST3 heuristic parameter generation with multi-oscillator parameters (Osc 1 Waveform, Osc 1 Octave, Osc 2 Detune, Sub Osc Level) and binary signature heuristics.
+- **Interactive Macro Knobs in Plugin Inspector**: Added real-time sound design macro buttons (✨ Brighten, 🔥 Warmth, 🌌 Space Out, 🥊 Snappy / Punch) connected to the active plugin parameter bus.
+- **Granular Category Filtering & Bidirectional Synchronization**: Filter parameter controls by functional category (Filter/Tone, Envelopes, Mod/LFO, FX/Mix, Master) with live search and slider-input sync.
+
+## [v3.2.0] - 2026-11-06
+### Added
+- **Consolidated Master Studio Console**: Redesigned the entire dashboard into a single, unified responsive control surface organized by high-value functional domains.
+- **Deep VST3 Parameter Discovery**: Implemented moduleinfo.json parsing, binary header probing heuristics, preset enumeration, and calibrated parameter ranges.
+- **Categorized Parameter Inspector UX**: Added functional group filter tabs (Filter/Tone, Envelopes, Mod/LFO, FX/Mix, Master), instant search bar, and bidirectional numeric input sync with parameter sliders.
+- **Synchronous Plugin Query API**: Added `/api/plugins` endpoint supporting direct querying of all plugins, single plugin parameter sets, and triggerable deep scans (`?deep=true`).
+- **Graceful Server Shutdown & Process Control**: Added `/api/quit` endpoint and dashboard button to shut down background servers, TCP gateways, and OSC bridges cleanly.
+- **Interactive VST3 Control Surface**: Dynamic parameter sliders with real-time numeric readouts, unit labels, and preset selector wired directly to DAW parameter automation.
+- **Comprehensive Tooltip System**: Added contextual tooltip descriptions across all console controls, transport buttons, patching fields, and generative parameters.
+
+### Fixed
+- Fixed compilation failures in `pkg/daw/logic.go` and `pkg/daw/protools.go` caused by duplicate method definitions (`SendCC`, `SetPluginParameter`) and redundant imports.
+- Archived conflicting root-level `test_*.go` scripts into `archive/test_scripts.tar.gz` to restore clean Go workspace testing.
+- Resolved git merge conflict markers in `TODO.md`.
+
+## [v3.1.0] - 2026-06-17
+### Added
+- Initial VST3 heuristic parameter discovery and basic Plugin Inspector module.
+- Ableton Live 10 Standard instrument mapping and deferred loading.
+- Submodule audit and clean consolidation into native core drivers.
+
+## [v3.0.0] - 2026-04-12
+### Added
+- Multi-instance connection manager and bidirectional OSC telemetry.
+- TCP JSON-RPC Gateway on port 12002.

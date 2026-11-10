@@ -301,6 +301,25 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_link_sync",
+				Description: "Synchronize Ableton Link session transport and BPM across studio network.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"playing": map[string]interface{}{"type": "boolean"},
+						"bpm":     map[string]interface{}{"type": "number"},
+					},
+				},
+			},
+			{
+				Name:        "superdaw_link_status",
+				Description: "Query real-time Ableton Link session clock, beat time, phase, and peer count.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{},
+				},
+			},
+			{
 				Name:        "superdaw_set_plugin_parameter",
 				Description: "Adjust a parameter of a VST plugin by name.",
 				InputSchema: map[string]interface{}{
@@ -313,6 +332,32 @@ func GenerateManifest() ListToolsResult {
 						"daw":            map[string]interface{}{"type": "string"},
 					},
 					"required": []string{"plugin_name", "parameter_name", "value", "track_id"},
+				},
+			},
+			{
+				Name:        "superdaw_set_plugin_param_mod",
+				Description: "Assign modulation routing source (LFO 1/2, Envelope 1/2, Velocity) and bipolar depth (-1.0 to 1.0) to a VST3 plugin parameter",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+						"param_index": map[string]interface{}{"type": "integer"},
+						"source":      map[string]interface{}{"type": "string"},
+						"depth":       map[string]interface{}{"type": "number"},
+					},
+					"required": []string{"plugin_name", "param_index", "source", "depth"},
+				},
+			},
+			{
+				Name:        "superdaw_get_plugin_param_mod",
+				Description: "Get modulation routing source and depth assigned to a VST3 plugin parameter",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+						"param_index": map[string]interface{}{"type": "integer"},
+					},
+					"required": []string{"plugin_name", "param_index"},
 				},
 			},
 			{

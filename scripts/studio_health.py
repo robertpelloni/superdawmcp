@@ -26,16 +26,17 @@ def main():
     print(f"Server: {server_path}")
     print("-" * 40)
 
-    report = orch.studio_report()
+    report = orch.get_studio_status()
 
     active_count = 0
     for daw, info in report.items():
-        status = "ONLINE" if info["active"] else "OFFLINE"
+        status = "ONLINE" if info.get("online") else "OFFLINE"
         print(f"[{status}] {daw.upper():<10}")
-        if info["active"]:
+        if info.get("online"):
             active_count += 1
-            print(f"  > Tracks: {info['track_count']}")
-            print(f"  > State:  {info['transport']}")
+            print(f"  > Tracks: {info.get('track_count', 0)}")
+            print(f"  > BPM:    {info.get('bpm', 120.0)}")
+            print(f"  > Play:   {info.get('playing', False)}")
         print("-" * 20)
 
     print(f"\nSummary: {active_count} engines active.")
