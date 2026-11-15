@@ -96,7 +96,7 @@ func TestIntegration_Bitwig(t *testing.T) {
 		t.Fatal("Client is nil")
 	}
 	defer client.Close()
-
+	time.Sleep(200 * time.Millisecond)
 	err = client.SetMixer("1", 0.8, 0.0, "bitwig")
 	if err != nil { t.Errorf("SetMixer failed: %v", err) }
 

@@ -3,7 +3,6 @@ package daw
 import (
 	"fmt"
 	"github.com/hypebeast/go-osc/osc"
-    "fmt"
 )
 
 // LogicProDriver maps unified commands to Logic Pro's standard OSC schema.
@@ -101,12 +100,3 @@ func (l *LogicProDriver) ExecuteCustomCommand(cmd string, args map[string]interf
 
 
 
-// SendCC stub – Logic Pro does not support CC via OSC currently.
-func (l *LogicProDriver) SendCC(trackID string, controller int, value int) error {
-	return nil
-}
-
-// SetPluginParameter stub – not implemented for Logic Pro over OSC.
-func (l *LogicProDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
-	return nil
-}

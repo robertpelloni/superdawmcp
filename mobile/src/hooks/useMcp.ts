@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import TcpGateway from "../services/TcpGateway";
 
 export interface UseMcpReturn {
@@ -21,6 +21,21 @@ export function useMcp(): UseMcpReturn {
 	const [error, setError] = useState<string | null>(null);
 	const [tempo, setTempoState] = useState(145);
 	const [playing, setPlaying] = useState(false);
+
+
+	useEffect(() => {
+		TcpGateway.onStateUpdate = (state: any) => {
+			if (state.playing !== undefined) {
+				setPlaying(state.playing);
+			}
+			if (state.bpm !== undefined) {
+				setTempoState(state.bpm);
+			}
+		};
+		return () => {
+			TcpGateway.onStateUpdate = undefined;
+		};
+	}, []);
 
 	const connect = useCallback(async () => {
 		setConnecting(true);

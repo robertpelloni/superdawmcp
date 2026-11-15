@@ -8,6 +8,10 @@ A Model Context Protocol (MCP) server that exposes DAW (digital audio workstatio
 
 ## What's in here
 
+## Quick Start
+See [DEPLOY.md](DEPLOY.md) for installation instructions and the [User Guide](docs/USER_GUIDE.md) for comprehensive usage and workflows.
+
+
 - **Go server core** (`go.mod`, `cmd/`, `pkg/`) with Python client/tooling alongside.
 - **DAW bridges** — per-DAW adapters of varying maturity. Ableton Live (Python remote script) and REAPER (Lua/web) are the most developed. The full target list from the design docs: Ableton Live 11/12, REAPER 6/7, Bitwig Studio 5, Logic Pro (OSC), Pro Tools (OSC), FL Studio 21 (MIDI script), Cubase 13 (MIDI remote), Ardour 8 (OSC). Treat non-Ableton/REAPER bridges as in-progress unless `FEATURES.md` / `CLIENTS.md` say otherwise.
 - **Psytrance production scripts** (`build_psytrance*.py`, `make_psytrance.py`, `automate_surge_xt.py`, arrangement enhancers) — the working tooling this project grew out of.

@@ -3,8 +3,8 @@ package daw
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 	"github.com/hypebeast/go-osc/osc"
+	"sync"
 )
 
 type AbletonLiveDriver struct {
@@ -14,7 +14,7 @@ type AbletonLiveDriver struct {
 		playing     bool
 		tempo       float32
 		arrangement string
-		trackCount   int
+		trackCount  int
 		mu          sync.RWMutex
 	}
 }
@@ -82,7 +82,7 @@ func (a *AbletonLiveDriver) listen(port int) {
 		}
 	})
 
-dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {
+	dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {
 		a.state.mu.Lock()
 		if len(msg.Arguments) > 0 {
 			if i, ok := msg.Arguments[0].(int32); ok {
@@ -107,11 +107,14 @@ dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {
 
 func (a *AbletonLiveDriver) GetType() string               { return "ableton" }
 func (a *AbletonLiveDriver) Connect(endpoint string) error { return nil }
-func (a *AbletonLiveDriver) Disconnect() error { return nil }
+func (a *AbletonLiveDriver) Disconnect() error             { return nil }
 
 func (a *AbletonLiveDriver) SetTransportState(playing bool, bpm float64) error {
 	m := osc.NewMessage("/superdaw/transport/play")
-	v := int32(0); if playing { v = 1 }
+	v := int32(0)
+	if playing {
+		v = 1
+	}
 	m.Append(v)
 	a.OSCClient.Send(m)
 	m2 := osc.NewMessage("/superdaw/transport/tempo")
@@ -193,12 +196,17 @@ func (a *AbletonLiveDriver) ExecuteCustomCommand(cmd string, args map[string]int
 	switch cmd {
 	case "fire_scene":
 		idx, ok := args["scene_index"].(float64)
-		if !ok { return nil, fmt.Errorf("missing scene_index") }
+		if !ok {
+			return nil, fmt.Errorf("missing scene_index")
+		}
 		m := osc.NewMessage("/live/scene/fire")
 		m.Append(int32(idx))
 		return "Fired scene", a.OSCClient.Send(m)
 	}
-	return nil, fmt.Errorf("unknown command: %s", cmd)
+
+	// Generic dispatch for dynamically loaded tools (Ableton remote script handles these via /superdaw/custom/...)
+	m := osc.NewMessage("/superdaw/custom/" + cmd)
+	return "Sent to Ableton Live", a.OSCClient.Send(m)
 }
 
 func (a *AbletonLiveDriver) SetPluginParameter(trackID string, pluginID string, paramIndex int, value float32) error {
