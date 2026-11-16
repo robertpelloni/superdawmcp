@@ -8,147 +8,196 @@ import (
 // RegisterMobileRemote sets up a touch-friendly remote control interface on /remote
 func RegisterMobileRemote(mux *http.ServeMux) {
 	mux.HandleFunc("/remote", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `
-			<html>
+		fmt.Fprint(w, `
+			<!DOCTYPE html>
+			<html lang="en">
 				<head>
+					<meta charset="utf-8">
 					<title>SuperDAW Mobile Remote</title>
 					<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 					<style>
-						body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #000; color: #fff; text-align: center; padding: 10px; margin: 0; overflow-x: hidden; }
-						.header { padding: 20px 0; background: #111; border-bottom: 1px solid #333; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
-						.section { background: #1a1a1a; margin: 10px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
-						h2 { font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
-						.btn { display: inline-block; width: 45%%; padding: 25px 0; margin: 5px; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
-						.btn:active { transform: scale(0.95); }
-						.play { background: #00ff88; color: #000; }
-						.stop { background: #ff4444; color: #fff; }
-						.scene-btn { width: 30%%; padding: 15px 0; background: #333; color: #00bcd4; font-size: 16px; }
-						.fader-container { margin: 20px 0; }
-						.fader { width: 100%%; height: 50px; -webkit-appearance: none; background: #222; border-radius: 25px; outline: none; }
-						.fader::-webkit-slider-thumb { -webkit-appearance: none; width: 50px; height: 50px; background: #00ff88; border-radius: 50%%; box-shadow: 0 0 10px rgba(0,255,136,0.5); }
-						.pan-fader::-webkit-slider-thumb { background: #00bcd4; }
-						select { width: 100%%; padding: 15px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
-						.room-badge { background: #00ff88; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 12px; margin-top: 5px; font-weight: bold; }
+						* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+						body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 16px; }
+						.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+						.title { font-size: 20px; font-weight: 800; color: #38bdf8; letter-spacing: -0.5px; }
+						.status-badge { font-size: 11px; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 3px 8px; border-radius: 999px; }
+						.card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+						.card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 12px; }
+						.transport-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+						.btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; text-align: center; }
+						.play { background: #10b981; color: #000; }
+						.stop { background: #ef4444; color: #fff; }
+						.macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+						.btn-macro { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 12px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+						.select-box { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569; color: #f8fafc; border-radius: 6px; font-size: 14px; margin-bottom: 12px; outline: none; }
+						.param-row { background: rgba(0,0,0,0.25); border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+						.param-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+						.fader { width: 100%; height: 36px; -webkit-appearance: none; background: #0f172a; border-radius: 18px; outline: none; }
+						.fader::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; background: #38bdf8; border-radius: 50%; cursor: pointer; }
+						.badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #334155; color: #94a3b8; }
 					</style>
 				</head>
 				<body>
 					<div class="header">
-						<h1 style="margin: 0; font-size: 24px; color: #00ff88;">SuperDAW Remote</h1>
-						<div id="room-display" class="room-badge">Room: default</div>
+						<div class="title">⚡ SuperDAW Remote</div>
+						<div class="status-badge" id="conn-status">Online</div>
 					</div>
 
-					<div class="section">
-						<h2>Transport</h2>
-						<button class="btn play" onclick="callTool('superdaw_transport_control', {playing: true})">PLAY</button>
-						<button class="btn stop" onclick="callTool('superdaw_transport_control', {playing: false})">STOP</button>
-					</div>
-
-					<div class="section">
-						<h2>Scene Launcher</h2>
-						<div style="display: flex; flex-wrap: wrap; justify-content: center;">
-							<button class="btn scene-btn" onclick="callTool('superdaw_fire_scene', {scene_index: 0})">SCENE 1</button>
-							<button class="btn scene-btn" onclick="callTool('superdaw_fire_scene', {scene_index: 1})">SCENE 2</button>
-							<button class="btn scene-btn" onclick="callTool('superdaw_fire_scene', {scene_index: 2})">SCENE 3</button>
-							<button class="btn scene-btn" onclick="callTool('superdaw_fire_scene', {scene_index: 3})">SCENE 4</button>
-							<button class="btn scene-btn" onclick="callTool('superdaw_fire_scene', {scene_index: 4})">SCENE 5</button>
-							<button class="btn scene-btn" onclick="callTool('superdaw_fire_scene', {scene_index: 5})">SCENE 6</button>
+					<!-- Transport Section -->
+					<div class="card">
+						<div class="card-title">Transport Control</div>
+						<div class="transport-grid">
+							<button class="btn play" onclick="callTool('superdaw_transport_control', {playing: true})">▶ PLAY</button>
+							<button class="btn stop" onclick="callTool('superdaw_transport_control', {playing: false})">■ STOP</button>
 						</div>
 					</div>
 
-					<div class="section">
-						<h2>Mixer Control</h2>
-						<select id="track-id" onchange="updateFaderLabel()">
-							<option value="0">Master</option>
+					<!-- Mobile Plugin Inspector Section -->
+					<div class="card">
+						<div class="card-title">VST3 Touch Inspector</div>
+						<select id="mobile-plugin-list" class="select-box" onchange="loadMobilePlugin(this.value)">
+							<option value="">Select plugin...</option>
 						</select>
-						<div class="fader-container">
-							<div id="vol-label" style="margin-bottom: 10px; color: #00ff88;">Master Volume: 0.80</div>
-							<input type="range" id="vol-fader" class="fader" min="0" max="1" step="0.01" value="0.8" oninput="handleVol(this.value)">
+
+						<div class="card-title" style="margin-top: 8px;">Sound Design Macros</div>
+						<div class="macro-grid">
+							<button class="btn-macro" onclick="triggerMobileMacro('brighten')">✨ Brighten</button>
+							<button class="btn-macro" onclick="triggerMobileMacro('warmth')">🔥 Warmth</button>
+							<button class="btn-macro" onclick="triggerMobileMacro('space')">🌌 Space Out</button>
+							<button class="btn-macro" onclick="triggerMobileMacro('punch')">🥊 Punch</button>
 						</div>
-						<div class="fader-container">
-							<div id="pan-label" style="margin-bottom: 10px; color: #00bcd4;">Master Pan: 0.00</div>
-							<input type="range" id="pan-fader" class="fader pan-fader" min="-1" max="1" step="0.01" value="0" oninput="handlePan(this.value)">
+
+						<div id="mobile-param-list">
+							<p style="color: #64748b; font-size: 13px; text-align: center;">Select a plugin to control parameters.</p>
 						</div>
 					</div>
 
 					<script>
-						let currentRoom = new URLSearchParams(window.location.search).get('room') || 'default';
-						document.getElementById('room-display').innerText = 'Room: ' + currentRoom;
-
-						let ws;
-						function connectWS() {
-							if (ws) ws.close();
-							ws = new WebSocket('ws://' + window.location.host + '/ws?room=' + currentRoom);
-							ws.onmessage = (event) => {
-								const state = JSON.parse(event.data);
-								console.log("State updated:", state);
-
-								const trackSelector = document.getElementById('track-id');
-								let currentVal = trackSelector.value;
-								const savedTrack = localStorage.getItem('superdaw_last_track');
-								if (!currentVal && savedTrack) currentVal = savedTrack;
-
-								let options = '<option value="0">Master</option>';
-								for (const name in state.daws) {
-									const d = state.daws[name];
-									if (d.arrangement) {
-										try {
-											const arrangement = JSON.parse(d.arrangement);
-											arrangement.forEach((track, idx) => {
-												options += '<option value="' + (idx+1) + '">' + track.track + '</option>';
-											});
-										} catch(e) {}
-									}
-								}
-								trackSelector.innerHTML = options;
-								trackSelector.value = currentVal;
-								updateFaderLabel();
-							};
-						}
-
-						// Restore saved track selection
-						window.onload = () => {
-							const savedTrack = localStorage.getItem('superdaw_last_track');
-							if (savedTrack) {
-								document.getElementById('track-id').value = savedTrack;
-								updateFaderLabel();
-							}
-							connectWS();
-						};
-
-						function updateFaderLabel() {
-							const v = document.getElementById('vol-fader').value;
-							const p = document.getElementById('pan-fader').value;
-							const trackSelector = document.getElementById('track-id');
-							localStorage.setItem('superdaw_last_track', trackSelector.value);
-							const name = trackSelector.options[trackSelector.selectedIndex]?.text || 'Master';
-							document.getElementById('vol-label').innerText = name + ' Volume: ' + parseFloat(v).toFixed(2);
-							document.getElementById('pan-label').innerText = name + ' Pan: ' + parseFloat(p).toFixed(2);
-						}
-
-						function handleVol(val) {
-							updateFaderLabel();
-							const track = document.getElementById('track-id').value;
-							callTool('superdaw_set_mixer', {track_id: track, volume: parseFloat(val)});
-						}
-
-						function handlePan(val) {
-							updateFaderLabel();
-							const track = document.getElementById('track-id').value;
-							callTool('superdaw_set_mixer', {track_id: track, pan: parseFloat(val)});
-						}
+						let cachedPlugins = {};
+						let activePluginName = "";
 
 						async function callTool(name, args) {
-							console.log("Calling tool in room " + currentRoom + ":", name, args);
-							fetch('/api/call', {
-								method: 'POST',
-								headers: {'Content-Type': 'application/json'},
-								body: JSON.stringify({room_id: currentRoom, name, arguments: args})
+							try {
+								await fetch('/api/call', {
+									method: 'POST',
+									headers: {'Content-Type': 'application/json'},
+									body: JSON.stringify({name, arguments: args})
+								});
+							} catch(e) {
+								console.error("Tool dispatch failed:", e);
+							}
+						}
+
+						async function initPlugins() {
+							try {
+								const res = await fetch('/api/plugins');
+								cachedPlugins = await res.json();
+								const sel = document.getElementById('mobile-plugin-list');
+								sel.innerHTML = '<option value="">Select plugin...</option>';
+								for (const name in cachedPlugins) {
+									sel.innerHTML += '<option value="' + name + '">' + name + '</option>';
+								}
+								// Auto-select first plugin if available
+								const keys = Object.keys(cachedPlugins);
+								if (keys.length > 0) {
+									sel.value = keys[0];
+									loadMobilePlugin(keys[0]);
+								}
+							} catch(e) {
+								console.error("Plugin fetch failed:", e);
+							}
+						}
+
+						function loadMobilePlugin(name) {
+							activePluginName = name;
+							if (!name || !cachedPlugins[name]) {
+								document.getElementById('mobile-param-list').innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center;">Select a plugin to control parameters.</p>';
+								return;
+							}
+							const p = cachedPlugins[name];
+							let html = '';
+							(p.parameters || []).forEach(param => {
+								const val = param.default_value !== undefined ? param.default_value : 0.5;
+								const unit = param.unit ? ' ' + param.unit : '';
+								const modSrc = param.modulation ? param.modulation.source || "None" : "None";
+								html += ' \
+									<div class="param-row"> \
+										<div class="param-header"> \
+											<span>' + param.name + '</span> \
+											<span class="badge" id="val-' + param.index + '">' + val.toFixed(2) + unit + '</span> \
+										</div> \
+										<input type="range" class="fader" min="' + (param.min_value !== undefined ? param.min_value : 0) + '" max="' + (param.max_value !== undefined ? param.max_value : 1) + '" step="' + (param.step || 0.01) + '" value="' + val + '" oninput="syncMobileParam(\'' + name + '\', \'' + param.name + '\', this.value, ' + param.index + ', \'' + (param.unit || '') + '\')"> \
+										<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px;"> \
+											<span style="color: #94a3b8;">Mod: ' + modSrc + '</span> \
+											<div style="display: flex; gap: 4px;"> \
+												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="stepMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', -0.05, \'' + (param.unit || '') + '\')">-0.05</button> \
+												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="stepMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', 0.05, \'' + (param.unit || '') + '\')">+0.05</button> \
+												<button class="macro-btn" style="padding: 2px 6px; font-size: 10px;" onclick="resetMobileParam(\'' + name + '\', \'' + param.name + '\', ' + param.index + ', ' + val + ', \'' + (param.unit || '') + '\')">↺ Reset</button> \
+											</div> \
+										</div> \
+									</div> \
+								';
+							});
+							document.getElementById('mobile-param-list').innerHTML = html;
+						}
+
+						function resetMobileParam(pluginName, paramName, index, defVal, unit) {
+							const slider = document.querySelector('input.fader[oninput*="\'' + paramName + '\'"]');
+							if (slider) slider.value = defVal;
+							syncMobileParam(pluginName, paramName, defVal, index, unit);
+						}
+
+						function stepMobileParam(pluginName, paramName, index, delta, unit) {
+							const slider = document.querySelector('input.fader[oninput*="\'' + paramName + '\'"]');
+							if (!slider) return;
+							let newVal = parseFloat(slider.value) + delta;
+							const min = parseFloat(slider.min || 0);
+							const max = parseFloat(slider.max || 1);
+							if (newVal < min) newVal = min;
+							if (newVal > max) newVal = max;
+							slider.value = newVal;
+							syncMobileParam(pluginName, paramName, newVal, index, unit);
+						}
+
+						function syncMobileParam(pluginName, paramName, value, index, unit) {
+							const num = parseFloat(value);
+							const badge = document.getElementById('val-' + index);
+							if (badge) badge.innerText = num.toFixed(2) + (unit ? ' ' + unit : '');
+							callTool('superdaw_set_plugin_parameter', {
+								daw: 'ableton',
+								track_id: '0',
+								plugin_name: pluginName,
+								parameter_name: paramName,
+								value: num
 							});
 						}
+
+						function triggerMobileMacro(macroType) {
+							if (!activePluginName || !cachedPlugins[activePluginName]) return;
+							const p = cachedPlugins[activePluginName];
+							(p.parameters || []).forEach(param => {
+								let newVal = null;
+								const pName = param.name.toLowerCase();
+								if (macroType === 'brighten' && (pName.includes('cutoff') || pName.includes('high cut'))) {
+									newVal = Math.min((param.max_value || 1.0), 0.85);
+								} else if (macroType === 'warmth' && (pName.includes('drive') || pName.includes('damping'))) {
+									newVal = 0.65;
+								} else if (macroType === 'space' && (pName.includes('reverb') || pName.includes('wet') || pName.includes('delay'))) {
+									newVal = 0.70;
+								} else if (macroType === 'punch' && (pName.includes('attack'))) {
+									newVal = 0.01;
+								}
+								if (newVal !== null) {
+									syncMobileParam(activePluginName, param.name, newVal, param.index, param.unit || '');
+								}
+							});
+							loadMobilePlugin(activePluginName);
+						}
+
+						window.onload = initPlugins;
 					</script>
 				</body>
 			</html>
 		`)
 	})
-
 }

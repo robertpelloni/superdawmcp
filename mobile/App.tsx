@@ -5,10 +5,11 @@ import HomeScreen from "./src/screens/HomeScreen";
 import MixerScreen from "./src/screens/MixerScreen";
 import PluginScreen from "./src/screens/PluginScreen";
 
+import PluginScreen from "./src/screens/PluginScreen";
+
 type RootStackParamList = {
 	Home: undefined;
-	Mixer: undefined;
-	Plugins: undefined;
+	Plugin: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -23,14 +24,9 @@ export default function App(): React.JSX.Element {
 					options={{ title: "SuperDAW Remote" }}
 				/>
 				<Stack.Screen
-					name="Mixer"
-					component={MixerScreen}
-					options={{ title: "Mixer" }}
-				/>
-				<Stack.Screen
-					name="Plugins"
+					name="Plugin"
 					component={PluginScreen}
-					options={{ title: "Plugin Inspector" }}
+					options={{ title: "VST3 Touch Inspector" }}
 				/>
 			</Stack.Navigator>
 		</NavigationContainer>

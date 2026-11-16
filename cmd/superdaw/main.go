@@ -33,7 +33,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	scanner := vst.NewScanner("vst_cache.json")
 
-	dash, dashMux := dashboard.StartDashboard(8081)
+	dash, dashMux := dashboard.StartDashboard(8081, scanner)
 	dashboard.RegisterMobileRemote(dashMux)
 
 	router := daw.NewAudioRouter("127.0.0.1", 12000)
@@ -252,7 +252,15 @@ func main() {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
+			// In stdio MCP mode, EOF indicates parent process closed standard input
+			// Check if standard input was connected to a pipe or closed by client
 			if err == io.EOF {
+				// If launched with --headless or detached daemon flag, block to keep HTTP/OSC running
+				for _, arg := range os.Args {
+					if arg == "--headless" || arg == "--daemon" {
+						select {}
+					}
+				}
 				return
 			}
 			continue
@@ -403,9 +411,26 @@ func handleToolCallWithRoom(roomID string, name string, args map[string]interfac
 		result = scanner.ListPlugins()
 	case "superdaw_get_plugin_params":
 		name, _ := args["plugin_name"].(string); result, _ = scanner.GetPluginMetadata(name)
-	case "superdaw_vst_deep_scan":
-		name, _ := args["plugin_name"].(string); scanner.DeepScan(name)
-		result, _ = scanner.GetPluginMetadata(name)
+	case "superdaw_set_plugin_param_mod":
+		pName, _ := args["plugin_name"].(string)
+		idx, _ := args["param_index"].(float64)
+		src, _ := args["source"].(string)
+		depth, _ := args["depth"].(float64)
+		err := scanner.SetParamModulation(pName, int(idx), src, float32(depth))
+		if err != nil {
+			result = fmt.Sprintf("Error setting modulation: %v", err)
+		} else {
+			result = fmt.Sprintf("Assigned mod %s (depth %.2f) to param %d on %s", src, depth, int(idx), pName)
+		}
+	case "superdaw_get_plugin_param_mod":
+		pName, _ := args["plugin_name"].(string)
+		idx, _ := args["param_index"].(float64)
+		mod, err := scanner.GetParamModulation(pName, int(idx))
+		if err != nil {
+			result = fmt.Sprintf("Error getting modulation: %v", err)
+		} else {
+			result = mod
+		}
 	case "superdaw_set_plugin_parameter":
 		pName, _ := args["plugin_name"].(string)
 		paramName, _ := args["parameter_name"].(string)
@@ -474,23 +499,16 @@ func handleToolCallWithRoom(roomID string, name string, args map[string]interfac
 		fname, _ := args["filename"].(string); if fname == "" { fname = "studio_session.json" }
 		data, _ := os.ReadFile(fname); var state dashboard.RoomData; json.Unmarshal(data, &state); dash.SetState(roomID, state); result = "Session loaded."
 	case "superdaw_generate_music":
-		style, _ := args["style"].(string)
-		bars, _ := args["bars"].(float64)
-		trackID, _ := args["track_id"].(string)
-		notes := engine.GenerateMusic(style, int(bars))
-		driver.WriteMIDIClip(trackID, 0, notes)
-		result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
-	default:
-		// Generic dispatch for dynamically generated tools
-		if strings.HasPrefix(name, "superdaw_") {
-			cmd := strings.TrimPrefix(name, "superdaw_")
-			res, err := driver.ExecuteCustomCommand(cmd, args)
-			if err != nil {
-				return err.Error()
-			}
-			return res
-		}
-		return fmt.Sprintf("Unknown tool: %s", name)
+		style, _ := args["style"].(string); bars, _ := args["bars"].(float64); trackID, _ := args["track_id"].(string)
+		notes := engine.GenerateMusic(style, int(bars)); driver.WriteMIDIClip(trackID, 0, notes); result = fmt.Sprintf("Generated %d bars of %s music.", int(bars), style)
+	case "superdaw_link_sync":
+		play, _ := args["playing"].(bool)
+		bpm, _ := args["bpm"].(float64)
+		if bpm <= 0 { bpm = 120.0 }
+		link.Sync(play, bpm)
+		result = link.GetStatus()
+	case "superdaw_link_status":
+		result = link.GetStatus()
 	}
 	return result
 }

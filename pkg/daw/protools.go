@@ -105,3 +105,4 @@ func (p *ProToolsDriver) ExecuteCustomCommand(command string, args map[string]in
 func (p *ProToolsDriver) SetNotifyHandler(h func(method string, params interface{})) {
 	p.Notify = h
 }
+
