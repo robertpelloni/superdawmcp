@@ -1,32 +1,25 @@
-# SuperDAW-MCP: The Universal DAW Control Protocol
+# SuperDAW-MCP
 
-SuperDAW-MCP is a unified Model Context Protocol (MCP) server that standardizes the control of multiple Digital Audio Workstations (DAWs) through a single semantic interface. It allows LLMs, automation scripts, and hardware controllers to interact with professional audio software using a DAW-agnostic toolset.
+A Model Context Protocol (MCP) server that exposes DAW (digital audio workstation) control through one semantic interface, so LLMs, automation scripts, and hardware controllers can drive different DAWs with a DAW-agnostic toolset: transport, mixer, tempo, arrangement discovery, and routing.
 
-## Supported DAWs
-- **Ableton Live 11/12** (Python Remote Script)
-- **REAPER 6/7** (Lua Bridge + Web API)
-- **Bitwig Studio 5** (Java Extension)
-- **Logic Pro** (OSC Bridge)
-- **Pro Tools** (OSC Bridge)
-- **FL Studio 21** (MIDI Script)
-- **Cubase 13** (MIDI Remote JS)
-- **Ardour 8** (Native OSC)
+## Status
 
-## Key Features
-- **Unified Transport & Mixer Control:** Play, stop, set BPM, and adjust volume/pan across any connected DAW.
-- **Arrangement Discovery:** Real-time track and clip layout broadcasting (Ableton/REAPER).
-- **JACK Audio Routing:** System-level virtual audio patching between DAW engines.
-- **Global OSC Gateway:** Control your entire studio from hardware controllers via port 12001.
-- **Web Dashboard:** Interactive timeline visualization, virtual MIDI keyboard, and signal flow monitoring.
-- **Multi-Language SDKs:** Ready-to-use libraries for Python, Go, TypeScript, Rust, and more.
+**Active hobby project, no stable release.** Personal studio-automation project by Robert Pelloni (psytrance production + MCP tooling). Version in tree: v3.1.0 (`VERSION.md`). Last commit: 2026-11-06 (submodule re-pin); last substantive feature work: v3.1.0 VST3 Inspector, merged 2026-06-15.
+
+## What's in here
 
 ## Quick Start
 See [DEPLOY.md](DEPLOY.md) for installation instructions and the [User Guide](docs/USER_GUIDE.md) for comprehensive usage and workflows.
 
-## Developer SDKs
 
-### Python SDK
-The Python SDK provides specialized adapters and a high-level orchestrator for studio management.
+- **Go server core** (`go.mod`, `cmd/`, `pkg/`) with Python client/tooling alongside.
+- **DAW bridges** — per-DAW adapters of varying maturity. Ableton Live (Python remote script) and REAPER (Lua/web) are the most developed. The full target list from the design docs: Ableton Live 11/12, REAPER 6/7, Bitwig Studio 5, Logic Pro (OSC), Pro Tools (OSC), FL Studio 21 (MIDI script), Cubase 13 (MIDI remote), Ardour 8 (OSC). Treat non-Ableton/REAPER bridges as in-progress unless `FEATURES.md` / `CLIENTS.md` say otherwise.
+- **Psytrance production scripts** (`build_psytrance*.py`, `make_psytrance.py`, `automate_surge_xt.py`, arrangement enhancers) — the working tooling this project grew out of.
+- `examples/`, `mobile/`, `docs/`, `tests/`, plus many DAW-MCP submodules (see `SUBMODULES.md` / `SUBMODULE_AUDIT.md`).
+
+## Quick start
+
+See `DEPLOY.md` for installation and environment setup. Python SDK sketch (from the project docs):
 
 ```python
 from superdaw_client.client import SuperDAWClient
@@ -34,31 +27,11 @@ from superdaw_client.orchestrator import SuperDAWOrchestrator
 
 client = SuperDAWClient("./superdaw")
 client.connect()
-
 studio = SuperDAWOrchestrator(client)
 studio.sync_tempo(128.0)
 studio.play_all()
-
-# Specialized control
-studio.ableton.fire_scene(1)
-studio.reaper.run_action("_S&M_MUTE_ALL_TRACKS")
 ```
 
-### TypeScript SDK
-Ideal for web-based studio dashboards and Node.js automation.
+## Docs in this repo
 
-```typescript
-import { SuperDAWClient, AbletonLive, Reaper } from "superdaw-mcp";
-
-const client = new SuperDAWClient("./superdaw");
-await client.connect();
-
-const ableton = new AbletonLive(client);
-await ableton.play();
-```
-
-## Architecture
-SuperDAW-MCP uses a high-performance Go core daemon to route standardized JSON-RPC commands to lightweight native "Agents" running inside each DAW. This ensures low-latency execution and deep access to proprietary DAW APIs.
-
----
-*Built with Google Jules and the open-source audio community.*
+`FEATURES.md`, `CLIENTS.md`, `VISION.md`, `ROADMAP.md`, `TODO.md`, `CHANGELOG.md`, `HANDOFF.md`, `SUBMODULES.md`.

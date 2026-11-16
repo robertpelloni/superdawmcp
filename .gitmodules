@@ -55,9 +55,6 @@
 [submodule "third_party/ableton-proj-mcp"]
 	path = third_party/ableton-proj-mcp
 	url = https://github.com/closestfriend/ableton-proj-mcp
-[submodule "third_party/dawpilot-mcp"]
-	path = third_party/dawpilot-mcp
-	url = https://github.com/squarewave-studio/dawpilot-mcp
 [submodule "third_party/reaper-mcp-server"]
 	path = third_party/reaper-mcp-server
 	url = https://github.com/yeeking/reaper-mcp-server
