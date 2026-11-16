@@ -103,6 +103,3 @@ func (p *ProToolsDriver) SetNotifyHandler(h func(method string, params interface
 	p.Notify = h
 }
 
-// SendCC stub – Pro Tools does not support CC via OSC.
-func (p *ProToolsDriver) SendCC(trackID string, controller int, value int) error { return nil }
-

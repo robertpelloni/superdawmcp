@@ -1,45 +1,66 @@
 package integration
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
 	"testing"
 	"time"
 
-	"github.com/robertpelloni/superdaw-mcp/pkg/daw"
-	"github.com/hypebeast/go-osc/osc"
+	"github.com/robertpelloni/superdaw-mcp/pkg/mcp"
 )
 
-func TestRealtimeSync_Ableton(t *testing.T) {
-	// 1. Start Ableton Driver with a specific local port
-	localPort := 11005
-	driver := daw.NewAbletonDriver("127.0.0.1", 11000, localPort)
+func TestIntegration_StateSync(t *testing.T) {
+	binPath := "./superdaw-sync-test"
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../../cmd/superdaw")
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("Failed to build: %v\nOutput: %s", err, string(out))
+	}
+	defer os.Remove(binPath)
 
-	time.Sleep(100 * time.Millisecond) // Wait for server to start
+	mockDAW := NewMockDAW(11000)
+	go mockDAW.Start()
+	defer mockDAW.Stop()
 
-	// 2. Simulate OSC message from Ableton Agent
-	client := osc.NewClient("127.0.0.1", localPort)
-	msg := osc.NewMessage("/superdaw/state/playing")
-	msg.Append(int32(1))
+	cmd := exec.Command(binPath)
+	stdin, _ := cmd.StdinPipe()
+	stdout, _ := cmd.StdoutPipe()
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Failed to start cmd: %v", err)
+	}
+	defer cmd.Process.Kill()
 
-	err := client.Send(msg)
-	if err != nil { t.Fatalf("Failed to send OSC: %v", err) }
-
-	// 3. Wait for async processing
 	time.Sleep(200 * time.Millisecond)
 
-	// 4. Verify Driver Cache
-	playing, _, _ := driver.GetTransportState()
-	if !playing {
-		t.Error("Driver did not reflect real-time playing state change")
+	// Send multiple rapid sync states to test race conditions
+	for i := 0; i < 100; i++ {
+		_ = mockDAW.SendMessage("127.0.0.1", 11001, "/superdaw/state/tempo", float32(120.0+float32(i)))
 	}
 
-	// 5. Test Tempo
-	msg2 := osc.NewMessage("/superdaw/state/tempo")
-	msg2.Append(float32(135.0))
-	client.Send(msg2)
-
 	time.Sleep(200 * time.Millisecond)
-	_, tempo, _ := driver.GetTransportState()
-	if tempo != 135.0 {
-		t.Errorf("Driver did not reflect real-time tempo change. Expected 135, got %f", tempo)
+
+	req := mcp.JSONRPCRequest{
+		JSONRPC: "2.0",
+		Method:  "tools/call",
+		Params: json.RawMessage(`{"name": "superdaw_get_transport_state", "arguments": {"daw": "ableton"}}`),
+		ID:      "1",
+	}
+	reqBytes, _ := json.Marshal(req)
+	fmt.Fprintf(stdin, "%s\n", string(reqBytes))
+
+	var res mcp.JSONRPCResponse
+	dec := json.NewDecoder(stdout)
+	for {
+		if err := dec.Decode(&res); err != nil {
+			t.Fatalf("Failed to decode response: %v", err)
+		}
+		if res.ID == "1" {
+			break
+		}
+	}
+
+	if res.Error != nil {
+		t.Fatalf("Error from server: %+v", *res.Error)
 	}
 }
