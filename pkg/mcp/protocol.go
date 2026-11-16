@@ -103,6 +103,19 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
+				Name:        "superdaw_set_instrument",
+				Description: "Load an instrument plugin onto a track.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"track_id":   map[string]interface{}{"type": "string"},
+						"instrument": map[string]interface{}{"type": "string"},
+						"daw":        map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"track_id", "instrument"},
+				},
+			},
+			{
 				Name:        "superdaw_generate_euclidean",
 				Description: "Generate a Euclidean rhythm pattern on a target track.",
 				InputSchema: map[string]interface{}{
@@ -112,6 +125,9 @@ func GenerateManifest() ListToolsResult {
 						"hits":     map[string]interface{}{"type": "integer"},
 						"steps":    map[string]interface{}{"type": "integer"},
 						"pitch":    map[string]interface{}{"type": "integer"},
+						"velocity": map[string]interface{}{"type": "integer"},
+						"rotation": map[string]interface{}{"type": "integer"},
+						"length":   map[string]interface{}{"type": "number"},
 						"daw":      map[string]interface{}{"type": "string"},
 					},
 					"required": []string{"track_id", "hits", "steps"},
@@ -168,21 +184,6 @@ func GenerateManifest() ListToolsResult {
 				},
 			},
 			{
-				Name:        "superdaw_generate_euclidean",
-				Description: "Generate a Euclidean rhythm.",
-				InputSchema: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"track_id": map[string]interface{}{"type": "string"},
-						"hits":     map[string]interface{}{"type": "integer"},
-						"steps":    map[string]interface{}{"type": "integer"},
-						"pitch":    map[string]interface{}{"type": "integer"},
-						"daw":      map[string]interface{}{"type": "string"},
-					},
-					"required": []string{"track_id", "hits", "steps", "pitch"},
-				},
-			},
-			{
 				Name:        "superdaw_list_clips",
 				Description: "List clips on a track.",
 				InputSchema: map[string]interface{}{
@@ -218,6 +219,17 @@ func GenerateManifest() ListToolsResult {
 			{
 				Name:        "superdaw_get_plugin_params",
 				Description: "Get parameters for a specific plugin.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"plugin_name": map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"plugin_name"},
+				},
+			},
+			{
+				Name:        "superdaw_vst_deep_scan",
+				Description: "Perform a deep binary scan of a VST3 plugin to extract granular metadata.",
 				InputSchema: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
@@ -379,6 +391,20 @@ func GenerateManifest() ListToolsResult {
 						"daw":         map[string]interface{}{"type": "string"},
 					},
 					"required": []string{"scene_index"},
+				},
+			},
+			{
+				Name:        "superdaw_send_cc",
+				Description: "Send a MIDI Control Change message to a track.",
+				InputSchema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"track_id":   map[string]interface{}{"type": "string"},
+						"controller": map[string]interface{}{"type": "integer"},
+						"value":      map[string]interface{}{"type": "integer"},
+						"daw":        map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"track_id", "controller", "value"},
 				},
 			},
 		},

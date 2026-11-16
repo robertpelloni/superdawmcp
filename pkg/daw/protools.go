@@ -56,7 +56,10 @@ func (p *ProToolsDriver) SetTrackPan(trackID string, pan float32) error {
 }
 
 func (p *ProToolsDriver) SetTrackInstrument(trackID string, instrument string) error {
-	return nil // Not implemented for Pro Tools
+	msg := osc.NewMessage("/protools/track/instrument")
+	msg.Append(trackID)
+	msg.Append(instrument)
+	return p.OSCClient.Send(msg)
 }
 
 func (p *ProToolsDriver) CreateTrack(name string, trackType string) (string, error) {
@@ -102,4 +105,3 @@ func (p *ProToolsDriver) ExecuteCustomCommand(command string, args map[string]in
 func (p *ProToolsDriver) SetNotifyHandler(h func(method string, params interface{})) {
 	p.Notify = h
 }
-

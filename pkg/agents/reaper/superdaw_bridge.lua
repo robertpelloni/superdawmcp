@@ -740,14 +740,58 @@ DSL_FUNCTIONS = {
 
 -- Send state updates back to SuperDAW core
 local function send_state_update(method, params)
-    -- Use a dedicated OSC message or file-based notify if needed.
-    -- For REAPER, the OSC interface handles most telemetry,
-    -- but we can send custom arrangement updates here.
-    local response = {
+    local notification = {
         method = method,
         params = params
     }
-    -- Implementation: Append to a notifications queue file or send OSC
+    local content = encode_json(notification)
+    -- Write to a notification file with timestamp to avoid collisions
+    local filename = bridge_dir .. 'notify_' .. reaper.time_precise() .. '.json'
+    write_file(filename, content)
+end
+
+local last_selected_track = nil
+local last_fx_params = {}
+
+local function monitor_fx_params()
+    local track = reaper.GetSelectedTrack(0, 0)
+    if track ~= last_selected_track then
+        last_selected_track = track
+        last_fx_params = {}
+    end
+
+    if track then
+        local _, track_name = reaper.GetTrackName(track)
+        local track_idx = reaper.CSurf_TrackToID(track, false) - 1
+        local fx_count = reaper.TrackFX_GetCount(track)
+        if fx_count > 0 then
+            -- Monitor the first focused FX or just the first one
+            local fx_idx = 0
+            local _, fx_name = reaper.TrackFX_GetFXName(track, fx_idx, "")
+            local param_count = reaper.TrackFX_GetNumParams(track, fx_idx)
+            local current_params = {}
+            local changed = false
+
+            for i = 0, param_count - 1 do
+                local val = reaper.TrackFX_GetParam(track, fx_idx, i)
+                local name = reaper.TrackFX_GetParamName(track, fx_idx, i, "")
+                table.insert(current_params, {n = name, v = val})
+                if not last_fx_params[i] or last_fx_params[i].v ~= val then
+                    changed = true
+                end
+            end
+
+            if changed then
+                last_fx_params = current_params
+                send_state_update("superdaw/plugin_params_update", {
+                    daw = "reaper",
+                    track_index = track_idx,
+                    plugin_name = fx_name,
+                    parameters = encode_json(current_params)
+                })
+            end
+        end
+    end
 end
 
 -- Main processing function
@@ -4084,6 +4128,7 @@ reaper.ShowConsoleMsg("Bridge directory: " .. bridge_dir .. "\n")
 
 function main()
     process_request()
+    monitor_fx_params()
     reaper.defer(main)
 end
 

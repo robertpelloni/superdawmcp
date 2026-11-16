@@ -21,10 +21,7 @@ type AbletonLiveDriver struct {
 
 func NewAbletonDriver(host string, port int, localPort int) *AbletonLiveDriver {
 	d := &AbletonLiveDriver{OSCClient: osc.NewClient(host, port)}
-
-	// Start OSC listener for state updates
 	go d.listen(localPort)
-
 	return d
 }
 
@@ -44,10 +41,7 @@ func (a *AbletonLiveDriver) listen(port int) {
 			}
 			a.state.playing = b
 			if a.notifyHandler != nil {
-				a.notifyHandler("superdaw/transport_update", map[string]interface{}{
-					"daw":     "ableton",
-					"playing": b,
-				})
+				a.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "ableton", "playing": b})
 			}
 		}
 	})
@@ -58,10 +52,7 @@ func (a *AbletonLiveDriver) listen(port int) {
 			if s, ok := msg.Arguments[0].(string); ok {
 				a.state.arrangement = s
 				if a.notifyHandler != nil {
-					a.notifyHandler("superdaw/arrangement_update", map[string]interface{}{
-						"daw":         "ableton",
-						"arrangement": s,
-					})
+					a.notifyHandler("superdaw/arrangement_update", map[string]interface{}{"daw": "ableton", "arrangement": s})
 				}
 			}
 		}
@@ -73,34 +64,45 @@ func (a *AbletonLiveDriver) listen(port int) {
 			if f, ok := msg.Arguments[0].(float32); ok {
 				a.state.tempo = f
 				if a.notifyHandler != nil {
-					a.notifyHandler("superdaw/transport_update", map[string]interface{}{
-						"daw":   "ableton",
-						"tempo": f,
-					})
+					a.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "ableton", "tempo": f})
 				}
 			}
 		}
 	})
-
 	dispatcher.AddMsgHandler("/superdaw/state/track_count", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if i, ok := msg.Arguments[0].(int32); ok {
 				a.state.trackCount = int(i)
 			}
 		}
-		a.state.mu.Unlock()
 	})
-
 	dispatcher.AddMsgHandler("/superdaw/state/track_created", func(msg *osc.Message) {
 		a.state.mu.Lock()
+		defer a.state.mu.Unlock()
 		if len(msg.Arguments) > 0 {
 			if i, ok := msg.Arguments[0].(int32); ok {
 				a.state.trackCount = int(i) + 1
 			}
 		}
-		a.state.mu.Unlock()
 	})
+	dispatcher.AddMsgHandler("/superdaw/state/plugin/params", func(msg *osc.Message) {
+		if len(msg.Arguments) >= 3 {
+			trackIdx, _ := msg.Arguments[0].(int32)
+			deviceName, _ := msg.Arguments[1].(string)
+			paramsJSON, _ := msg.Arguments[2].(string)
+			if a.notifyHandler != nil {
+				a.notifyHandler("superdaw/plugin_params_update", map[string]interface{}{
+					"daw":         "ableton",
+					"track_index": trackIdx,
+					"plugin_name": deviceName,
+					"parameters":  paramsJSON,
+				})
+			}
+		}
+	})
+
 	server := &osc.Server{Addr: fmt.Sprintf("0.0.0.0:%d", port), Dispatcher: dispatcher}
 	server.ListenAndServe()
 }
@@ -171,11 +173,8 @@ func (a *AbletonLiveDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) 
 	m := osc.NewMessage("/superdaw/clip/write")
 	m.Append(id)
 	m.Append(int32(idx))
-
-	// Agent expects JSON string
 	data, _ := json.Marshal(notes)
 	m.Append(string(data))
-
 	return a.OSCClient.Send(m)
 }
 

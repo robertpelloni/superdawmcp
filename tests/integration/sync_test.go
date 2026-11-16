@@ -1,10 +1,6 @@
 package integration
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"os/exec"
 	"testing"
 	"time"
 
@@ -19,9 +15,12 @@ func TestIntegration_StateSync(t *testing.T) {
 	}
 	defer os.Remove(binPath)
 
-	mockDAW := NewMockDAW(11000)
-	go mockDAW.Start()
-	defer mockDAW.Stop()
+	time.Sleep(100 * time.Millisecond) // Wait for server to start
+
+	// 2. Simulate OSC message from Ableton Agent
+	client := osc.NewClient("127.0.0.1", localPort)
+	msg := osc.NewMessage("/superdaw/state/playing")
+	msg.Append(int32(1))
 
 	cmd := exec.Command(binPath)
 	stdin, _ := cmd.StdinPipe()
@@ -31,6 +30,7 @@ func TestIntegration_StateSync(t *testing.T) {
 	}
 	defer cmd.Process.Kill()
 
+	// 3. Wait for async processing
 	time.Sleep(200 * time.Millisecond)
 
 	// Send multiple rapid sync states to test race conditions
@@ -40,27 +40,9 @@ func TestIntegration_StateSync(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	req := mcp.JSONRPCRequest{
-		JSONRPC: "2.0",
-		Method:  "tools/call",
-		Params: json.RawMessage(`{"name": "superdaw_get_transport_state", "arguments": {"daw": "ableton"}}`),
-		ID:      "1",
-	}
-	reqBytes, _ := json.Marshal(req)
-	fmt.Fprintf(stdin, "%s\n", string(reqBytes))
-
-	var res mcp.JSONRPCResponse
-	dec := json.NewDecoder(stdout)
-	for {
-		if err := dec.Decode(&res); err != nil {
-			t.Fatalf("Failed to decode response: %v", err)
-		}
-		if res.ID == "1" {
-			break
-		}
-	}
-
-	if res.Error != nil {
-		t.Fatalf("Error from server: %+v", *res.Error)
+	time.Sleep(200 * time.Millisecond)
+	_, tempo, _ := driver.GetTransportState()
+	if tempo != 135.0 {
+		t.Errorf("Driver did not reflect real-time tempo change. Expected 135, got %f", tempo)
 	}
 }

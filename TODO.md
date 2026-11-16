@@ -11,14 +11,10 @@
 - [x] Universal Audio Routing (Jack/ReRoute integration)
 - [x] Generative AI Stem Import
 - [x] VST3 Plugin Inspector UI (v3.1.0)
-- [x] Dynamic Schema loading architecture
-- [x] End-to-End Latency benchmarking
-- [x] Mobile Remote UX (React Native)
-- [x] VST3 Parameters Deep-Scanning (libvst3 integration)
+- [x] Mobile Remote UX (Web)
 - [x] TCP MCP Gateway (v2.7.0)
 - [x] Remote Python SDK socket transport (v2.7.0)
 - [x] Universal MIDI CC Support (v2.7.0)
-- [x] Multi-user Collaborative Studio Sessions
-- [x] In-DAW LLM Reasoning Sidecar
-- [x] WebAssembly VST Runners
-- [x] Universal Preset Translator
+- [x] Collaborative Session room logic (v3.2.0)
+- [ ] VST3 Deep-Scanning (libvst3 precursor)
+- [ ] Aggressive refactor of Audio Routing matrix

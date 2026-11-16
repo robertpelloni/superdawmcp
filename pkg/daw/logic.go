@@ -25,15 +25,36 @@ func (l *LogicProDriver) listen(port int) {
 		if l.notifyHandler == nil {
 			return
 		}
-		if msg.Address == "/superdaw/state/playing" {
+		switch msg.Address {
+		case "/superdaw/state/playing":
 			if len(msg.Arguments) > 0 {
 				if b, ok := msg.Arguments[0].(int32); ok {
 					l.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "logic", "playing": b == 1})
 				}
 			}
+		case "/superdaw/state/tempo":
+			if len(msg.Arguments) > 0 {
+				if f, ok := msg.Arguments[0].(float32); ok {
+					l.notifyHandler("superdaw/transport_update", map[string]interface{}{"daw": "logic", "tempo": f})
+				}
+			}
+		case "/superdaw/state/plugin/params":
+			if len(msg.Arguments) >= 3 {
+				trackIdx, _ := msg.Arguments[0].(int32)
+				deviceName, _ := msg.Arguments[1].(string)
+				paramsJSON, _ := msg.Arguments[2].(string)
+				l.notifyHandler("superdaw/plugin_params_update", map[string]interface{}{
+					"daw":         "logic",
+					"track_index": trackIdx,
+					"plugin_name": deviceName,
+					"parameters":  paramsJSON,
+				})
+			}
 		}
 	}
 	dispatcher.AddMsgHandler("/superdaw/state/playing", handler)
+	dispatcher.AddMsgHandler("/superdaw/state/tempo", handler)
+	dispatcher.AddMsgHandler("/superdaw/state/plugin/params", handler)
 	server := &osc.Server{Addr: fmt.Sprintf("0.0.0.0:%d", port), Dispatcher: dispatcher}
 	server.ListenAndServe()
 }
@@ -74,7 +95,10 @@ func (l *LogicProDriver) SetTrackPan(id string, pan float32) error {
 }
 
 func (l *LogicProDriver) SetTrackInstrument(id string, instrument string) error {
-	return nil // Not implemented for Logic Pro
+	m := osc.NewMessage("/logic/track/instrument")
+	m.Append(id)
+	m.Append(instrument)
+	return l.OSCClient.Send(m)
 }
 
 func (l *LogicProDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
@@ -97,6 +121,3 @@ func (l *LogicProDriver) ExecuteCustomCommand(cmd string, args map[string]interf
 	m := osc.NewMessage("/logic/custom/" + cmd)
 	return "Sent to Logic Pro", l.OSCClient.Send(m)
 }
-
-
-

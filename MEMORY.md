@@ -5,3 +5,9 @@
 - **Protocol Mapping**: The agent acts as a translation layer, mapping unified \`/superdaw/\` OSC commands to the native Live API and broadcasting state changes back with \`/superdaw/state/\` prefixes.
 - **VST3 Discovery (v3.1.0)**: Enhanced heuristics in `pkg/vst/scanner.go` provide high-confidence mapping for common parameters (LFO, Filters) across generic plugins.
 - **Unified Inspector**: The dashboard now features a `Plugin Inspector` that leverages MCP tool `superdaw_get_plugin_params` for real-time control.
+- **Bidirectional Feedback (v3.1.0)**: Supports real-time parameter sync for Ableton Live (OSC), REAPER (File-polling), and Bitwig Studio (JSON-RPC broadcast).
+- **Generative Theory (v3.1.0)**: The core engine now includes a `theory.go` module supporting Tonic-Predominant-Dominant chord patterns and scale-aware MIDI generation.
+- **v3.2.0-alpha (UI Expansion)**: The Dashboard now includes interactive panels for MIDI CC, Custom Commands, and AI Prompt-to-Stem orchestration.
+- **Deep Scanning (v3.2.0)**: Initial structure for binary-level VST scanning is implemented in `pkg/vst/scanner.go` via the `DeepScan` stub and `DeepMetadata` structure.
+- **Go Templates**: Corrected `fmt.Fprintf` escaping for CSS percentages; use `%%` for a literal `%`.
+- **Sanitization**: Removed redundant test artifacts and legacy scripts to ensure a clean v3.1.0 baseline.

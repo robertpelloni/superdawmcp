@@ -14,9 +14,11 @@
 - [x] Pro Tools native driver & universal studio parity (v2.4)
 - [x] Multi-Instance Connection Manager & Bidirectional Telemetry (v3.0.0)
 - [x] Enhanced VST3 Parameter Discovery & Plugin Inspector (v3.1.0)
-- [x] VST3 Parameters Deep-Scanning (libvst3 integration)
-- [x] Mobile Control Application (React Native)
-- [x] Multi-user Collaborative Studio Sessions
-- [x] In-DAW LLM Reasoning Sidecar
-- [x] WebAssembly VST Runners
-- [x] Universal Preset Translator
+- [x] Mobile Remote v1.0 (v3.1.0)
+- [x] Collaborative Studio Sessions (v3.2.0)
+- [ ] VST3 Deep-Scanning (v3.3.0)
+    - [ ] libvst3 binary integration
+    - [ ] Automated MIDI mapping discovery
+    - [ ] Real-time parameter change broadcasting for all engines
+- [ ] Aggressive Audio Routing Refactor (v3.4.0)
+- [ ] Mobile Control Application (React Native)

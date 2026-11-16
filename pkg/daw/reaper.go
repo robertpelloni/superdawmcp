@@ -52,6 +52,7 @@ func NewReaperDriver(host string, port, webPort int) *ReaperDriver {
 func (r *ReaperDriver) GetType() string { return "reaper" }
 func (r *ReaperDriver) Connect(endpoint string) error {
 	os.MkdirAll(r.bridgeDir, 0755)
+	go r.pollNotifications()
 	return nil
 }
 
@@ -63,6 +64,36 @@ func (r *ReaperDriver) GetArrangement() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%v", res["data"]), nil
+}
+
+func (r *ReaperDriver) pollNotifications() {
+	for {
+		files, err := os.ReadDir(r.bridgeDir)
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		for _, f := range files {
+			if strings.HasPrefix(f.Name(), "notify_") {
+				path := filepath.Join(r.bridgeDir, f.Name())
+				data, err := os.ReadFile(path)
+				if err == nil {
+					var notif struct {
+						Method string      `json:"method"`
+						Params interface{} `json:"params"`
+					}
+					if err := json.Unmarshal(data, &notif); err == nil {
+						if r.notifyHandler != nil {
+							r.notifyHandler(notif.Method, notif.Params)
+						}
+					}
+				}
+				os.Remove(path)
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func (r *ReaperDriver) callBridge(funcName string, args []interface{}) (map[string]interface{}, error) {
@@ -168,10 +199,8 @@ func (r *ReaperDriver) SetTrackPan(id string, pan float32) error {
 }
 
 func (r *ReaperDriver) SetTrackInstrument(id string, instrument string) error {
-	m := osc.NewMessage("/superdaw/track/instrument")
-	m.Append(id)
-	m.Append(instrument)
-	return r.OSCClient.Send(m)
+	_, err := r.callBridge("TrackFX_AddByName", []interface{}{id, instrument, false, -1})
+	return err
 }
 
 func (r *ReaperDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error {

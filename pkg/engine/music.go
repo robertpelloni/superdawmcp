@@ -9,26 +9,45 @@ import (
 func GenerateMusic(style string, bars int) []daw.MIDINote {
 	notes := []daw.MIDINote{}
 
-	// Example Logic: C Major Pentatonic (0, 2, 4, 7, 9)
-	scale := []int{60, 62, 64, 67, 69}
+	// Root C (60), Scale: Minor for techno/ambient, Major for basic
+	root := 60
+	scaleName := "minor"
+	if style == "basic" || style == "pop" { scaleName = "major" }
 
-	if style == "techno" {
-		// 16th note pulses
-		for i := 0; i < bars*16; i++ {
-			if rand.Float32() > 0.7 {
-				notes = append(notes, daw.MIDINote{
-					Pitch:     scale[rand.Intn(len(scale))],
-					Velocity:  90 + rand.Intn(30),
-					StartBeat: float32(i) * 0.25,
-					Duration:  0.2,
-				})
+	if style == "techno" || style == "ambient" {
+		prog := GenerateProgression(style, root, scaleName)
+		for b := 0; b < bars; b++ {
+			chord := prog[b%len(prog)]
+			for i, pitch := range chord {
+				if style == "techno" {
+					// 16th note pulses
+					for pulse := 0; i == 0 && pulse < 16; pulse++ {
+						if rand.Float32() > 0.7 {
+							notes = append(notes, daw.MIDINote{
+								Pitch:     pitch,
+								Velocity:  90 + rand.Intn(30),
+								StartBeat: float32(b)*4.0 + float32(pulse)*0.25,
+								Duration:  0.2,
+							})
+						}
+					}
+				} else {
+					// Ambient pads
+					notes = append(notes, daw.MIDINote{
+						Pitch:     pitch + 12, // Octave up
+						Velocity:  60,
+						StartBeat: float32(b) * 4.0,
+						Duration:  3.8,
+					})
+				}
 			}
 		}
 	} else if style == "ambient" {
 		// Longer pads
+		scale := GetScaleNotes(root, scaleName)
 		for i := 0; i < bars; i++ {
 			notes = append(notes, daw.MIDINote{
-				Pitch:     scale[rand.Intn(len(scale))],
+				Pitch:     root + scale[rand.Intn(len(scale))] + 12,
 				Velocity:  60,
 				StartBeat: float32(i) * 4.0,
 				Duration:  3.8,

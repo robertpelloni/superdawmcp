@@ -5,39 +5,44 @@ import (
 	"sync"
 )
 
-// TransportState holds the last-known playback state for a DAW instance.
 type TransportState struct {
 	Playing bool
 	BPM     float64
 }
 
-// ConnectionManager handles multiple concurrent DAW instances.
-type ConnectionManager struct {
-	instances         map[string]DAWDriver
-	defaultID         string
-	transportStates   map[string]TransportState
-	mu                sync.RWMutex
+type ConnectionInfo struct {
+	Driver DAWDriver
+	RoomID string
 }
 
-// NewConnectionManager creates a new instance manager.
+type ConnectionManager struct {
+	instances       map[string]ConnectionInfo
+	defaultID       string
+	transportStates map[string]TransportState
+	mu              sync.RWMutex
+}
+
 func NewConnectionManager() *ConnectionManager {
 	return &ConnectionManager{
-		instances:       make(map[string]DAWDriver),
+		instances:       make(map[string]ConnectionInfo),
 		transportStates: make(map[string]TransportState),
 	}
 }
 
-// Register adds a new DAW driver instance to the manager.
 func (m *ConnectionManager) Register(id string, driver DAWDriver) {
+	m.RegisterWithRoom(id, driver, "default")
+}
+
+func (m *ConnectionManager) RegisterWithRoom(id string, driver DAWDriver, roomID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.instances[id] = driver
+	if roomID == "" { roomID = "default" }
+	m.instances[id] = ConnectionInfo{Driver: driver, RoomID: roomID}
 	if m.defaultID == "" {
 		m.defaultID = id
 	}
 }
 
-// Unregister removes a DAW instance.
 func (m *ConnectionManager) Unregister(id string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -51,7 +56,6 @@ func (m *ConnectionManager) Unregister(id string) {
 	}
 }
 
-// SetDefault sets the default DAW instance to use when none is specified.
 func (m *ConnectionManager) SetDefault(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -62,21 +66,32 @@ func (m *ConnectionManager) SetDefault(id string) error {
 	return nil
 }
 
-// Get retrieves a DAW driver by its unique ID.
 func (m *ConnectionManager) Get(id string) (DAWDriver, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	if id == "" {
 		id = m.defaultID
 	}
-	driver, ok := m.instances[id]
+	info, ok := m.instances[id]
 	if !ok {
 		return nil, fmt.Errorf("DAW instance '%s' not found", id)
 	}
-	return driver, nil
+	return info.Driver, nil
 }
 
-// ResolveID returns the effective instance ID (resolves empty to default).
+func (m *ConnectionManager) GetInfo(id string) (ConnectionInfo, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if id == "" {
+		id = m.defaultID
+	}
+	info, ok := m.instances[id]
+	if !ok {
+		return ConnectionInfo{}, fmt.Errorf("DAW instance '%s' not found", id)
+	}
+	return info, nil
+}
+
 func (m *ConnectionManager) ResolveID(id string) string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -86,14 +101,12 @@ func (m *ConnectionManager) ResolveID(id string) string {
 	return id
 }
 
-// CacheTransportState stores the last known playback state for a DAW instance.
 func (m *ConnectionManager) CacheTransportState(id string, playing bool, bpm float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.transportStates[id] = TransportState{Playing: playing, BPM: bpm}
 }
 
-// GetCachedTransportState retrieves a previously cached transport state.
 func (m *ConnectionManager) GetCachedTransportState(id string) (TransportState, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -101,13 +114,12 @@ func (m *ConnectionManager) GetCachedTransportState(id string) (TransportState, 
 	return s, ok
 }
 
-// GetAll returns a map of all registered DAW instances.
 func (m *ConnectionManager) GetAll() map[string]DAWDriver {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	res := make(map[string]DAWDriver)
 	for k, v := range m.instances {
-		res[k] = v
+		res[k] = v.Driver
 	}
 	return res
 }

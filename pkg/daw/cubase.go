@@ -48,7 +48,10 @@ func (c *CubaseDriver) SetTrackPan(id string, pan float32) error {
 }
 
 func (c *CubaseDriver) SetTrackInstrument(id string, instrument string) error {
-	return nil // Not implemented for Cubase
+	m := osc.NewMessage("/cubase/track/instrument")
+	m.Append(id)
+	m.Append(instrument)
+	return c.OSCClient.Send(m)
 }
 
 func (c *CubaseDriver) WriteMIDIClip(id string, idx int, notes []MIDINote) error { return nil }
